@@ -213,7 +213,7 @@ class _SystemCardState extends State<SystemCard> {
         margin: EdgeInsets.all(2.r),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(14.r),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -388,13 +388,22 @@ class _SystemCardState extends State<SystemCard> {
   }
 
   /// Renders the system brand logo with fallback support.
-  Widget _buildSystemLogo(String assetLogoPath, {double? height}) {
+  /// The white-transparent logo is tinted with [color] (falls back to theme text).
+  Widget _buildSystemLogo(String assetLogoPath, {double? height, Color? color}) {
     height ??= 32.r;
     final customLogoPath = widget.info.customLogoPath;
     final hasCustomLogo = customLogoPath != null && customLogoPath.isNotEmpty;
 
+    Widget buildLogo(Widget image) {
+      if (color == null) return image;
+      return ColorFiltered(
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+        child: image,
+      );
+    }
+
     if (hasCustomLogo) {
-      return Image.file(
+      return buildLogo(Image.file(
         File(customLogoPath),
         key: ValueKey('${customLogoPath}_${widget.info.imageVersion}'),
         height: height,
@@ -411,12 +420,12 @@ class _SystemCardState extends State<SystemCard> {
             height: 24.r,
           ),
         ),
-      );
+      ));
     }
 
     final themeLogoPath = _themeLogoPath;
     if (themeLogoPath != null && themeLogoPath.isNotEmpty) {
-      return Image.file(
+      return buildLogo(Image.file(
         File(themeLogoPath),
         key: ValueKey(themeLogoPath),
         height: height,
@@ -433,10 +442,10 @@ class _SystemCardState extends State<SystemCard> {
             height: 24.r,
           ),
         ),
-      );
+      ));
     }
 
-    return Image.asset(
+    return buildLogo(Image.asset(
       assetLogoPath,
       height: height,
       cacheWidth: 256,
@@ -446,7 +455,7 @@ class _SystemCardState extends State<SystemCard> {
         shortName: widget.info.shortName,
         height: 24.r,
       ),
-    );
+    ));
   }
 
   /// Builds the foreground content, including badges and specialized layouts for 'Recent Games'.
@@ -617,9 +626,13 @@ class _SystemCardState extends State<SystemCard> {
 
     return Container(
       height: 32.r,
-      padding: EdgeInsets.only(left: 0.r, right: 0.r, bottom: 0.r, top: 4.r),
+      padding: EdgeInsets.only(left: 0.r, right: 0.r, top: 4.r, bottom: 0.r),
       child: Center(
-        child: _buildSystemLogo(assetLogoPath, height: 30.r),
+        child: _buildSystemLogo(
+          assetLogoPath,
+          height: 30.r,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
     );
   }
