@@ -488,6 +488,8 @@ class FlutterSoLoudFfi extends FlutterSoLoud {
       nativeOnBufferingCallable?.nativeFunction ?? ffi.nullptr,
       nativeOnMetadataCallable?.nativeFunction ?? ffi.nullptr,
     );
+    nativeOnBufferingCallable?.close();
+    nativeOnMetadataCallable?.close();
     final soundHash = SoundHash(hash.value);
     final ret = (error: PlayerErrors.values[e], soundHash: soundHash);
     calloc.free(hash);

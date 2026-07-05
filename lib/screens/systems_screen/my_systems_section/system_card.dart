@@ -216,14 +216,14 @@ class _SystemCardState extends State<SystemCard> {
           borderRadius: BorderRadius.circular(12.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 2.r,
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 5.r,
               offset: Offset(2.0.r, 2.0.r),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(9.r),
           child: InkWell(
             focusNode: _focusNode,
             onTap: () {
@@ -236,7 +236,7 @@ class _SystemCardState extends State<SystemCard> {
             highlightColor: Colors.transparent,
             splashColor: Colors.transparent,
             child: Padding(
-              padding: EdgeInsets.all(4.r),
+              padding: EdgeInsets.all(6.r),
               child: widget.info.isGame
                   ? Stack(
                       key: _contentStackKey,
@@ -309,7 +309,7 @@ class _SystemCardState extends State<SystemCard> {
     if (hasCustomBg && ImageUtils.isGif(customBgPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
             child: ShaderGifWidget(
@@ -325,7 +325,7 @@ class _SystemCardState extends State<SystemCard> {
     if (!hasCustomBg && ImageUtils.isGif(_themeBackgroundPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
             child: ShaderGifWidget(
@@ -345,7 +345,7 @@ class _SystemCardState extends State<SystemCard> {
 
     return Positioned.fill(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(9.r),
         child: hasActiveBg
             ? Image.file(
                 File(activeBgPath),
@@ -389,7 +389,7 @@ class _SystemCardState extends State<SystemCard> {
 
   /// Renders the system brand logo with fallback support.
   Widget _buildSystemLogo(String assetLogoPath, {double? height}) {
-    height ??= 128.r;
+    height ??= 32.r;
     final customLogoPath = widget.info.customLogoPath;
     final hasCustomLogo = customLogoPath != null && customLogoPath.isNotEmpty;
 
@@ -398,12 +398,12 @@ class _SystemCardState extends State<SystemCard> {
         File(customLogoPath),
         key: ValueKey('${customLogoPath}_${widget.info.imageVersion}'),
         height: height,
-        cacheWidth: 384,
+        cacheWidth: 256,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Image.asset(
           assetLogoPath,
           height: height,
-          cacheWidth: 384,
+          cacheWidth: 256,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => SystemLogoFallback(
             title: widget.info.title,
@@ -420,12 +420,12 @@ class _SystemCardState extends State<SystemCard> {
         File(themeLogoPath),
         key: ValueKey(themeLogoPath),
         height: height,
-        cacheWidth: 384,
+        cacheWidth: 256,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => Image.asset(
           assetLogoPath,
           height: height,
-          cacheWidth: 384,
+          cacheWidth: 256,
           fit: BoxFit.contain,
           errorBuilder: (context, error2, stackTrace2) => SystemLogoFallback(
             title: widget.info.title,
@@ -439,7 +439,7 @@ class _SystemCardState extends State<SystemCard> {
     return Image.asset(
       assetLogoPath,
       height: height,
-      cacheWidth: 384,
+      cacheWidth: 256,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) => SystemLogoFallback(
         title: widget.info.title,
@@ -615,10 +615,11 @@ class _SystemCardState extends State<SystemCard> {
     final assetLogoPath =
         'assets/images/systems/logos/$resolvedLogoFolder.webp';
 
-    return SizedBox(
-      height: 44.r,
+    return Container(
+      height: 32.r,
+      padding: EdgeInsets.only(left: 0.r, right: 0.r, bottom: 0.r, top: 4.r),
       child: Center(
-        child: _buildSystemLogo(assetLogoPath, height: 36.r),
+        child: _buildSystemLogo(assetLogoPath, height: 30.r),
       ),
     );
   }

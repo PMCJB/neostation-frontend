@@ -365,6 +365,10 @@ interface class SoLoud {
     _controller.soLoudFFI.disposeNativeCallables();
     _controller.soLoudFFI.disposeAllSound();
     _controller.soLoudFFI.deinit();
+    for (final sound in _activeSounds) {
+      sound.soundEventsController.close();
+      sound.allInstancesFinishedController.close();
+    }
     _activeSounds.clear();
   }
 

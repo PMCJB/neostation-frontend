@@ -707,20 +707,12 @@ void Player::disposeSound(unsigned int soundHash)
 
     if (it != sounds.end())
     {
-        // Free filters
-        if (it->get()->filters)
-        {
-            Filters *f = it->get()->filters.release();
-            if (f != nullptr)
-            {
-                // TODO: deleting "f" when running on Web will crash with segmentation fault.
-                // This could be a bug in WebAssembly I can't figure out. Even if I don't delete
-                // there shouldn't be a memory leak as the filters are destroyed with the sound.
-                // This behavior can be tested by running "testAllInstancesFinished" in tests.dart.
-                // delete f;
-            }
-            it->get()->filters.reset();
-        }
+        // Let the unique_ptr handle cleanup of filters when the sound is erased.
+        // On WebAssembly the Filters destructor crashes (WASM bug), so we avoid
+        // the destructor there by releasing before erase.
+#if defined(__EMSCRIPTEN__)
+        it->get()->filters.release();
+#endif
         sounds.erase(it);
     }
     

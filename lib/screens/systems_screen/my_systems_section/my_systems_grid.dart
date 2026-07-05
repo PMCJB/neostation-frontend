@@ -1377,7 +1377,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
     // For system cards (childAspectRatio != 1) add extra height for logo footer.
     final double itemHeight;
     if (widget.childAspectRatio != 1) {
-      itemHeight = itemWidth + 56.r;
+      itemHeight = itemWidth + 32.r;
     } else {
       itemHeight = itemWidth / widget.childAspectRatio;
     }
@@ -1787,7 +1787,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                               color: Theme.of(context).colorScheme.secondary,
                               width: 4.r,
                             ),
-                            borderRadius: BorderRadius.circular(14.r),
+                            borderRadius: BorderRadius.circular(16.r),
                           ),
                         ),
                       ),

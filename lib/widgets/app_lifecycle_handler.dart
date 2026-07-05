@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 import 'package:flutter/material.dart';
 import 'package:neostation/services/logger_service.dart';
 import '../services/notification_service.dart';
@@ -25,6 +26,7 @@ class AppLifecycleHandler extends StatefulWidget {
 class _AppLifecycleHandlerState extends State<AppLifecycleHandler>
     with WidgetsBindingObserver {
   String? _lastKnownPlan;
+  AppLifecycleListener? _exitListener;
 
   static final _log = LoggerService.instance;
 
@@ -55,6 +57,16 @@ class _AppLifecycleHandlerState extends State<AppLifecycleHandler>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Register exit listener to clean up native resources (SoLoud audio threads)
+    // so the process exits cleanly when the window is closed.
+    _exitListener = AppLifecycleListener(
+      onExitRequested: () async {
+        try {
+          MusicPlayerService().dispose();
+        } catch (_) {}
+        return AppExitResponse.exit;
+      },
+    );
     // Initialize with current plan after a delay to ensure auth is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Wait a bit more to ensure auth service is fully loaded
@@ -69,6 +81,7 @@ class _AppLifecycleHandlerState extends State<AppLifecycleHandler>
 
   @override
   void dispose() {
+    _exitListener?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
