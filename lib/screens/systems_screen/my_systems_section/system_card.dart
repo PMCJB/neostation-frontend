@@ -52,6 +52,10 @@ class _SystemCardState extends State<SystemCard> {
   String? _coverResolutionPath;
   String? _lastActiveTrackPath;
 
+  double _mouseDx = 0.0;
+  double _mouseDy = 0.0;
+  bool _isHovering = false;
+
   String? _themeBackgroundPath;
   String? _themeLogoPath;
   String _lastThemeFolder = '';
@@ -268,6 +272,13 @@ class _SystemCardState extends State<SystemCard> {
     );
   }
 
+  String? _holoPathFromBackground(String? bgPath) {
+    if (bgPath == null || bgPath.isEmpty) return null;
+    final dotIndex = bgPath.lastIndexOf('.');
+    if (dotIndex == -1) return null;
+    return '${bgPath.substring(0, dotIndex)}_holo${bgPath.substring(dotIndex)}';
+  }
+
   /// Orchestrates background rendering, selecting between static images,
   /// music cover shaders, or GIF animators.
   Widget _buildSystemBackground() {
@@ -342,33 +353,110 @@ class _SystemCardState extends State<SystemCard> {
     // SCENARIO C: Static image (Custom or Theme-provided).
     final activeBgPath = hasCustomBg ? customBgPath : _themeBackgroundPath;
     final hasActiveBg = activeBgPath != null && activeBgPath.isNotEmpty;
+    final holoPath = hasActiveBg ? _holoPathFromBackground(activeBgPath) : null;
+
+    Widget bgContent = hasActiveBg
+        ? Image.file(
+            File(activeBgPath),
+            key: ValueKey('${activeBgPath}_${widget.info.imageVersion}'),
+            fit: BoxFit.cover,
+            cacheWidth: widget.info.isGame ? 1024 : 256,
+            errorBuilder: (context, error, stackTrace) => Stack(
+              children: [
+                Container(color: Theme.of(context).colorScheme.surface),
+                Container(
+                  color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
+          )
+        : Stack(
+            children: [
+              Container(color: Theme.of(context).colorScheme.surface),
+              Container(
+                color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+              ),
+            ],
+          );
+
+    if (holoPath != null) {
+      bgContent = Stack(
+        fit: StackFit.expand,
+        children: [
+          bgContent,
+          _buildHoloOverlay(holoPath),
+        ],
+      );
+    }
 
     return Positioned.fill(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9.r),
-        child: hasActiveBg
-            ? Image.file(
-                File(activeBgPath),
-                key: ValueKey('${activeBgPath}_${widget.info.imageVersion}'),
-                fit: BoxFit.cover,
-                cacheWidth: widget.info.isGame ? 1024 : 256,
-                errorBuilder: (context, error, stackTrace) => Stack(
-                  children: [
-                    Container(color: Theme.of(context).colorScheme.surface),
-                    Container(
-                      color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+        child: bgContent,
+      ),
+    );
+  }
+
+  Widget _buildHoloOverlay(String holoPath) {
+    return Positioned.fill(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final h = constraints.maxHeight;
+          return MouseRegion(
+            onHover: (event) {
+              setState(() {
+                _mouseDx = (event.localPosition.dx / w - 0.5) * 2;
+                _mouseDy = (event.localPosition.dy / h - 0.5) * 2;
+                _isHovering = true;
+              });
+            },
+            onExit: (_) {
+              setState(() => _isHovering = false);
+            },
+            child: AnimatedOpacity(
+              opacity: _isHovering ? 0.9 : 0.0,
+              duration: const Duration(milliseconds: 400),
+              child: ShaderMask(
+                shaderCallback: (bounds) {
+                  return LinearGradient(
+                    begin: Alignment(
+                      -1 + _mouseDx * 0.4,
+                      -1 + _mouseDy * 0.4,
                     ),
-                  ],
-                ),
-              )
-            : Stack(
-                children: [
-                  Container(color: Theme.of(context).colorScheme.surface),
-                  Container(
-                    color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+                    end: Alignment(
+                      1 + _mouseDx * 0.4,
+                      1 + _mouseDy * 0.4,
+                    ),
+                    colors: const [
+                      Color(0x00FFFFFF),
+                      Color(0x30FF006A),
+                      Color(0x60FFD700),
+                      Color(0x6000FFD5),
+                      Color(0x306A00FF),
+                      Color(0x00FFFFFF),
+                    ],
+                    stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                  ).createShader(bounds);
+                },
+                blendMode: BlendMode.srcIn,
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.matrix(<double>[
+                    0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1,
+                    0, 0, 0, 0, 1,
+                    0.33, 0.33, 0.33, 0, 0,
+                  ]),
+                  child: Image.file(
+                    File(holoPath),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                   ),
-                ],
+                ),
               ),
+            ),
+          );
+        },
       ),
     );
   }
