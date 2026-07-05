@@ -215,9 +215,9 @@ class _SystemCardState extends State<SystemCard> {
         cursor: SystemMouseCursors.basic,
         child: Tilt(
           tiltConfig: TiltConfig(
-            angle: 20,
+            angle: 5,
             leaveCurve: Curves.fastEaseInToSlowEaseOut,
-            leaveDuration: const Duration(milliseconds: 900),
+            leaveDuration: const Duration(milliseconds: 300),
           ),
           child: TiltAnimatedBuilder(
             builder: (context, state, child) {
@@ -228,6 +228,7 @@ class _SystemCardState extends State<SystemCard> {
                 filterQuality: FilterQuality.medium,
                 child: Stack(
                   fit: StackFit.expand,
+                  clipBehavior: Clip.none,
                   children: [
                     child!,
                     Positioned.fill(

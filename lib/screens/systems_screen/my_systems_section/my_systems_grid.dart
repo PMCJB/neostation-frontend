@@ -1761,12 +1761,14 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
 
         return SingleChildScrollView(
           controller: _scrollController,
+          clipBehavior: Clip.none,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
           child: SizedBox(
             height: totalHeight,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 ...cardWidgets,
                 if (highlightLeft != null)
