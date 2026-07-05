@@ -1738,27 +1738,6 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
           }
         }
 
-        // Focused Item Highlight calculations.
-        double? highlightLeft, highlightTop, highlightWidth, highlightHeight;
-        if (widget.selectedIndex != -1) {
-          for (int r = 0; r < grid.length; r++) {
-            for (int c = 0; c < grid[r].length; c++) {
-              if (grid[r][c] == widget.selectedIndex) {
-                final card = systemCards[widget.selectedIndex];
-                final spanW = (card.isGame && cols >= 3) ? 3 : 1;
-                final spanH = (card.isGame && cols >= 3) ? 2 : 1;
-
-                highlightLeft = c * (colWidth + spX);
-                highlightTop = r * (rowHeight + spY);
-                highlightWidth = spanW * colWidth + (spanW - 1) * spX;
-                highlightHeight = spanH * rowHeight + (spanH - 1) * spY;
-                break;
-              }
-            }
-            if (highlightLeft != null) break;
-          }
-        }
-
         return SingleChildScrollView(
           controller: _scrollController,
           clipBehavior: Clip.none,
@@ -1771,30 +1750,6 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
               clipBehavior: Clip.none,
               children: [
                 ...cardWidgets,
-                if (highlightLeft != null)
-                  AnimatedPositioned(
-                    duration: Duration(
-                      milliseconds: _isNavigatingFast ? 120 : 300,
-                    ),
-                    curve: Curves.easeOutQuart,
-                    left: highlightLeft,
-                    top: highlightTop!,
-                    width: highlightWidth!,
-                    height: highlightHeight!,
-                    child: RepaintBoundary(
-                      child: IgnorePointer(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.secondary,
-                              width: 4.r,
-                            ),
-                            borderRadius: BorderRadius.circular(16.r),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),

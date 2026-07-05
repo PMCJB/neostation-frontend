@@ -233,10 +233,24 @@ class _SystemCardState extends State<SystemCard> {
                     child!,
                     Positioned.fill(
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(9.r),
-                        child: Padding(
-                          padding: EdgeInsets.all(6.r),
-                          child: _buildHoloOverlay(data.areaProgress),
+                        borderRadius: BorderRadius.circular(14.r),
+                        child: _buildHoloOverlay(data.areaProgress),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: AnimatedOpacity(
+                        opacity: widget.isSelected ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 300),
+                        child: IgnorePointer(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.secondary,
+                                width: 4.r,
+                              ),
+                              borderRadius: BorderRadius.circular(14.r),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -415,7 +429,7 @@ class _SystemCardState extends State<SystemCard> {
         (progress.distance / math.sqrt2).clamp(0.0, 1.0);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(9.r),
+      borderRadius: BorderRadius.circular(14.r),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -428,7 +442,7 @@ class _SystemCardState extends State<SystemCard> {
           IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9.r),
+                borderRadius: BorderRadius.circular(14.r),
                 gradient: LinearGradient(
                   begin: Alignment(
                     -progress.dx * 0.65,
@@ -778,7 +792,7 @@ class HolofoilPainter extends CustomPainter {
     final primaryHue =
         (tiltAngle / (2 * math.pi) * 360 + 180) % 360;
     final opacity =
-        (0.03 + tiltMagnitude * 0.22).clamp(0.0, 1.0);
+        (0.03 + tiltMagnitude * 0.07).clamp(0.0, 1.0);
     final hueCenterX =
         rect.left + (0.5 + progress.dx * 0.58) * rect.width;
     final hueCenterY =
@@ -789,17 +803,17 @@ class HolofoilPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            HSVColor.fromAHSV(opacity, primaryHue, 0.90, 1.0).toColor(),
+            HSVColor.fromAHSV(opacity, primaryHue, 0.12, 1.0).toColor(),
             HSVColor.fromAHSV(
-              opacity * 0.60,
+              opacity * 0.30,
               (primaryHue + 50) % 360,
-              0.82,
+              0.08,
               1.0,
             ).toColor(),
             HSVColor.fromAHSV(
-              opacity * 0.22,
+              opacity * 0.12,
               (primaryHue + 160) % 360,
-              0.70,
+              0.06,
               1.0,
             ).toColor(),
             Colors.transparent,
@@ -824,7 +838,7 @@ class HolofoilPainter extends CustomPainter {
     final phase = progress.dx * 215.0 + progress.dy * 108.0;
 
     const cyclesA = 3;
-    final opacityA = (0.04 + tiltMagnitude * 0.28).clamp(0.0, 1.0);
+    final opacityA = (0.02 + tiltMagnitude * 0.16).clamp(0.0, 1.0);
     final alignmentXA = 1.00 + normDy * 0.07;
     final alignmentYA = 0.50 - normDx * 0.05;
 
@@ -846,7 +860,7 @@ class HolofoilPainter extends CustomPainter {
     );
 
     const cyclesB = 2;
-    final opacityB = (0.01 + tiltMagnitude * 0.12).clamp(0.0, 1.0);
+    final opacityB = (0.005 + tiltMagnitude * 0.07).clamp(0.0, 1.0);
     final alignmentXB = 0.50 + normDy * 0.04;
     final alignmentYB = 1.00 - normDx * 0.07;
 
@@ -887,7 +901,7 @@ List<Color> organicColors({
           .clamp(0.0, 1.0);
       final hue = (phase + tWarped * 360.0 * cycles) % 360;
       final saturation =
-          (0.60 + 0.28 * math.sin(tWarped * math.pi * cycles * 2))
+          (0.08 + 0.10 * math.sin(tWarped * math.pi * cycles * 2))
               .clamp(0.0, 1.0);
       final envelope =
           (math.sin(tLinear * math.pi) * 0.55 +
