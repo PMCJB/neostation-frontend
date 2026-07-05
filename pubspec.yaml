@@ -61,6 +61,7 @@ dependencies:
   audio_metadata_reader: ^1.6.0
   wakelock_plus: ^1.6.1
   flutter_localization: ^0.4.1
+  flutter_tilt: ^4.0.4
 
 dev_dependencies:
   flutter_test:

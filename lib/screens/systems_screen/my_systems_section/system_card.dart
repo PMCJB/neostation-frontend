@@ -8,7 +8,9 @@ import 'package:neostation/services/sfx_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tilt/flutter_tilt.dart';
 import '../../../widgets/marquee_text.dart';
 import '../../../widgets/shaders/shader_gif_widget.dart';
 import '../../../widgets/shaders/music_card_shader_background.dart';
@@ -51,10 +53,6 @@ class _SystemCardState extends State<SystemCard> {
   bool _isResolvingMusicCover = false;
   String? _coverResolutionPath;
   String? _lastActiveTrackPath;
-
-  double _mouseDx = 0.0;
-  double _mouseDy = 0.0;
-  bool _isHovering = false;
 
   String? _themeBackgroundPath;
   String? _themeLogoPath;
@@ -211,72 +209,99 @@ class _SystemCardState extends State<SystemCard> {
           : neoAssets.getLogoForSystemSync(folderName);
     }
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.basic,
-      child: Container(
-        margin: EdgeInsets.all(2.r),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(14.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 5.r,
-              offset: Offset(2.0.r, 2.0.r),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(9.r),
-          child: InkWell(
-            focusNode: _focusNode,
-            onTap: () {
-              SfxService().playNavSound();
-              widget.onTap?.call();
+    return Padding(
+      padding: EdgeInsets.all(2.r),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.basic,
+        child: Tilt(
+          tiltConfig: TiltConfig(
+            angle: 20,
+            leaveCurve: Curves.fastEaseInToSlowEaseOut,
+            leaveDuration: const Duration(milliseconds: 900),
+          ),
+          child: TiltAnimatedBuilder(
+            builder: (context, state, child) {
+              final data = state.animatedTiltData;
+              return Transform(
+                alignment: Alignment.center,
+                transform: data.transform,
+                filterQuality: FilterQuality.medium,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    child!,
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(9.r),
+                        child: Padding(
+                          padding: EdgeInsets.all(6.r),
+                          child: _buildHoloOverlay(data.areaProgress),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
-            canRequestFocus: false,
-            focusColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            splashColor: Colors.transparent,
-            child: Padding(
-              padding: EdgeInsets.all(6.r),
-              child: widget.info.isGame
-                  ? Stack(
-                      key: _contentStackKey,
-                      children: [
-                        _buildSystemBackground(),
-                        _buildMainBodyContent(context, true),
-                        _buildRecentFooter(context),
-                      ],
-                    )
-                  : Column(
-                      children: [
-                        AspectRatio(
-                          aspectRatio: 1,
-                          child: Stack(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(14.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 5.r,
+                    offset: Offset(2.0.r, 2.0.r),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(9.r),
+                child: InkWell(
+                  focusNode: _focusNode,
+                  onTap: () {
+                    SfxService().playNavSound();
+                    widget.onTap?.call();
+                  },
+                  canRequestFocus: false,
+                  focusColor: Colors.transparent,
+                  hoverColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.transparent,
+                  child: Padding(
+                    padding: EdgeInsets.all(6.r),
+                    child: widget.info.isGame
+                        ? Stack(
                             key: _contentStackKey,
                             children: [
                               _buildSystemBackground(),
                               _buildMainBodyContent(context, true),
+                              _buildRecentFooter(context),
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 1,
+                                child: Stack(
+                                  key: _contentStackKey,
+                                  children: [
+                                    _buildSystemBackground(),
+                                    _buildMainBodyContent(context, true),
+                                  ],
+                                ),
+                              ),
+                              _buildSystemFooter(context),
                             ],
                           ),
-                        ),
-                        _buildSystemFooter(context),
-                      ],
-                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  String? _holoPathFromBackground(String? bgPath) {
-    if (bgPath == null || bgPath.isEmpty) return null;
-    final dotIndex = bgPath.lastIndexOf('.');
-    if (dotIndex == -1) return null;
-    return '${bgPath.substring(0, dotIndex)}_holo${bgPath.substring(dotIndex)}';
   }
 
   /// Orchestrates background rendering, selecting between static images,
@@ -353,110 +378,81 @@ class _SystemCardState extends State<SystemCard> {
     // SCENARIO C: Static image (Custom or Theme-provided).
     final activeBgPath = hasCustomBg ? customBgPath : _themeBackgroundPath;
     final hasActiveBg = activeBgPath != null && activeBgPath.isNotEmpty;
-    final holoPath = hasActiveBg ? _holoPathFromBackground(activeBgPath) : null;
-
-    Widget bgContent = hasActiveBg
-        ? Image.file(
-            File(activeBgPath),
-            key: ValueKey('${activeBgPath}_${widget.info.imageVersion}'),
-            fit: BoxFit.cover,
-            cacheWidth: widget.info.isGame ? 1024 : 256,
-            errorBuilder: (context, error, stackTrace) => Stack(
-              children: [
-                Container(color: Theme.of(context).colorScheme.surface),
-                Container(
-                  color: widget.info.color1AsColor?.withValues(alpha: 0.4),
-                ),
-              ],
-            ),
-          )
-        : Stack(
-            children: [
-              Container(color: Theme.of(context).colorScheme.surface),
-              Container(
-                color: widget.info.color1AsColor?.withValues(alpha: 0.4),
-              ),
-            ],
-          );
-
-    if (holoPath != null) {
-      bgContent = Stack(
-        fit: StackFit.expand,
-        children: [
-          bgContent,
-          _buildHoloOverlay(holoPath),
-        ],
-      );
-    }
 
     return Positioned.fill(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(9.r),
-        child: bgContent,
+        child: hasActiveBg
+            ? Image.file(
+                File(activeBgPath),
+                key: ValueKey('${activeBgPath}_${widget.info.imageVersion}'),
+                fit: BoxFit.cover,
+                cacheWidth: widget.info.isGame ? 1024 : 256,
+                errorBuilder: (context, error, stackTrace) => Stack(
+                  children: [
+                    Container(color: Theme.of(context).colorScheme.surface),
+                    Container(
+                      color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+                    ),
+                  ],
+                ),
+              )
+            : Stack(
+                children: [
+                  Container(color: Theme.of(context).colorScheme.surface),
+                  Container(
+                    color: widget.info.color1AsColor?.withValues(alpha: 0.4),
+                  ),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildHoloOverlay(String holoPath) {
-    return Positioned.fill(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final w = constraints.maxWidth;
-          final h = constraints.maxHeight;
-          return MouseRegion(
-            onHover: (event) {
-              setState(() {
-                _mouseDx = (event.localPosition.dx / w - 0.5) * 2;
-                _mouseDy = (event.localPosition.dy / h - 0.5) * 2;
-                _isHovering = true;
-              });
-            },
-            onExit: (_) {
-              setState(() => _isHovering = false);
-            },
-            child: AnimatedOpacity(
-              opacity: _isHovering ? 0.9 : 0.0,
-              duration: const Duration(milliseconds: 400),
-              child: ShaderMask(
-                shaderCallback: (bounds) {
-                  return LinearGradient(
-                    begin: Alignment(
-                      -1 + _mouseDx * 0.4,
-                      -1 + _mouseDy * 0.4,
-                    ),
-                    end: Alignment(
-                      1 + _mouseDx * 0.4,
-                      1 + _mouseDy * 0.4,
-                    ),
-                    colors: const [
-                      Color(0x00FFFFFF),
-                      Color(0x30FF006A),
-                      Color(0x60FFD700),
-                      Color(0x6000FFD5),
-                      Color(0x306A00FF),
-                      Color(0x00FFFFFF),
-                    ],
-                    stops: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.srcIn,
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.matrix(<double>[
-                    0, 0, 0, 0, 1,
-                    0, 0, 0, 0, 1,
-                    0, 0, 0, 0, 1,
-                    0.33, 0.33, 0.33, 0, 0,
-                  ]),
-                  child: Image.file(
-                    File(holoPath),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+  Widget _buildHoloOverlay(Offset progress) {
+    final tiltMagnitude =
+        (progress.distance / math.sqrt2).clamp(0.0, 1.0);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(9.r),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          IgnorePointer(
+            child: CustomPaint(
+              willChange: true,
+              painter: HolofoilPainter(progress: progress),
+            ),
+          ),
+          IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(9.r),
+                gradient: LinearGradient(
+                  begin: Alignment(
+                    -progress.dx * 0.65,
+                    -progress.dy * 0.65 - 1.0,
                   ),
+                  end: Alignment(
+                    progress.dx * 0.65,
+                    progress.dy * 0.65 + 1.0,
+                  ),
+                  colors: [
+                    Colors.white.withValues(
+                      alpha: (0.06 + tiltMagnitude * 0.10).clamp(0.0, 1.0),
+                    ),
+                    Colors.transparent,
+                    Colors.transparent,
+                    Colors.black.withValues(
+                      alpha: (0.04 + tiltMagnitude * 0.06).clamp(0.0, 1.0),
+                    ),
+                  ],
+                  stops: const [0.0, 0.38, 0.62, 1.0],
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
@@ -757,3 +753,150 @@ class ProgressLine extends StatelessWidget {
     );
   }
 }
+
+/// Paints a holographic foil effect driven by tilt [progress].
+class HolofoilPainter extends CustomPainter {
+  const HolofoilPainter({required this.progress});
+
+  final Offset progress;
+
+  double get tiltMagnitude =>
+      (progress.distance / math.sqrt2).clamp(0.0, 1.0);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    paintDominantHue(canvas, rect);
+    paintSpectralBands(canvas, rect);
+  }
+
+  void paintDominantHue(Canvas canvas, Rect rect) {
+    final tiltAngle = progress.distance < 0.001
+        ? 0.0
+        : math.atan2(progress.dy, progress.dx);
+    final primaryHue =
+        (tiltAngle / (2 * math.pi) * 360 + 180) % 360;
+    final opacity =
+        (0.03 + tiltMagnitude * 0.22).clamp(0.0, 1.0);
+    final hueCenterX =
+        rect.left + (0.5 + progress.dx * 0.58) * rect.width;
+    final hueCenterY =
+        rect.top + (0.5 + progress.dy * 0.58) * rect.height;
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            HSVColor.fromAHSV(opacity, primaryHue, 0.90, 1.0).toColor(),
+            HSVColor.fromAHSV(
+              opacity * 0.60,
+              (primaryHue + 50) % 360,
+              0.82,
+              1.0,
+            ).toColor(),
+            HSVColor.fromAHSV(
+              opacity * 0.22,
+              (primaryHue + 160) % 360,
+              0.70,
+              1.0,
+            ).toColor(),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.32, 0.64, 1.0],
+        ).createShader(
+          Rect.fromCircle(
+            center: Offset(hueCenterX, hueCenterY),
+            radius: rect.longestSide * 0.90,
+          ),
+        ),
+    );
+  }
+
+  void paintSpectralBands(Canvas canvas, Rect rect) {
+    final normDx = progress.distance < 0.001
+        ? 0.0
+        : (progress.dx / progress.distance).clamp(-1.0, 1.0);
+    final normDy = progress.distance < 0.001
+        ? 0.0
+        : (progress.dy / progress.distance).clamp(-1.0, 1.0);
+    final phase = progress.dx * 215.0 + progress.dy * 108.0;
+
+    const cyclesA = 3;
+    final opacityA = (0.04 + tiltMagnitude * 0.28).clamp(0.0, 1.0);
+    final alignmentXA = 1.00 + normDy * 0.07;
+    final alignmentYA = 0.50 - normDx * 0.05;
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment(-alignmentXA, -alignmentYA),
+          end: Alignment(alignmentXA, alignmentYA),
+          colors: organicColors(
+            n: cyclesA * 10,
+            cycles: cyclesA,
+            phase: phase,
+            maxOpacity: opacityA,
+            warpAmplitude: 0.060,
+            warpFrequency: 8.0,
+          ),
+        ).createShader(rect),
+    );
+
+    const cyclesB = 2;
+    final opacityB = (0.01 + tiltMagnitude * 0.12).clamp(0.0, 1.0);
+    final alignmentXB = 0.50 + normDy * 0.04;
+    final alignmentYB = 1.00 - normDx * 0.07;
+
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment(-alignmentXB, -alignmentYB),
+          end: Alignment(alignmentXB, alignmentYB),
+          colors: organicColors(
+            n: cyclesB * 8,
+            cycles: cyclesB,
+            phase: phase + 90.0,
+            maxOpacity: opacityB,
+            warpAmplitude: 0.090,
+            warpFrequency: 5.5,
+          ),
+        ).createShader(rect),
+    );
+  }
+
+  @override
+  bool shouldRepaint(HolofoilPainter old) => old.progress != progress;
+}
+
+List<Color> organicColors({
+  required int n,
+  required int cycles,
+  required double phase,
+  required double maxOpacity,
+  required double warpAmplitude,
+  required double warpFrequency,
+}) =>
+    List<Color>.generate(n + 1, (i) {
+      final tLinear = i / n;
+      final tWarped = (tLinear +
+              warpAmplitude * math.sin(tLinear * math.pi * warpFrequency))
+          .clamp(0.0, 1.0);
+      final hue = (phase + tWarped * 360.0 * cycles) % 360;
+      final saturation =
+          (0.60 + 0.28 * math.sin(tWarped * math.pi * cycles * 2))
+              .clamp(0.0, 1.0);
+      final envelope =
+          (math.sin(tLinear * math.pi) * 0.55 +
+                  math.sin(tLinear * math.pi * 2.0) * 0.27 +
+                  0.18)
+              .clamp(0.0, 1.0);
+      return HSVColor.fromAHSV(
+        (maxOpacity * envelope).clamp(0.0, 1.0),
+        hue,
+        saturation,
+        1.0,
+      ).toColor();
+    });
