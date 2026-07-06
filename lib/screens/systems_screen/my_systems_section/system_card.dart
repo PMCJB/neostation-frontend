@@ -8,9 +8,8 @@ import 'package:neostation/services/sfx_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_tilt/flutter_tilt.dart';
 import '../../../widgets/marquee_text.dart';
 import '../../../widgets/shaders/shader_gif_widget.dart';
 import '../../../widgets/shaders/music_card_shader_background.dart';
@@ -213,89 +212,57 @@ class _SystemCardState extends State<SystemCard> {
       padding: EdgeInsets.all(2.r),
       child: MouseRegion(
         cursor: SystemMouseCursors.basic,
-        child: Tilt(
-          tiltConfig: TiltConfig(
-            angle: 5,
-            leaveCurve: Curves.fastEaseInToSlowEaseOut,
-            leaveDuration: const Duration(milliseconds: 300),
-            enableGestureTouch: !Platform.isAndroid,
-            enableGestureSensors: Platform.isAndroid ? widget.isSelected : true,
-          ),
-          child: TiltAnimatedBuilder(
-            builder: (context, state, child) {
-              final data = state.animatedTiltData;
-              return Transform(
-                alignment: Alignment.center,
-                transform: data.transform,
-                filterQuality: FilterQuality.medium,
-                child: Stack(
-                  fit: StackFit.expand,
-                  clipBehavior: Clip.none,
-                  children: [
-                    child!,
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(14.r),
-                        child: _buildHoloOverlay(data.areaProgress),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(14.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 5.r,
-                    offset: Offset(2.0.r, 2.0.r),
-                  ),
-                ],
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(14.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 5.r,
+                offset: Offset(2.0.r, 2.0.r),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(9.r),
-                child: InkWell(
-                  focusNode: _focusNode,
-                  onTap: () {
-                    SfxService().playNavSound();
-                    widget.onTap?.call();
-                  },
-                  canRequestFocus: false,
-                  focusColor: Colors.transparent,
-                  hoverColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  splashColor: Colors.transparent,
-                  child: Padding(
-                    padding: EdgeInsets.all(6.r),
-                    child: widget.info.isGame
-                        ? Stack(
-                            key: _contentStackKey,
-                            children: [
-                              _buildSystemBackground(),
-                              _buildMainBodyContent(context, true),
-                              _buildRecentFooter(context),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              AspectRatio(
-                                aspectRatio: 1,
-                                child: Stack(
-                                  key: _contentStackKey,
-                                  children: [
-                                    _buildSystemBackground(),
-                                    _buildMainBodyContent(context, true),
-                                  ],
-                                ),
-                              ),
-                              _buildSystemFooter(context),
-                            ],
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(9.r),
+            child: InkWell(
+              focusNode: _focusNode,
+              onTap: () {
+                SfxService().playNavSound();
+                widget.onTap?.call();
+              },
+              canRequestFocus: false,
+              focusColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              splashColor: Colors.transparent,
+              child: Padding(
+                padding: EdgeInsets.all(6.r),
+                child: widget.info.isGame
+                    ? Stack(
+                        key: _contentStackKey,
+                        children: [
+                          _buildSystemBackground(),
+                          _buildMainBodyContent(context, true),
+                          _buildRecentFooter(context),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 1,
+                            child: Stack(
+                              key: _contentStackKey,
+                              children: [
+                                _buildSystemBackground(),
+                                _buildMainBodyContent(context, true),
+                              ],
+                            ),
                           ),
-                  ),
-                ),
+                          _buildSystemFooter(context),
+                        ],
+                      ),
               ),
             ),
           ),
@@ -408,55 +375,6 @@ class _SystemCardState extends State<SystemCard> {
       ),
     );
   }
-
-  Widget _buildHoloOverlay(Offset progress) {
-    final tiltMagnitude =
-        (progress.distance / math.sqrt2).clamp(0.0, 1.0);
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14.r),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          IgnorePointer(
-            child: CustomPaint(
-              willChange: true,
-              painter: HolofoilPainter(progress: progress),
-            ),
-          ),
-          IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14.r),
-                gradient: LinearGradient(
-                  begin: Alignment(
-                    -progress.dx * 0.65,
-                    -progress.dy * 0.65 - 1.0,
-                  ),
-                  end: Alignment(
-                    progress.dx * 0.65,
-                    progress.dy * 0.65 + 1.0,
-                  ),
-                  colors: [
-                    Colors.white.withValues(
-                      alpha: (0.06 + tiltMagnitude * 0.10).clamp(0.0, 1.0),
-                    ),
-                    Colors.transparent,
-                    Colors.transparent,
-                    Colors.black.withValues(
-                      alpha: (0.04 + tiltMagnitude * 0.06).clamp(0.0, 1.0),
-                    ),
-                  ],
-                  stops: const [0.0, 0.38, 0.62, 1.0],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Helper for localized play time formatting.
   String _formatPlayTimeLocalized(int seconds) {
     return GameUtils.formatPlayTime(
@@ -753,150 +671,3 @@ class ProgressLine extends StatelessWidget {
     );
   }
 }
-
-/// Paints a holographic foil effect driven by tilt [progress].
-class HolofoilPainter extends CustomPainter {
-  const HolofoilPainter({required this.progress});
-
-  final Offset progress;
-
-  double get tiltMagnitude =>
-      (progress.distance / math.sqrt2).clamp(0.0, 1.0);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    paintDominantHue(canvas, rect);
-    paintSpectralBands(canvas, rect);
-  }
-
-  void paintDominantHue(Canvas canvas, Rect rect) {
-    final tiltAngle = progress.distance < 0.001
-        ? 0.0
-        : math.atan2(progress.dy, progress.dx);
-    final primaryHue =
-        (tiltAngle / (2 * math.pi) * 360 + 180) % 360;
-    final opacity =
-        (0.03 + tiltMagnitude * 0.07).clamp(0.0, 1.0);
-    final hueCenterX =
-        rect.left + (0.5 + progress.dx * 0.58) * rect.width;
-    final hueCenterY =
-        rect.top + (0.5 + progress.dy * 0.58) * rect.height;
-
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            HSVColor.fromAHSV(opacity, primaryHue, 0.12, 1.0).toColor(),
-            HSVColor.fromAHSV(
-              opacity * 0.30,
-              (primaryHue + 50) % 360,
-              0.08,
-              1.0,
-            ).toColor(),
-            HSVColor.fromAHSV(
-              opacity * 0.12,
-              (primaryHue + 160) % 360,
-              0.06,
-              1.0,
-            ).toColor(),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.32, 0.64, 1.0],
-        ).createShader(
-          Rect.fromCircle(
-            center: Offset(hueCenterX, hueCenterY),
-            radius: rect.longestSide * 0.90,
-          ),
-        ),
-    );
-  }
-
-  void paintSpectralBands(Canvas canvas, Rect rect) {
-    final normDx = progress.distance < 0.001
-        ? 0.0
-        : (progress.dx / progress.distance).clamp(-1.0, 1.0);
-    final normDy = progress.distance < 0.001
-        ? 0.0
-        : (progress.dy / progress.distance).clamp(-1.0, 1.0);
-    final phase = progress.dx * 215.0 + progress.dy * 108.0;
-
-    const cyclesA = 3;
-    final opacityA = (0.02 + tiltMagnitude * 0.16).clamp(0.0, 1.0);
-    final alignmentXA = 1.00 + normDy * 0.07;
-    final alignmentYA = 0.50 - normDx * 0.05;
-
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment(-alignmentXA, -alignmentYA),
-          end: Alignment(alignmentXA, alignmentYA),
-          colors: organicColors(
-            n: cyclesA * 10,
-            cycles: cyclesA,
-            phase: phase,
-            maxOpacity: opacityA,
-            warpAmplitude: 0.060,
-            warpFrequency: 8.0,
-          ),
-        ).createShader(rect),
-    );
-
-    const cyclesB = 2;
-    final opacityB = (0.005 + tiltMagnitude * 0.07).clamp(0.0, 1.0);
-    final alignmentXB = 0.50 + normDy * 0.04;
-    final alignmentYB = 1.00 - normDx * 0.07;
-
-    canvas.drawRect(
-      rect,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment(-alignmentXB, -alignmentYB),
-          end: Alignment(alignmentXB, alignmentYB),
-          colors: organicColors(
-            n: cyclesB * 8,
-            cycles: cyclesB,
-            phase: phase + 90.0,
-            maxOpacity: opacityB,
-            warpAmplitude: 0.090,
-            warpFrequency: 5.5,
-          ),
-        ).createShader(rect),
-    );
-  }
-
-  @override
-  bool shouldRepaint(HolofoilPainter old) => old.progress != progress;
-}
-
-List<Color> organicColors({
-  required int n,
-  required int cycles,
-  required double phase,
-  required double maxOpacity,
-  required double warpAmplitude,
-  required double warpFrequency,
-}) =>
-    List<Color>.generate(n + 1, (i) {
-      final tLinear = i / n;
-      final tWarped = (tLinear +
-              warpAmplitude * math.sin(tLinear * math.pi * warpFrequency))
-          .clamp(0.0, 1.0);
-      final hue = (phase + tWarped * 360.0 * cycles) % 360;
-      final saturation =
-          (0.08 + 0.10 * math.sin(tWarped * math.pi * cycles * 2))
-              .clamp(0.0, 1.0);
-      final envelope =
-          (math.sin(tLinear * math.pi) * 0.55 +
-                  math.sin(tLinear * math.pi * 2.0) * 0.27 +
-                  0.18)
-              .clamp(0.0, 1.0);
-      return HSVColor.fromAHSV(
-        (maxOpacity * envelope).clamp(0.0, 1.0),
-        hue,
-        saturation,
-        1.0,
-      ).toColor();
-    });
