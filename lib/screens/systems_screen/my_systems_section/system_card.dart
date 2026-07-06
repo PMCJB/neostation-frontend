@@ -218,6 +218,8 @@ class _SystemCardState extends State<SystemCard> {
             angle: 5,
             leaveCurve: Curves.fastEaseInToSlowEaseOut,
             leaveDuration: const Duration(milliseconds: 300),
+            enableGestureTouch: !Platform.isAndroid,
+            enableGestureSensors: Platform.isAndroid ? widget.isSelected : true,
           ),
           child: TiltAnimatedBuilder(
             builder: (context, state, child) {
@@ -235,23 +237,6 @@ class _SystemCardState extends State<SystemCard> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(14.r),
                         child: _buildHoloOverlay(data.areaProgress),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: AnimatedOpacity(
-                        opacity: widget.isSelected ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 300),
-                        child: IgnorePointer(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: Theme.of(context).colorScheme.secondary,
-                                width: 4.r,
-                              ),
-                              borderRadius: BorderRadius.circular(14.r),
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                   ],

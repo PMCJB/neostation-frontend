@@ -1689,6 +1689,8 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
         final List<Widget> cardWidgets = [];
         final Set<int> placedIndices = {};
 
+        double? selLeft, selTop, selWidth, selHeight;
+
         for (int r = 0; r < grid.length; r++) {
           for (int c = 0; c < grid[r].length; c++) {
             final cardIdx = grid[r][c];
@@ -1702,6 +1704,13 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             final top = r * (rowHeight + spY);
             final width = spanW * colWidth + (spanW - 1) * spX;
             final height = spanH * rowHeight + (spanH - 1) * spY;
+
+            if (cardIdx == widget.selectedIndex) {
+              selLeft = left;
+              selTop = top;
+              selWidth = width;
+              selHeight = height;
+            }
 
             cardWidgets.add(
               Positioned(
@@ -1738,6 +1747,39 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
           }
         }
 
+        final focusIndicator = (selLeft != null && selTop != null && selWidth != null && selHeight != null)
+            ? AnimatedPositioned(
+                key: const ValueKey('focus_indicator'),
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.fastOutSlowIn,
+                left: selLeft + 1.r,
+                top: selTop + 1.r,
+                width: selWidth - 2.r,
+                height: selHeight - 2.r,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14.r),
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.28),
+                          Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 0.35, 1.0],
+                      ),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.55),
+                        width: 2.r,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : const SizedBox.shrink();
+
         return SingleChildScrollView(
           controller: _scrollController,
           clipBehavior: Clip.none,
@@ -1750,6 +1792,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
               clipBehavior: Clip.none,
               children: [
                 ...cardWidgets,
+                focusIndicator,
               ],
             ),
           ),
