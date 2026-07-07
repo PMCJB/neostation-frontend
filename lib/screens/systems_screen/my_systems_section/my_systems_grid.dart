@@ -656,28 +656,15 @@ class MySystems extends StatelessWidget {
     if (secondaryState == null) return;
     final folder = system.primaryFolderName ?? system.folderName ?? 'all';
 
-    // UI Asset Mapping logic — resolve the same way as the hover path
-    // (_updateSecondaryScreenName): prefer a custom logo, then the active
-    // theme's logo, then the bundled asset. Resolving the theme asset here
-    // (instead of always falling back to the bundled asset) is what keeps the
-    // correct system art on the secondary display when returning from a
-    // system, rather than reverting to the default logo until the user hovers
-    // another system. See NeoAssetsProvider (returns null when no theme).
     final neoAssets = Provider.of<NeoAssetsProvider>(context, listen: false);
 
     final String? customLogo = system.customLogoPath?.isNotEmpty == true
         ? system.customLogoPath
         : null;
-    final String? themeLogo = customLogo == null
-        ? neoAssets.getLogoForSystemSync(folder)
-        : null;
     final String? systemLogo = system.isGame
         ? system.customWheelImage
-        : (customLogo ??
-              themeLogo ??
-              'assets/images/systems/logos/$folder.webp');
-    final bool isLogoAsset =
-        !system.isGame && customLogo == null && themeLogo == null;
+        : (customLogo ?? 'assets/images/logos/$folder.webp');
+    final bool isLogoAsset = !system.isGame && customLogo == null;
 
     final String? customBg = system.customBackgroundPath;
     final bool hasCustomBg = customBg != null && customBg.isNotEmpty;
@@ -810,7 +797,6 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
   SecondaryDisplayState? _secondaryDisplayState;
 
   final Map<String, String?> _themeBackgrounds = {};
-  final Map<String, String?> _themeLogos = {};
   String _lastThemeFolder = '';
 
   List<List<int>>? _cachedVirtualGrid;
@@ -882,10 +868,9 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
     _lastThemeFolder = themeFolder;
 
     if (themeFolder.isEmpty) {
-      if (_themeBackgrounds.isNotEmpty || _themeLogos.isNotEmpty) {
+      if (_themeBackgrounds.isNotEmpty) {
         setState(() {
           _themeBackgrounds.clear();
-          _themeLogos.clear();
         });
       }
       return;
@@ -902,20 +887,15 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
         .toSet();
 
     final Map<String, String?> newBgs = {};
-    final Map<String, String?> newLogos = {};
 
     for (final folder in folderNames) {
       newBgs[folder] = neoAssets.getBackgroundForSystemSync(folder);
-      newLogos[folder] = neoAssets.getLogoForSystemSync(folder);
     }
 
     setState(() {
       _themeBackgrounds
         ..clear()
         ..addAll(newBgs);
-      _themeLogos
-        ..clear()
-        ..addAll(newLogos);
     });
   }
 
@@ -962,15 +942,6 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
           if (file.existsSync()) {
             precacheImage(ResizeImage(FileImage(file), width: 512), context);
           }
-        } else {
-          final folderName = sys.primaryFolderName ?? sys.folderName ?? '';
-          final themeLogo = _themeLogos[folderName];
-          if (themeLogo != null && themeLogo.isNotEmpty) {
-            final file = File(themeLogo);
-            if (file.existsSync()) {
-              precacheImage(ResizeImage(FileImage(file), width: 512), context);
-            }
-          }
         }
       }
     }
@@ -994,14 +965,10 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
     final String? customLogo = info.customLogoPath?.isNotEmpty == true
         ? info.customLogoPath
         : null;
-    final String? themeLogo = customLogo == null ? _themeLogos[folder] : null;
     final String? systemLogo = info.isGame
         ? info.customWheelImage
-        : (customLogo ??
-              themeLogo ??
-              'assets/images/systems/logos/$folder.webp');
-    final bool isLogoAsset =
-        !info.isGame && customLogo == null && themeLogo == null;
+        : (customLogo ?? 'assets/images/logos/$folder.webp');
+    final bool isLogoAsset = !info.isGame && customLogo == null;
 
     final String? customBg = info.customBackgroundPath;
     final bool hasCustomBg = customBg != null && customBg.isNotEmpty;

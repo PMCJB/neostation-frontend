@@ -54,7 +54,6 @@ class _SystemCardState extends State<SystemCard> {
   String? _lastActiveTrackPath;
 
   String? _themeBackgroundPath;
-  String? _themeLogoPath;
   String _lastThemeFolder = '';
 
   /// Cached wheel file and existence check — computed once, not on every build.
@@ -101,7 +100,6 @@ class _SystemCardState extends State<SystemCard> {
         oldWidget.info.primaryFolderName != widget.info.primaryFolderName;
     if (folderChanged) {
       _themeBackgroundPath = null;
-      _themeLogoPath = null;
       _lastThemeFolder = '';
     }
     if (oldWidget.info.customWheelImage != widget.info.customWheelImage ||
@@ -198,14 +196,10 @@ class _SystemCardState extends State<SystemCard> {
       final folderName =
           widget.info.primaryFolderName ?? widget.info.folderName ?? '';
 
-      // Asset hierarchy: Custom > Theme-specific > Null (fallback to color).
       _themeBackgroundPath =
           widget.info.customBackgroundPath?.isNotEmpty == true
           ? null
           : neoAssets.getBackgroundForSystemSync(folderName);
-      _themeLogoPath = widget.info.customLogoPath?.isNotEmpty == true
-          ? null
-          : neoAssets.getLogoForSystemSync(folderName);
     }
 
     return Padding(
@@ -425,28 +419,6 @@ class _SystemCardState extends State<SystemCard> {
       ));
     }
 
-    final themeLogoPath = _themeLogoPath;
-    if (themeLogoPath != null && themeLogoPath.isNotEmpty) {
-      return buildLogo(Image.file(
-        File(themeLogoPath),
-        key: ValueKey(themeLogoPath),
-        height: height,
-        cacheWidth: 256,
-        fit: BoxFit.contain,
-        errorBuilder: (context, error, stackTrace) => Image.asset(
-          assetLogoPath,
-          height: height,
-          cacheWidth: 256,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error2, stackTrace2) => SystemLogoFallback(
-            title: widget.info.title,
-            shortName: widget.info.shortName,
-            height: 24.r,
-          ),
-        ),
-      ));
-    }
-
     return buildLogo(Image.asset(
       assetLogoPath,
       height: height,
@@ -624,7 +596,7 @@ class _SystemCardState extends State<SystemCard> {
               ? widget.info.folderName!
               : 'all');
     final assetLogoPath =
-        'assets/images/systems/logos/$resolvedLogoFolder.webp';
+        'assets/images/logos/$resolvedLogoFolder.webp';
 
     return Container(
       height: 32.r,
