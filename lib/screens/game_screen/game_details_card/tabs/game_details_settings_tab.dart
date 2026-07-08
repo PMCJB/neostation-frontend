@@ -271,7 +271,8 @@ class GameDetailsSettingsTabState extends State<GameDetailsSettingsTab> {
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _DeleteGameDialog(gameName: _game.name, romName: _game.romname),
+      builder: (ctx) =>
+          _DeleteGameDialog(gameName: _game.name, romName: _game.romname),
     );
     if (confirmed == true && mounted) {
       _deleteGame();

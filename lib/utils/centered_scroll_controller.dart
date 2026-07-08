@@ -220,10 +220,7 @@ class CenteredScrollController with WindowListener, WidgetsBindingObserver {
           itemCenterPosition - (viewportHeight * centerPosition);
 
       return targetOffset
-          .clamp(
-            0.0,
-            scrollController.position.maxScrollExtent,
-          )
+          .clamp(0.0, scrollController.position.maxScrollExtent)
           .toDouble();
     } catch (e) {
       _log.e('CenteredScrollController: Error calculating target offset: $e');
