@@ -136,7 +136,7 @@ class GamepadControl extends StatelessWidget {
     // Default to a subtle semi-transparent style when no background color is provided.
     final Color buttonBg =
         backgroundColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.1);
-    final Color contentColor = theme.colorScheme.onPrimary;
+    final Color contentColor = textColor ?? theme.colorScheme.onPrimary;
 
     return Material(
       color: Colors.transparent,
@@ -154,7 +154,7 @@ class GamepadControl extends StatelessWidget {
             borderRadius: BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
+                color: theme.colorScheme.shadow.withValues(alpha: 0.3),
                 blurRadius: 2.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),
