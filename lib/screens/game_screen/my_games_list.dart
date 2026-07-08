@@ -2937,6 +2937,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
     });
 
     if (_games.isNotEmpty && _selectedGame != null) {
+      // The list view's didUpdateWidget already recenters the new selection
+      // when [_selectedGameIndex] changes, so an explicit scroll here is
+      // redundant and can cause conflicting animations.
       _updateSecondaryDisplay(_selectedGame!);
       _updateBackground(_selectedGame!);
       _startVideoTimer();
@@ -3042,6 +3045,12 @@ class _GameListViewState extends State<GameListView>
       duration: duration,
       curve: curve,
     );
+  }
+
+  /// Immediately jumps to center on the item at [index] without animation.
+  /// Unlike [scrollToIndex], this executes synchronously.
+  void jumpToIndex(int index) {
+    _centeredScrollController.jumpToIndex(index);
   }
 
   @override
@@ -3162,6 +3171,7 @@ class _GameListViewState extends State<GameListView>
     final theme = Theme.of(context);
     final itemHeight = _itemHeightBase.r;
     final totalItemHeight = itemHeight;
+    _centeredScrollController.setItemExtent(totalItemHeight, paddingTop: 2.r);
 
     return Column(
       children: [
