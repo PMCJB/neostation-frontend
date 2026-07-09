@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -49,10 +51,23 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
     );
   }
 
+  /// Scaled [BorderRadius] tokens (uses flutter_screenutil).
   BorderRadius get boxesExternal => BorderRadius.circular(_boxesExternal.r);
   BorderRadius get boxesInternal => BorderRadius.circular(_boxesInternal.r);
   BorderRadius get fieldsExternal => BorderRadius.circular(_fieldsExternal.r);
   BorderRadius get fieldsInternal => BorderRadius.circular(_fieldsInternal.r);
+
+  /// Raw design-time radius values (before flutter_screenutil scaling).
+  double get boxesExternalRaw => _boxesExternal;
+  double get boxesInternalRaw => _boxesInternal;
+  double get fieldsExternalRaw => _fieldsExternal;
+  double get fieldsInternalRaw => _fieldsInternal;
+
+  /// Scaled raw radius values, for widgets that expect a `double` radius.
+  double get boxesExternalRadius => _boxesExternal.r;
+  double get boxesInternalRadius => _boxesInternal.r;
+  double get fieldsExternalRadius => _fieldsExternal.r;
+  double get fieldsInternalRadius => _fieldsInternal.r;
 
   static CornerRadii of(BuildContext context) {
     final radii = Theme.of(context).extension<CornerRadii>();

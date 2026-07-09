@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import '../../../themes/corner_radii.dart';
 import '../../../widgets/marquee_text.dart';
 import '../../../widgets/shaders/shader_gif_widget.dart';
 import '../../../widgets/shaders/music_card_shader_background.dart';
@@ -209,7 +210,8 @@ class _SystemCardState extends State<SystemCard> {
         child: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(14.r),
+            borderRadius: Theme.of(context).extension<CornerRadii>()?.boxesExternal ??
+                BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
@@ -219,7 +221,8 @@ class _SystemCardState extends State<SystemCard> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(9.r),
+            borderRadius: Theme.of(context).extension<CornerRadii>()?.boxesInternal ??
+                BorderRadius.circular(9.r),
             child: InkWell(
               focusNode: _focusNode,
               onTap: () {
