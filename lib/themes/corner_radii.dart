@@ -3,43 +3,56 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Corner radius tokens for NeoStation themes.
 ///
+/// The raw radius values are stored as private doubles and converted to
+/// [BorderRadius] through public getters using `flutter_screenutil`, so they
+/// are only resolved when the widget tree is built (after ScreenUtil has been
+/// initialized).
+///
 /// - [boxesExternal]: outer corners for cards, dialogs, alerts, etc.
 /// - [boxesInternal]: inner corners for cards, dialogs, alerts, etc.
 /// - [fieldsExternal]: outer corners for buttons, inputs, selects, tabs, etc.
 /// - [fieldsInternal]: inner corners for buttons, inputs, selects, tabs, etc.
 @immutable
 class CornerRadii extends ThemeExtension<CornerRadii> {
-  final BorderRadius boxesExternal;
-  final BorderRadius boxesInternal;
-  final BorderRadius fieldsExternal;
-  final BorderRadius fieldsInternal;
+  final double _boxesExternal;
+  final double _boxesInternal;
+  final double _fieldsExternal;
+  final double _fieldsInternal;
 
   const CornerRadii({
-    required this.boxesExternal,
-    required this.boxesInternal,
-    required this.fieldsExternal,
-    required this.fieldsInternal,
-  });
+    required double boxesExternal,
+    required double boxesInternal,
+    required double fieldsExternal,
+    required double fieldsInternal,
+  })  : _boxesExternal = boxesExternal,
+        _boxesInternal = boxesInternal,
+        _fieldsExternal = fieldsExternal,
+        _fieldsInternal = fieldsInternal;
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.standard() {
-    return CornerRadii(
-      boxesExternal: BorderRadius.circular(14.r),
-      boxesInternal: BorderRadius.circular(12.r),
-      fieldsExternal: BorderRadius.circular(14.r),
-      fieldsInternal: BorderRadius.circular(12.r),
+    return const CornerRadii(
+      boxesExternal: 14,
+      boxesInternal: 12,
+      fieldsExternal: 14,
+      fieldsInternal: 12,
     );
   }
 
   /// Sharp corners (no radius). Useful for themes like Cyberpunk.
   factory CornerRadii.zero() {
     return const CornerRadii(
-      boxesExternal: BorderRadius.zero,
-      boxesInternal: BorderRadius.zero,
-      fieldsExternal: BorderRadius.zero,
-      fieldsInternal: BorderRadius.zero,
+      boxesExternal: 0,
+      boxesInternal: 0,
+      fieldsExternal: 0,
+      fieldsInternal: 0,
     );
   }
+
+  BorderRadius get boxesExternal => BorderRadius.circular(_boxesExternal.r);
+  BorderRadius get boxesInternal => BorderRadius.circular(_boxesInternal.r);
+  BorderRadius get fieldsExternal => BorderRadius.circular(_fieldsExternal.r);
+  BorderRadius get fieldsInternal => BorderRadius.circular(_fieldsInternal.r);
 
   static CornerRadii of(BuildContext context) {
     final radii = Theme.of(context).extension<CornerRadii>();
@@ -49,16 +62,16 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
 
   @override
   CornerRadii copyWith({
-    BorderRadius? boxesExternal,
-    BorderRadius? boxesInternal,
-    BorderRadius? fieldsExternal,
-    BorderRadius? fieldsInternal,
+    double? boxesExternal,
+    double? boxesInternal,
+    double? fieldsExternal,
+    double? fieldsInternal,
   }) {
     return CornerRadii(
-      boxesExternal: boxesExternal ?? this.boxesExternal,
-      boxesInternal: boxesInternal ?? this.boxesInternal,
-      fieldsExternal: fieldsExternal ?? this.fieldsExternal,
-      fieldsInternal: fieldsInternal ?? this.fieldsInternal,
+      boxesExternal: boxesExternal ?? _boxesExternal,
+      boxesInternal: boxesInternal ?? _boxesInternal,
+      fieldsExternal: fieldsExternal ?? _fieldsExternal,
+      fieldsInternal: fieldsInternal ?? _fieldsInternal,
     );
   }
 
@@ -66,10 +79,10 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
   CornerRadii lerp(CornerRadii? other, double t) {
     if (other == null) return this;
     return CornerRadii(
-      boxesExternal: BorderRadius.lerp(boxesExternal, other.boxesExternal, t)!,
-      boxesInternal: BorderRadius.lerp(boxesInternal, other.boxesInternal, t)!,
-      fieldsExternal: BorderRadius.lerp(fieldsExternal, other.fieldsExternal, t)!,
-      fieldsInternal: BorderRadius.lerp(fieldsInternal, other.fieldsInternal, t)!,
+      boxesExternal: lerpDouble(_boxesExternal, other._boxesExternal, t)!,
+      boxesInternal: lerpDouble(_boxesInternal, other._boxesInternal, t)!,
+      fieldsExternal: lerpDouble(_fieldsExternal, other._fieldsExternal, t)!,
+      fieldsInternal: lerpDouble(_fieldsInternal, other._fieldsInternal, t)!,
     );
   }
 }
