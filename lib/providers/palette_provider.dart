@@ -125,6 +125,16 @@ class PaletteProvider extends ChangeNotifier with WidgetsBindingObserver {
         _currentPalette = availablePalettes[savedPaletteName]!;
         _currentPaletteName = savedPaletteName;
         notifyListeners();
+      } else {
+        // The previously selected palette is no longer available (e.g. removed
+        // in an update). Fall back to the system palette and persist it.
+        _log.w(
+          'Saved palette "$savedPaletteName" is no longer available, falling back to system.',
+        );
+        _currentPaletteName = 'system';
+        _updateSystemPalette();
+        await ConfigRepository.updatePaletteName('system');
+        notifyListeners();
       }
     } catch (e) {
       _log.e('Error loading saved palette: $e');
