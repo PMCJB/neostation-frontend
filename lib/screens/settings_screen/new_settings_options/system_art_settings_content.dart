@@ -16,12 +16,12 @@ import 'settings_title.dart';
 
 final _log = LoggerService.instance;
 
-class ThemesSettingsContent extends StatefulWidget {
+class SystemArtSettingsContent extends StatefulWidget {
   final bool isContentFocused;
   final int selectedContentIndex;
   final ValueChanged<int>? onSelectionChanged;
 
-  const ThemesSettingsContent({
+  const SystemArtSettingsContent({
     super.key,
     required this.isContentFocused,
     required this.selectedContentIndex,
@@ -29,10 +29,10 @@ class ThemesSettingsContent extends StatefulWidget {
   });
 
   @override
-  State<ThemesSettingsContent> createState() => ThemesSettingsContentState();
+  State<SystemArtSettingsContent> createState() => SystemArtSettingsContentState();
 }
 
-class ThemesSettingsContentState extends State<ThemesSettingsContent> {
+class SystemArtSettingsContentState extends State<SystemArtSettingsContent> {
   final ScrollController _scrollController = ScrollController();
   final List<GlobalKey> _itemKeys = [];
 

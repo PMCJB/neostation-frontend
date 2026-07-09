@@ -12,8 +12,8 @@ import 'new_settings_options/systems_settings_content.dart';
 import 'new_settings_options/launcher_settings_content.dart';
 import 'new_settings_options/about_settings_content.dart';
 import 'new_settings_options/exit_settings_content.dart';
-import 'new_settings_options/palette_settings_content.dart';
 import 'new_settings_options/themes_settings_content.dart';
+import 'new_settings_options/system_art_settings_content.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/services/logger_service.dart';
@@ -55,10 +55,10 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
       GlobalKey<GeneralSettingsContentState>();
   final GlobalKey<SecondarySettingsContentState> _secondarySettingsKey =
       GlobalKey<SecondarySettingsContentState>();
-  final GlobalKey<PaletteSettingsContentState> _paletteSettingsKey =
-      GlobalKey<PaletteSettingsContentState>();
   final GlobalKey<ThemesSettingsContentState> _themesSettingsKey =
       GlobalKey<ThemesSettingsContentState>();
+  final GlobalKey<SystemArtSettingsContentState> _systemArtSettingsKey =
+      GlobalKey<SystemArtSettingsContentState>();
   final GlobalKey<DirectoriesSettingsContentState> _directoriesSettingsKey =
       GlobalKey<DirectoriesSettingsContentState>();
   final GlobalKey<SystemsSettingsContentState> _systemsSettingsKey =
@@ -201,11 +201,11 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     // Content-Specific Navigation Overrides.
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
     if (selectedKey == AppLocale.themes) {
-      _paletteSettingsKey.currentState?.navigateUp();
+      _themesSettingsKey.currentState?.navigateUp();
       return;
     }
     if (selectedKey == AppLocale.systemArt) {
-      _themesSettingsKey.currentState?.navigateUp();
+      _systemArtSettingsKey.currentState?.navigateUp();
       return;
     }
 
@@ -247,11 +247,11 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
 
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
     if (selectedKey == AppLocale.themes) {
-      _paletteSettingsKey.currentState?.navigateDown();
+      _themesSettingsKey.currentState?.navigateDown();
       return;
     }
     if (selectedKey == AppLocale.systemArt) {
-      _themesSettingsKey.currentState?.navigateDown();
+      _systemArtSettingsKey.currentState?.navigateDown();
       return;
     }
 
@@ -271,7 +271,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
     if (selectedKey == AppLocale.themes) {
       final returnToMenu =
-          _paletteSettingsKey.currentState?.navigateLeft() ?? true;
+          _themesSettingsKey.currentState?.navigateLeft() ?? true;
       if (returnToMenu) {
         setState(() {
           _focusOnMenu = true;
@@ -280,7 +280,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
       }
     } else if (selectedKey == AppLocale.systemArt) {
       final returnToMenu =
-          _themesSettingsKey.currentState?.navigateLeft() ?? true;
+          _systemArtSettingsKey.currentState?.navigateLeft() ?? true;
       if (returnToMenu) {
         setState(() {
           _focusOnMenu = true;
@@ -308,9 +308,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
 
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
     if (selectedKey == AppLocale.themes) {
-      _paletteSettingsKey.currentState?.navigateRight();
-    } else if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.navigateRight();
+    } else if (selectedKey == AppLocale.systemArt) {
+      _systemArtSettingsKey.currentState?.navigateRight();
     }
   }
 
@@ -331,9 +331,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     } else if (selectedKey == AppLocale.secondaryDisplay) {
       return _secondarySettingsKey.currentState?.getItemCount() ?? 0;
     } else if (selectedKey == AppLocale.themes) {
-      return _paletteSettingsKey.currentState?.getItemCount(context) ?? 0;
+      return _themesSettingsKey.currentState?.getItemCount(context) ?? 0;
     } else if (selectedKey == AppLocale.systemArt) {
-      return _themesSettingsKey.currentState?.getItemCount() ?? 0;
+      return _systemArtSettingsKey.currentState?.getItemCount() ?? 0;
     } else if (selectedKey == AppLocale.directories) {
       return _directoriesSettingsKey.currentState?.getItemCount() ?? 0;
     } else if (selectedKey == AppLocale.systemsSettings) {
@@ -354,9 +354,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     if (selectedKey == AppLocale.general) {
       _generalSettingsKey.currentState?.selectItem(_selectedContentIndex);
     } else if (selectedKey == AppLocale.themes) {
-      _paletteSettingsKey.currentState?.selectItem(_selectedContentIndex);
-    } else if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.selectItem(_selectedContentIndex);
+    } else if (selectedKey == AppLocale.systemArt) {
+      _systemArtSettingsKey.currentState?.selectItem(_selectedContentIndex);
     } else if (selectedKey == AppLocale.directories) {
       _directoriesSettingsKey.currentState?.selectItem(_selectedContentIndex);
     } else if (selectedKey == AppLocale.secondaryDisplay) {
@@ -549,8 +549,8 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
         selectedContentIndex: _selectedContentIndex,
       );
     } else if (selectedKey == AppLocale.themes) {
-      return PaletteSettingsContent(
-        key: _paletteSettingsKey,
+      return ThemesSettingsContent(
+        key: _themesSettingsKey,
         isContentFocused: !_focusOnMenu,
         selectedContentIndex: _selectedContentIndex,
         onSelectionChanged: (newIndex) {
@@ -560,8 +560,8 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
         },
       );
     } else if (selectedKey == AppLocale.systemArt) {
-      return ThemesSettingsContent(
-        key: _themesSettingsKey,
+      return SystemArtSettingsContent(
+        key: _systemArtSettingsKey,
         isContentFocused: !_focusOnMenu,
         selectedContentIndex: _selectedContentIndex,
         onSelectionChanged: (newIndex) {

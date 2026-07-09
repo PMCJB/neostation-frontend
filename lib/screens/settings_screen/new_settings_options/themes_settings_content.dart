@@ -14,12 +14,12 @@ import 'settings_title.dart';
 ///
 /// Implements a responsive grid layout with hardware-mapped gamepad navigation
 /// (Up/Down/Left/Right) and real-time palette application via PaletteProvider.
-class PaletteSettingsContent extends StatefulWidget {
+class ThemesSettingsContent extends StatefulWidget {
   final bool isContentFocused;
   final int selectedContentIndex;
   final ValueChanged<int>? onSelectionChanged;
 
-  const PaletteSettingsContent({
+  const ThemesSettingsContent({
     super.key,
     required this.isContentFocused,
     required this.selectedContentIndex,
@@ -27,10 +27,10 @@ class PaletteSettingsContent extends StatefulWidget {
   });
 
   @override
-  State<PaletteSettingsContent> createState() => PaletteSettingsContentState();
+  State<ThemesSettingsContent> createState() => ThemesSettingsContentState();
 }
 
-class PaletteSettingsContentState extends State<PaletteSettingsContent> {
+class ThemesSettingsContentState extends State<ThemesSettingsContent> {
   final ScrollController _scrollController = ScrollController();
 
   /// Keys used for calculating viewport alignment during grid-based navigation.
