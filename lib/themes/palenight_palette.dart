@@ -49,7 +49,7 @@ final ThemeData palenightPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.standard()],
+  extensions: [CornerRadii.m()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

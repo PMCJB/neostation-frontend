@@ -54,7 +54,7 @@ final ThemeData oledPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.standard()],
+  extensions: [CornerRadii.xs()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

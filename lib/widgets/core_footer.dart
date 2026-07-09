@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:neostation/l10n/app_locale.dart';
 
+import '../themes/corner_radii.dart';
+
 /// Base footer class that eliminates duplicated code between games_footer and systems_footer.
 abstract class CoreFooter extends StatefulWidget {
   const CoreFooter({super.key});
@@ -145,13 +147,15 @@ class GamepadControl extends StatelessWidget {
         canRequestFocus: false,
         splashColor: contentColor.withValues(alpha: 0.2),
         highlightColor: Colors.transparent,
-        borderRadius: BorderRadius.circular(6.r),
+        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+            BorderRadius.circular(6.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 4.r),
           decoration: BoxDecoration(
             color: gradient == null ? buttonBg : null,
             gradient: gradient,
-            borderRadius: BorderRadius.circular(6.r),
+            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
                 color: theme.colorScheme.shadow.withValues(alpha: 0.3),

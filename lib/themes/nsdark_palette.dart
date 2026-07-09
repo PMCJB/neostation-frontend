@@ -54,7 +54,7 @@ final ThemeData nsdarkPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.standard()],
+  extensions: [CornerRadii.sm()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

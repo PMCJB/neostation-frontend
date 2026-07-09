@@ -10,83 +10,94 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// are only resolved when the widget tree is built (after ScreenUtil has been
 /// initialized).
 ///
-/// - [boxesExternal]: outer corners for cards, dialogs, alerts, etc.
-/// - [boxesInternal]: inner corners for cards, dialogs, alerts, etc.
-/// - [fieldsExternal]: outer corners for buttons, inputs, selects, tabs, etc.
-/// - [fieldsInternal]: inner corners for buttons, inputs, selects, tabs, etc.
+/// - [radiusExternal]:
+/// - [radiusInternal]:
 @immutable
 class CornerRadii extends ThemeExtension<CornerRadii> {
-  final double _boxesExternal;
-  final double _boxesInternal;
-  final double _fieldsExternal;
-  final double _fieldsInternal;
+  final double _radiusExternal;
+  final double _radiusInternal;
 
   const CornerRadii({
-    required double boxesExternal,
-    required double boxesInternal,
-    required double fieldsExternal,
-    required double fieldsInternal,
-  })  : _boxesExternal = boxesExternal,
-        _boxesInternal = boxesInternal,
-        _fieldsExternal = fieldsExternal,
-        _fieldsInternal = fieldsInternal;
-
-  /// Default radii used by every theme for now. Override per theme later.
-  factory CornerRadii.standard() {
-    return const CornerRadii(
-      boxesExternal: 14,
-      boxesInternal: 12,
-      fieldsExternal: 14,
-      fieldsInternal: 12,
-    );
-  }
+    required double radiusExternal,
+    required double radiusInternal,
+  })  : _radiusExternal = radiusExternal,
+        _radiusInternal = radiusInternal;
+  
 
   /// Sharp corners (no radius). Useful for themes like Cyberpunk.
   factory CornerRadii.zero() {
     return const CornerRadii(
-      boxesExternal: 0,
-      boxesInternal: 0,
-      fieldsExternal: 0,
-      fieldsInternal: 0,
+      radiusExternal: 0,
+      radiusInternal: 0,
+    );
+  }
+
+    /// Default radii used by every theme for now. Override per theme later.
+  factory CornerRadii.xs() {
+    return const CornerRadii(
+      radiusExternal: 3,
+      radiusInternal: 2,
+    );
+  }
+
+      /// Default radii used by every theme for now. Override per theme later.
+  factory CornerRadii.sm() {
+    return const CornerRadii(
+      radiusExternal: 8,
+      radiusInternal: 5,
+    );
+  }
+
+  /// Default radii used by every theme for now. Override per theme later.
+  factory CornerRadii.m() {
+    return const CornerRadii(
+      radiusExternal: 14,
+      radiusInternal: 9,
+    );
+  }
+
+  /// Default radii used by every theme for now. Override per theme later.
+  factory CornerRadii.l() {
+    return const CornerRadii(
+      radiusExternal: 18,
+      radiusInternal: 12,
+    );
+  }
+
+  /// Default radii used by every theme for now. Override per theme later.
+  factory CornerRadii.xl() {
+    return const CornerRadii(
+      radiusExternal: 24,
+      radiusInternal: 18,
     );
   }
 
   /// Scaled [BorderRadius] tokens (uses flutter_screenutil).
-  BorderRadius get boxesExternal => BorderRadius.circular(_boxesExternal.r);
-  BorderRadius get boxesInternal => BorderRadius.circular(_boxesInternal.r);
-  BorderRadius get fieldsExternal => BorderRadius.circular(_fieldsExternal.r);
-  BorderRadius get fieldsInternal => BorderRadius.circular(_fieldsInternal.r);
+  BorderRadius get radiusExternal => BorderRadius.circular(_radiusExternal.r);
+  BorderRadius get radiusInternal => BorderRadius.circular(_radiusInternal.r);
 
   /// Raw design-time radius values (before flutter_screenutil scaling).
-  double get boxesExternalRaw => _boxesExternal;
-  double get boxesInternalRaw => _boxesInternal;
-  double get fieldsExternalRaw => _fieldsExternal;
-  double get fieldsInternalRaw => _fieldsInternal;
+  double get radiusExternalRaw => _radiusExternal;
+  double get radiusInternalRaw => _radiusInternal;
 
   /// Scaled raw radius values, for widgets that expect a `double` radius.
-  double get boxesExternalRadius => _boxesExternal.r;
-  double get boxesInternalRadius => _boxesInternal.r;
-  double get fieldsExternalRadius => _fieldsExternal.r;
-  double get fieldsInternalRadius => _fieldsInternal.r;
+  double get radiusExternalRadius => _radiusExternal.r;
+  double get radiusInternalRadius => _radiusInternal.r;
 
   static CornerRadii of(BuildContext context) {
     final radii = Theme.of(context).extension<CornerRadii>();
     assert(radii != null, 'CornerRadii extension is missing from the theme');
-    return radii ?? CornerRadii.standard();
+    return radii ?? CornerRadii.m();
   }
 
   @override
   CornerRadii copyWith({
-    double? boxesExternal,
-    double? boxesInternal,
-    double? fieldsExternal,
-    double? fieldsInternal,
+    double? radiusExternal,
+    double? radiusInternal,
   }) {
     return CornerRadii(
-      boxesExternal: boxesExternal ?? _boxesExternal,
-      boxesInternal: boxesInternal ?? _boxesInternal,
-      fieldsExternal: fieldsExternal ?? _fieldsExternal,
-      fieldsInternal: fieldsInternal ?? _fieldsInternal,
+      radiusExternal: radiusExternal ?? _radiusExternal,
+      radiusInternal: radiusInternal ?? _radiusInternal,
     );
   }
 
@@ -94,10 +105,8 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
   CornerRadii lerp(CornerRadii? other, double t) {
     if (other == null) return this;
     return CornerRadii(
-      boxesExternal: lerpDouble(_boxesExternal, other._boxesExternal, t)!,
-      boxesInternal: lerpDouble(_boxesInternal, other._boxesInternal, t)!,
-      fieldsExternal: lerpDouble(_fieldsExternal, other._fieldsExternal, t)!,
-      fieldsInternal: lerpDouble(_fieldsInternal, other._fieldsInternal, t)!,
+      radiusExternal: lerpDouble(_radiusExternal, other._radiusExternal, t)!,
+      radiusInternal: lerpDouble(_radiusInternal, other._radiusInternal, t)!,
     );
   }
 }

@@ -54,7 +54,7 @@ final ThemeData draculaPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.standard()],
+  extensions: [CornerRadii.xl()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

@@ -10,6 +10,7 @@ import 'package:neostation/models/system_model.dart';
 import 'package:neostation/screens/app_screen.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:provider/provider.dart';
+import '../../../themes/corner_radii.dart';
 import '../../../utils/gamepad_nav.dart';
 import '../../../services/game_service.dart';
 import '../../../utils/game_launch_utils.dart';
@@ -171,7 +172,8 @@ class MySystems extends StatelessWidget {
               padding: EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(12.r),
+                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                  BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(
@@ -1730,7 +1732,8 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                        BorderRadius.circular(14.r),
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,

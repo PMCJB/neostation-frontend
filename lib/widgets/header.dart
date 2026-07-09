@@ -15,6 +15,8 @@ import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/utils/time_format.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
+import '../themes/corner_radii.dart';
+
 class Header extends StatefulWidget {
   final int selectedTabIndex;
   final Function(int) onTabSelected;
@@ -173,7 +175,8 @@ class HeaderState extends State<Header> {
                   padding: EdgeInsets.symmetric(horizontal: 2.r),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8.r),
+                    borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(8.r),
                     // normal black shadow
                     boxShadow: [
                       BoxShadow(
@@ -204,7 +207,8 @@ class HeaderState extends State<Header> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.primary,
-                                borderRadius: BorderRadius.circular(4.r),
+                                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                BorderRadius.circular(4.r),
                               ),
                             ),
                           ),
@@ -284,7 +288,8 @@ class HeaderState extends State<Header> {
                   ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(24.r),
+                    borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(14),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

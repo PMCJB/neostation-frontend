@@ -210,7 +210,7 @@ class _SystemCardState extends State<SystemCard> {
         child: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: Theme.of(context).extension<CornerRadii>()?.boxesExternal ??
+            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
                 BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
@@ -221,7 +221,7 @@ class _SystemCardState extends State<SystemCard> {
             ],
           ),
           child: ClipRRect(
-            borderRadius: Theme.of(context).extension<CornerRadii>()?.boxesInternal ??
+            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
                 BorderRadius.circular(9.r),
             child: InkWell(
               focusNode: _focusNode,
@@ -286,7 +286,8 @@ class _SystemCardState extends State<SystemCard> {
                 tintColor:
                     widget.info.color1AsColor ??
                     Theme.of(context).colorScheme.primary,
-                borderRadius: 12.r,
+                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternalRadius ??
+                    12.r,
                 opacity: 1.0,
               ),
             );
@@ -309,7 +310,8 @@ class _SystemCardState extends State<SystemCard> {
     if (hasCustomBg && ImageUtils.isGif(customBgPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(9.r),
+          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+              BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
             child: ShaderGifWidget(
@@ -325,7 +327,8 @@ class _SystemCardState extends State<SystemCard> {
     if (!hasCustomBg && ImageUtils.isGif(_themeBackgroundPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(9.r),
+          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+              BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
             child: ShaderGifWidget(
@@ -345,7 +348,8 @@ class _SystemCardState extends State<SystemCard> {
 
     return Positioned.fill(
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(9.r),
+        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+              BorderRadius.circular(9.r),
         child: hasActiveBg
             ? Image.file(
                 File(activeBgPath),
