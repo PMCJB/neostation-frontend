@@ -35,8 +35,8 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.general: 'Generale',
   AppLocale.secondaryDisplay: 'Schermo Secondario',
   AppLocale.directories: 'Directory',
-  AppLocale.palettes: 'Temi',
-  AppLocale.neoThemes: 'System Art',
+  AppLocale.themes: 'Temi',
+  AppLocale.systemArt: 'System Art',
   AppLocale.neoThemesSubtitle:
       'Personalizza sfondi e loghi delle schede di sistema',
   AppLocale.neoThemesNone: 'Nessuno',

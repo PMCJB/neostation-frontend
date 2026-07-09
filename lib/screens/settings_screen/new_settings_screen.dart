@@ -139,7 +139,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     _menuItems.add(
       SettingsMenuItem(
         title: '',
-        localeKey: AppLocale.palettes,
+        localeKey: AppLocale.themes,
         icon: Symbols.palette_rounded,
         isVisible: true,
       ),
@@ -148,7 +148,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     _menuItems.add(
       SettingsMenuItem(
         title: '',
-        localeKey: AppLocale.neoThemes,
+        localeKey: AppLocale.systemArt,
         icon: Symbols.image_rounded,
         isVisible: true,
       ),
@@ -200,11 +200,11 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
 
     // Content-Specific Navigation Overrides.
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
-    if (selectedKey == AppLocale.palettes) {
+    if (selectedKey == AppLocale.themes) {
       _paletteSettingsKey.currentState?.navigateUp();
       return;
     }
-    if (selectedKey == AppLocale.neoThemes) {
+    if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.navigateUp();
       return;
     }
@@ -246,11 +246,11 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     }
 
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
-    if (selectedKey == AppLocale.palettes) {
+    if (selectedKey == AppLocale.themes) {
       _paletteSettingsKey.currentState?.navigateDown();
       return;
     }
-    if (selectedKey == AppLocale.neoThemes) {
+    if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.navigateDown();
       return;
     }
@@ -269,7 +269,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     if (_focusOnMenu) return;
 
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
-    if (selectedKey == AppLocale.palettes) {
+    if (selectedKey == AppLocale.themes) {
       final returnToMenu =
           _paletteSettingsKey.currentState?.navigateLeft() ?? true;
       if (returnToMenu) {
@@ -278,7 +278,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
           _selectedContentIndex = 0;
         });
       }
-    } else if (selectedKey == AppLocale.neoThemes) {
+    } else if (selectedKey == AppLocale.systemArt) {
       final returnToMenu =
           _themesSettingsKey.currentState?.navigateLeft() ?? true;
       if (returnToMenu) {
@@ -307,9 +307,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     }
 
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
-    if (selectedKey == AppLocale.palettes) {
+    if (selectedKey == AppLocale.themes) {
       _paletteSettingsKey.currentState?.navigateRight();
-    } else if (selectedKey == AppLocale.neoThemes) {
+    } else if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.navigateRight();
     }
   }
@@ -330,9 +330,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
       return _generalSettingsKey.currentState?.getItemCount() ?? 0;
     } else if (selectedKey == AppLocale.secondaryDisplay) {
       return _secondarySettingsKey.currentState?.getItemCount() ?? 0;
-    } else if (selectedKey == AppLocale.palettes) {
+    } else if (selectedKey == AppLocale.themes) {
       return _paletteSettingsKey.currentState?.getItemCount(context) ?? 0;
-    } else if (selectedKey == AppLocale.neoThemes) {
+    } else if (selectedKey == AppLocale.systemArt) {
       return _themesSettingsKey.currentState?.getItemCount() ?? 0;
     } else if (selectedKey == AppLocale.directories) {
       return _directoriesSettingsKey.currentState?.getItemCount() ?? 0;
@@ -353,9 +353,9 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
     final selectedKey = _menuItems[_selectedMenuIndex].localeKey;
     if (selectedKey == AppLocale.general) {
       _generalSettingsKey.currentState?.selectItem(_selectedContentIndex);
-    } else if (selectedKey == AppLocale.palettes) {
+    } else if (selectedKey == AppLocale.themes) {
       _paletteSettingsKey.currentState?.selectItem(_selectedContentIndex);
-    } else if (selectedKey == AppLocale.neoThemes) {
+    } else if (selectedKey == AppLocale.systemArt) {
       _themesSettingsKey.currentState?.selectItem(_selectedContentIndex);
     } else if (selectedKey == AppLocale.directories) {
       _directoriesSettingsKey.currentState?.selectItem(_selectedContentIndex);
@@ -548,7 +548,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
         isContentFocused: !_focusOnMenu,
         selectedContentIndex: _selectedContentIndex,
       );
-    } else if (selectedKey == AppLocale.palettes) {
+    } else if (selectedKey == AppLocale.themes) {
       return PaletteSettingsContent(
         key: _paletteSettingsKey,
         isContentFocused: !_focusOnMenu,
@@ -559,7 +559,7 @@ class _NewSettingsScreenState extends State<NewSettingsScreen> {
           });
         },
       );
-    } else if (selectedKey == AppLocale.neoThemes) {
+    } else if (selectedKey == AppLocale.systemArt) {
       return ThemesSettingsContent(
         key: _themesSettingsKey,
         isContentFocused: !_focusOnMenu,

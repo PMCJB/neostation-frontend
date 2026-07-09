@@ -58,8 +58,8 @@ mixin AppLocale {
   static const String general = 'general';
   static const String secondaryDisplay = 'secondary_display';
   static const String directories = 'directories';
-  static const String palettes = 'palettes';
-  static const String neoThemes = 'neo_themes';
+  static const String themes = 'themes';
+  static const String systemArt = 'system_art';
   static const String neoThemesSubtitle = 'neo_themes_subtitle';
   static const String neoThemesNone = 'neo_themes_none';
   static const String neoThemesNoneSubtitle = 'neo_themes_none_subtitle';

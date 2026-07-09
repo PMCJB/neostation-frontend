@@ -128,7 +128,7 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
 
     if (index == 0) {
       targetFolder = '';
-      targetName = AppLocale.neoThemesNone.getString(context);
+      targetName = AppLocale.systemArtNone.getString(context);
     } else {
       final themeIndex = index - 1;
       if (themeIndex < 0 || themeIndex >= themes.length) return;
@@ -178,7 +178,7 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
 
     final List<_ThemeItem> items = [
       _ThemeItem(
-        label: AppLocale.neoThemesNone.getString(context),
+        label: AppLocale.systemArtNone.getString(context),
         folder: '',
         previewUrl: '',
         isAi: false,
@@ -205,8 +205,8 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SettingsTitle(
-            title: AppLocale.neoThemes.getString(context),
-            subtitle: AppLocale.neoThemesSubtitle.getString(context),
+            title: AppLocale.systemArt.getString(context),
+            subtitle: AppLocale.systemArtSubtitle.getString(context),
           ),
           SizedBox(height: 12.r),
 
@@ -267,7 +267,7 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
             ),
             SizedBox(height: 12.r),
             Text(
-              AppLocale.neoThemesLoading.getString(context),
+              AppLocale.systemArtLoading.getString(context),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 11.r,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -300,7 +300,7 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
             ),
             SizedBox(height: 16.r),
             Text(
-              AppLocale.neoThemesDownloading.getString(context),
+              AppLocale.systemArtDownloading.getString(context),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 12.r,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
@@ -633,7 +633,7 @@ class _ThemeConfirmDialogState extends State<_ThemeConfirmDialog> {
           Icon(Symbols.image_rounded, color: primary, size: 20.r),
           SizedBox(width: 8.r),
           Text(
-            AppLocale.neoThemesApplyTitle.getString(context),
+            AppLocale.systemArtApplyTitle.getString(context),
             style: theme.textTheme.titleMedium?.copyWith(
               fontSize: 14.r,
               color: primary,
@@ -656,7 +656,7 @@ class _ThemeConfirmDialogState extends State<_ThemeConfirmDialog> {
           if (!widget.isNone) ...[
             SizedBox(height: 8.r),
             Text(
-              AppLocale.neoThemesApplyBody.getString(context),
+              AppLocale.systemArtApplyBody.getString(context),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 11.r,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),

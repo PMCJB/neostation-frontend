@@ -188,8 +188,8 @@ class PaletteSettingsContentState extends State<PaletteSettingsContent> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SettingsTitle(
-            title: AppLocale.palettes.getString(context),
-            subtitle: AppLocale.palettesSubtitle.getString(context),
+            title: AppLocale.themes.getString(context),
+            subtitle: AppLocale.themesSubtitle.getString(context),
           ),
           SizedBox(height: 12.r),
           GridView.builder(
