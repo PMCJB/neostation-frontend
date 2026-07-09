@@ -203,7 +203,7 @@ class HeaderState extends State<Header> {
                             curve: Curves.easeInOut,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondary,
+                                color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(4.r),
                               ),
                             ),
@@ -369,7 +369,7 @@ class HeaderState extends State<Header> {
           child: Image.asset(
             icon,
             color: isSelected
-                ? Theme.of(context).colorScheme.surface
+                ? Theme.of(context).colorScheme.onPrimary
                 : Theme.of(context).colorScheme.onSurface,
           ),
         ),

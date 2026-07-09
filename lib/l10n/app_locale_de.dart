@@ -35,8 +35,8 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.general: 'Allgemein',
   AppLocale.secondaryDisplay: 'Zweitbildschirm',
   AppLocale.directories: 'Verzeichnisse',
-  AppLocale.palettes: 'Paletten',
-  AppLocale.neoThemes: 'Themes',
+  AppLocale.palettes: 'Themes',
+  AppLocale.neoThemes: 'System Art',
   AppLocale.neoThemesSubtitle:
       'Passe Hintergründe und Logos der Systemkarten an',
   AppLocale.neoThemesNone: 'Keins',

@@ -1721,7 +1721,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                 selHeight != null)
             ? AnimatedPositioned(
                 key: const ValueKey('focus_indicator'),
-                duration: const Duration(milliseconds: 350),
+                duration: const Duration(milliseconds: 256),
                 curve: Curves.fastOutSlowIn,
                 left: selLeft + 1.r,
                 top: selTop + 1.r,
@@ -1737,10 +1737,10 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                         colors: [
                           Theme.of(
                             context,
-                          ).colorScheme.secondary.withValues(alpha: 0.28),
+                          ).colorScheme.primary.withValues(alpha: 0.28),
                           Theme.of(
                             context,
-                          ).colorScheme.secondary.withValues(alpha: 0.08),
+                          ).colorScheme.primary.withValues(alpha: 0.08),
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.35, 1.0],
@@ -1748,7 +1748,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.secondary.withValues(alpha: 0.55),
+                        ).colorScheme.primary.withValues(alpha: 0.55),
                         width: 2.r,
                       ),
                     ),

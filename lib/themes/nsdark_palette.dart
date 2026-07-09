@@ -1,34 +1,34 @@
 import 'package:flutter/material.dart';
 
-const Color _primaryColor = Color(0xFF8183C9);
-const Color _onPrimaryColor = Color(0xFF252029);
-const Color _secondaryColor = Color(0xFF30D1A1);
-const Color _onSecondaryColor = Color(0xFF252029);
-const Color _tertiaryColor = Color(0xFFCCD3F7);
-const Color _onTertiaryColor = Color(0xFF252029);
-final Color _surfaceColor = HSLColor.fromColor(
-  const Color(0xFF232030),
-).withLightness(0.18).toColor();
-const Color _onSurfaceColor = Color(0xFF9B9BB4);
+const Color _primaryColor = Color(0xFF605dff);
+const Color _onPrimaryColor = Color(0xFFedf1fe);
+const Color _secondaryColor = Color(0xFFf43098);
+const Color _onSecondaryColor = Color(0xFFf9e4f0);
+const Color _tertiaryColor = Color(0xFF00d3bb);
+const Color _onTertiaryColor = Color(0xFF084d49);
+const Color _tertiaryFixedColor = Color(0xFF09090b);
+const Color _onTertiaryFixedColor = Color(0xFFe4e4e7);
+const Color _surfaceColor = Color(0xFF1d232a);
+const Color _onSurfaceColor = Color(0xFFecf9ff);
 
-const Color _outlineColor = Color(0xFF50495A);
-const Color _shadowColor = Color(0xFF000000);
+const Color _outlineColor = Color(0xFF323841);
+const Color _shadowColor = Color(0xFF09090b);
 
-const Color _backgroundColor = Color(0xFF1E1D24);
+const Color _backgroundColor = Color(0xFF15191e);
 
-const Color _batteryFull = Color(0xFF30D1A1);
-const Color _batteryMedium = Color(0xFFFFB84D);
-const Color _batteryLow = Color(0xFFE53E3E);
-const Color _batteryPower = Color(0xFF4A90B8);
+const Color _batteryFull = Color(0xFF00d390);
+const Color _batteryMedium = Color(0xFFfcb700);
+const Color _batteryLow = Color(0xFFff627d);
+const Color _batteryPower = Color(0xFF00bafe);
 
-const Color _errorColor = Color(0xFFFF5252);
-const Color _onErrorColor = Color(0xFF252029);
-const Color _warningColor = Color(0xFFFFB84D);
-const Color _onWarningColor = Color(0xFF252029);
-const Color _successColor = Color(0xFF30D1A1);
-const Color _onSuccessColor = Color(0xFF252029);
-const Color _infoColor = Color(0xFF4A90B8);
-const Color _onInfoColor = Color(0xFF252029);
+const Color _errorColor = Color(0xFFff627d);
+const Color _onErrorColor = Color(0xFF4d0218);
+const Color _warningColor = Color(0xFFfcb700);
+const Color _onWarningColor = Color(0xFF793205);
+const Color _successColor = Color(0xFF00d390);
+const Color _onSuccessColor = Color(0xFF004c39);
+const Color _infoColor = Color(0xFF00bafe);
+const Color _onInfoColor = Color(0xFF042e49);
 
 final ThemeData nsdarkPalette = ThemeData(
   useMaterial3: true,
@@ -36,11 +36,13 @@ final ThemeData nsdarkPalette = ThemeData(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
+    tertiaryFixed: _tertiaryFixedColor,
     surface: _surfaceColor,
 
     onPrimary: _onPrimaryColor,
     onSecondary: _onSecondaryColor,
     onTertiary: _onTertiaryColor,
+    onTertiaryFixed: _onTertiaryFixedColor,
     onSurface: _onSurfaceColor,
 
     error: _errorColor,

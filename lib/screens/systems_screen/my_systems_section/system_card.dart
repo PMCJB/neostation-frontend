@@ -212,7 +212,7 @@ class _SystemCardState extends State<SystemCard> {
             borderRadius: BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
                 blurRadius: 5.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),

@@ -88,8 +88,8 @@ class HeaderSortDropdownState extends State<HeaderSortDropdown> {
           SfxService().playNavSound();
           _showDropdown(context);
         },
-        backgroundColor: Theme.of(context).colorScheme.tertiary,
-        textColor: Theme.of(context).colorScheme.onTertiary,
+        backgroundColor: Theme.of(context).colorScheme.tertiaryFixed,
+        textColor: Theme.of(context).colorScheme.onTertiaryFixed,
       ),
     );
   }
