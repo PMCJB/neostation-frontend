@@ -7,15 +7,13 @@ import 'nsdark_palette.dart' as nsdark;
 import 'nslight_palette.dart' as nslight;
 import 'oled_palette.dart' as oled;
 import 'valentine_palette.dart' as valentine;
-import 'rgc_palette.dart' as rgc;
-import 'tw_dark_palette.dart' as tw_dark;
 import 'dracula_palette.dart' as dracula;
 import 'nord_palette.dart' as nord;
 import 'gruvbox_palette.dart' as gruvbox;
 import 'tokyo_night_palette.dart' as tokyo_night;
 import 'solarized_light_palette.dart' as solarized_light;
 import 'one_light_palette.dart' as one_light;
-import 'catppuccin_palette.dart' as catppuccin;
+import 'cyberpunk_palette.dart' as cyberpunk;
 import 'solarized_dark_palette.dart' as solarized_dark;
 import 'palenight_palette.dart' as palenight;
 import 'horizon_palette.dart' as horizon;
@@ -31,10 +29,6 @@ class AppPalettes {
       return 'assets/images/app/logo-oled.webp';
     } else if (palette == valentinePalette) {
       return 'assets/images/app/logo-valentine.webp';
-    } else if (palette == rgcPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == twDarkPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
     } else if (palette == draculaPalette) {
       return 'assets/images/app/logo-monochrome.webp';
     } else if (palette == nordPalette) {
@@ -47,7 +41,7 @@ class AppPalettes {
       return 'assets/images/app/logo-monochrome.webp';
     } else if (palette == oneLightPalette) {
       return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == catppuccinPalette) {
+    } else if (palette == cyberpunkPalette) {
       return 'assets/images/app/logo-monochrome.webp';
     } else if (palette == solarizedDarkPalette) {
       return 'assets/images/app/logo-monochrome.webp';
@@ -84,8 +78,6 @@ class AppPalettes {
   static ThemeData get nslightPalette => nslight.nslightPalette;
   static ThemeData get oledPalette => oled.oledPalette;
   static ThemeData get valentinePalette => valentine.valentinePalette;
-  static ThemeData get rgcPalette => rgc.rgcPalette;
-  static ThemeData get twDarkPalette => tw_dark.twDarkPalette;
   static ThemeData get draculaPalette => dracula.draculaPalette;
   static ThemeData get nordPalette => nord.nordPalette;
   static ThemeData get gruvboxPalette => gruvbox.gruvboxPalette;
@@ -93,7 +85,7 @@ class AppPalettes {
   static ThemeData get solarizedLightPalette =>
       solarized_light.solarizedLightPalette;
   static ThemeData get oneLightPalette => one_light.oneLightPalette;
-  static ThemeData get catppuccinPalette => catppuccin.catppuccinPalette;
+  static ThemeData get cyberpunkPalette => cyberpunk.cyberpunkPalette;
   static ThemeData get solarizedDarkPalette =>
       solarized_dark.solarizedDarkPalette;
   static ThemeData get palenightPalette => palenight.palenightPalette;
@@ -104,8 +96,6 @@ class AppPalettes {
   static dynamic get nslightCustomColors => nslight.NSlightCustomColors();
   static dynamic get oledCustomColors => oled.OledCustomColors();
   static dynamic get valentineCustomColors => valentine.ValentineCustomColors();
-  static dynamic get rgcCustomColors => rgc.RGCCustomColors();
-  static dynamic get twDarkCustomColors => tw_dark.TWCustomColors();
   static dynamic get draculaCustomColors => dracula.DraculaCustomColors();
   static dynamic get nordCustomColors => nord.NordCustomColors();
   static dynamic get gruvboxCustomColors => gruvbox.GruvboxCustomColors();
@@ -114,8 +104,8 @@ class AppPalettes {
   static dynamic get solarizedLightCustomColors =>
       solarized_light.SolarizedLightCustomColors();
   static dynamic get oneLightCustomColors => one_light.OneLightCustomColors();
-  static dynamic get catppuccinCustomColors =>
-      catppuccin.CatppuccinCustomColors();
+  static dynamic get cyberpunkCustomColors =>
+      cyberpunk.CyberpunkCustomColors();
   static dynamic get solarizedDarkCustomColors =>
       solarized_dark.SolarizedDarkCustomColors();
   static dynamic get palenightCustomColors => palenight.PalenightCustomColors();
@@ -147,10 +137,6 @@ class AppPalettes {
           return oled.OledCustomColors();
         case 'valentine':
           return valentine.ValentineCustomColors();
-        case 'rgc':
-          return rgc.RGCCustomColors();
-        case 'tw_dark':
-          return tw_dark.TWCustomColors();
         case 'dracula':
           return dracula.DraculaCustomColors();
         case 'nord':
@@ -163,8 +149,8 @@ class AppPalettes {
           return solarized_light.SolarizedLightCustomColors();
         case 'one_light':
           return one_light.OneLightCustomColors();
-        case 'catppuccin':
-          return catppuccin.CatppuccinCustomColors();
+        case 'cyberpunk':
+          return cyberpunk.CyberpunkCustomColors();
         case 'solarized_dark':
           return solarized_dark.SolarizedDarkCustomColors();
         case 'palenight':
@@ -192,12 +178,6 @@ class AppPalettes {
     } else if (surface == valentinePalette.colorScheme.surface ||
         secondary == valentinePalette.colorScheme.secondary) {
       return valentine.ValentineCustomColors();
-    } else if (surface == rgcPalette.colorScheme.surface ||
-        secondary == rgcPalette.colorScheme.secondary) {
-      return rgc.RGCCustomColors();
-    } else if (surface == twDarkPalette.colorScheme.surface ||
-        secondary == twDarkPalette.colorScheme.secondary) {
-      return tw_dark.TWCustomColors();
     } else if (surface == draculaPalette.colorScheme.surface ||
         secondary == draculaPalette.colorScheme.secondary) {
       return dracula.DraculaCustomColors();
@@ -216,9 +196,9 @@ class AppPalettes {
     } else if (surface == oneLightPalette.colorScheme.surface ||
         secondary == oneLightPalette.colorScheme.secondary) {
       return one_light.OneLightCustomColors();
-    } else if (surface == catppuccinPalette.colorScheme.surface ||
-        secondary == catppuccinPalette.colorScheme.secondary) {
-      return catppuccin.CatppuccinCustomColors();
+    } else if (surface == cyberpunkPalette.colorScheme.surface ||
+        secondary == cyberpunkPalette.colorScheme.secondary) {
+      return cyberpunk.CyberpunkCustomColors();
     } else if (surface == solarizedDarkPalette.colorScheme.surface ||
         secondary == solarizedDarkPalette.colorScheme.secondary) {
       return solarized_dark.SolarizedDarkCustomColors();
@@ -243,10 +223,6 @@ class AppPalettes {
         return oledPalette;
       case 'valentine':
         return valentinePalette;
-      case 'rgc':
-        return rgcPalette;
-      case 'tw_dark':
-        return twDarkPalette;
       case 'dracula':
         return draculaPalette;
       case 'nord':
@@ -259,8 +235,8 @@ class AppPalettes {
         return solarizedLightPalette;
       case 'one_light':
         return oneLightPalette;
-      case 'catppuccin':
-        return catppuccinPalette;
+      case 'cyberpunk':
+        return cyberpunkPalette;
       case 'solarized_dark':
         return solarizedDarkPalette;
       case 'palenight':

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:neostation/themes/corner_radii.dart';
 
 const Color _primaryColor = Color(0xFF4078F2);
 const Color _onPrimaryColor = Color(0xFFFFFFFF);
@@ -48,6 +49,7 @@ final ThemeData oneLightPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
+  extensions: [CornerRadii.standard()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

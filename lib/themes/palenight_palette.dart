@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:neostation/themes/corner_radii.dart';
 
 const Color _primaryColor = Color(0xFF82AAFF);
 const Color _onPrimaryColor = Color(0xFF292D3E);
@@ -48,6 +49,7 @@ final ThemeData palenightPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
+  extensions: [CornerRadii.standard()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

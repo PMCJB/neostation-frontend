@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:neostation/themes/corner_radii.dart';
 
 const Color _primaryColor = Color(0xFFf43098);
 const Color _onPrimaryColor = Color(0xFFffffff);
@@ -53,6 +54,7 @@ final ThemeData valentinePalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
+  extensions: [CornerRadii.standard()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(
