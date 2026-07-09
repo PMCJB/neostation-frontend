@@ -31,6 +31,16 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
     );
   }
 
+  /// Sharp corners (no radius). Useful for themes like Cyberpunk.
+  factory CornerRadii.zero() {
+    return const CornerRadii(
+      boxesExternal: BorderRadius.zero,
+      boxesInternal: BorderRadius.zero,
+      fieldsExternal: BorderRadius.zero,
+      fieldsInternal: BorderRadius.zero,
+    );
+  }
+
   static CornerRadii of(BuildContext context) {
     final radii = Theme.of(context).extension<CornerRadii>();
     assert(radii != null, 'CornerRadii extension is missing from the theme');

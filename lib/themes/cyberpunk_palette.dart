@@ -54,7 +54,7 @@ final ThemeData cyberpunkPalette = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.standard()],
+  extensions: [CornerRadii.zero()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(
