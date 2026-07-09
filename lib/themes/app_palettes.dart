@@ -9,7 +9,7 @@ import 'oled_palette.dart' as oled;
 import 'valentine_palette.dart' as valentine;
 import 'dracula_palette.dart' as dracula;
 import 'nord_palette.dart' as nord;
-import 'gruvbox_palette.dart' as gruvbox;
+import 'coffee_palette.dart' as coffee;
 import 'tokyo_night_palette.dart' as tokyo_night;
 import 'solarized_light_palette.dart' as solarized_light;
 import 'one_light_palette.dart' as one_light;
@@ -19,58 +19,8 @@ import 'palenight_palette.dart' as palenight;
 import 'horizon_palette.dart' as horizon;
 
 class AppPalettes {
-  static String getLogoPath(ThemeData palette) {
-    // Check for specific theme instances before general brightness detection.
-    if (palette == nsdarkPalette) {
-      return 'assets/images/app/logo-nsdark.webp';
-    } else if (palette == nslightPalette) {
-      return 'assets/images/app/logo-nslight.webp';
-    } else if (palette == oledPalette) {
-      return 'assets/images/app/logo-oled.webp';
-    } else if (palette == valentinePalette) {
-      return 'assets/images/app/logo-valentine.webp';
-    } else if (palette == draculaPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == nordPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == gruvboxPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == tokyoNightPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == solarizedLightPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == oneLightPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == cyberpunkPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == solarizedDarkPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == palenightPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else if (palette == horizonPalette) {
-      return 'assets/images/app/logo-monochrome.webp';
-    } else {
-      return 'assets/images/logo_transparent.png';
-    }
-  }
-
-  static String getLogoPathByName(String paletteName) {
-    switch (paletteName) {
-      case 'nsdark':
-        return 'assets/images/logo_transparent.png';
-      case 'nslight':
-        return 'assets/images/logo_transparent.png';
-      case 'oled':
-        return 'assets/images/logo_transparent.png';
-      case 'valentine':
-        return 'assets/images/logo_transparent.png';
-      case 'rgc':
-        return 'assets/images/logo_transparent.png';
-      case 'tw_dark':
-        return 'assets/images/logo_transparent.png';
-      default:
-        return 'assets/images/logo_transparent.png';
-    }
+  static String getLogoPath() {
+    return 'assets/images/logo_transparent.png';
   }
 
   // References to individual themes
@@ -80,7 +30,7 @@ class AppPalettes {
   static ThemeData get valentinePalette => valentine.valentinePalette;
   static ThemeData get draculaPalette => dracula.draculaPalette;
   static ThemeData get nordPalette => nord.nordPalette;
-  static ThemeData get gruvboxPalette => gruvbox.gruvboxPalette;
+  static ThemeData get coffeePalette => coffee.coffeePalette;
   static ThemeData get tokyoNightPalette => tokyo_night.tokyoNightPalette;
   static ThemeData get solarizedLightPalette =>
       solarized_light.solarizedLightPalette;
@@ -98,7 +48,7 @@ class AppPalettes {
   static dynamic get valentineCustomColors => valentine.ValentineCustomColors();
   static dynamic get draculaCustomColors => dracula.DraculaCustomColors();
   static dynamic get nordCustomColors => nord.NordCustomColors();
-  static dynamic get gruvboxCustomColors => gruvbox.GruvboxCustomColors();
+  static dynamic get coffeeCustomColors => coffee.CoffeeCustomColors();
   static dynamic get tokyoNightCustomColors =>
       tokyo_night.TokyoNightCustomColors();
   static dynamic get solarizedLightCustomColors =>
@@ -141,8 +91,8 @@ class AppPalettes {
           return dracula.DraculaCustomColors();
         case 'nord':
           return nord.NordCustomColors();
-        case 'gruvbox':
-          return gruvbox.GruvboxCustomColors();
+        case 'coffee':
+          return coffee.CoffeeCustomColors();
         case 'tokyo_night':
           return tokyo_night.TokyoNightCustomColors();
         case 'solarized_light':
@@ -184,9 +134,9 @@ class AppPalettes {
     } else if (surface == nordPalette.colorScheme.surface ||
         secondary == nordPalette.colorScheme.secondary) {
       return nord.NordCustomColors();
-    } else if (surface == gruvboxPalette.colorScheme.surface ||
-        secondary == gruvboxPalette.colorScheme.secondary) {
-      return gruvbox.GruvboxCustomColors();
+    } else if (surface == coffeePalette.colorScheme.surface ||
+        secondary == coffeePalette.colorScheme.secondary) {
+      return coffee.CoffeeCustomColors();
     } else if (surface == tokyoNightPalette.colorScheme.surface ||
         secondary == tokyoNightPalette.colorScheme.secondary) {
       return tokyo_night.TokyoNightCustomColors();
@@ -227,8 +177,8 @@ class AppPalettes {
         return draculaPalette;
       case 'nord':
         return nordPalette;
-      case 'gruvbox':
-        return gruvboxPalette;
+      case 'coffee':
+        return coffeePalette;
       case 'tokyo_night':
         return tokyoNightPalette;
       case 'solarized_light':

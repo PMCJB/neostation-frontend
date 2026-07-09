@@ -7,20 +7,23 @@ const Color _secondaryColor = Color(0xFF98971A);
 const Color _onSecondaryColor = Color(0xFF282828);
 const Color _tertiaryColor = Color(0xFF458588);
 const Color _onTertiaryColor = Color(0xFFFBF1C7);
+const Color _tertiaryFixedColor = Color(0xFF111a3b);
+const Color _onTertiaryFixedColor = Color(0xFF120a11);
 const Color _surfaceColor = Color(0xFF3C3836);
 const Color _onSurfaceColor = Color(0xFFEBDBB2);
-const Color _errorColor = Color(0xFFCC241D);
-const Color _onErrorColor = Color(0xFF282828);
+
 const Color _outlineColor = Color(0xFF665C54);
 const Color _shadowColor = Color(0xFF000000);
 
-const Color _backgroundColor = Color(0xFF282828);
+const Color _backgroundColor = Color(0xFF120a11);
 
 const Color _batteryFull = Color(0xFF98971A);
 const Color _batteryMedium = Color(0xFFD79921);
 const Color _batteryLow = Color(0xFFCC241D);
 const Color _batteryPower = Color(0xFF458588);
 
+const Color _errorColor = Color(0xFFCC241D);
+const Color _onErrorColor = Color(0xFF282828);
 const Color _warningColor = Color(0xFFD79921);
 const Color _onWarningColor = Color(0xFF282828);
 const Color _successColor = Color(0xFF98971A);
@@ -28,17 +31,19 @@ const Color _onSuccessColor = Color(0xFF282828);
 const Color _infoColor = Color(0xFF458588);
 const Color _onInfoColor = Color(0xFF282828);
 
-final ThemeData gruvboxPalette = ThemeData(
+final ThemeData coffeePalette = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.dark(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
+    tertiaryFixed: _tertiaryFixedColor,
     surface: _surfaceColor,
 
     onPrimary: _onPrimaryColor,
     onSecondary: _onSecondaryColor,
     onTertiary: _onTertiaryColor,
+    onTertiaryFixed: _onTertiaryFixedColor,
     onSurface: _onSurfaceColor,
 
     error: _errorColor,
@@ -80,7 +85,7 @@ final ThemeData gruvboxPalette = ThemeData(
   ),
 );
 
-class GruvboxCustomColors {
+class CoffeeCustomColors {
   Color get batteryFull => _batteryFull;
   Color get batteryMedium => _batteryMedium;
   Color get batteryLow => _batteryLow;

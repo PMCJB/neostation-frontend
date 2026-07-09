@@ -50,7 +50,7 @@ class PaletteProvider extends ChangeNotifier with WidgetsBindingObserver {
     'valentine': AppPalettes.valentinePalette,
     'dracula': AppPalettes.draculaPalette,
     'nord': AppPalettes.nordPalette,
-    'gruvbox': AppPalettes.gruvboxPalette,
+    'coffee': AppPalettes.coffeePalette,
     'tokyo_night': AppPalettes.tokyoNightPalette,
     'solarized_light': AppPalettes.solarizedLightPalette,
     'one_light': AppPalettes.oneLightPalette,
@@ -177,13 +177,9 @@ class PaletteProvider extends ChangeNotifier with WidgetsBindingObserver {
       return {
         'name': key,
         'displayName': paletteDisplayNames[key] ?? key,
-        'logoPath': AppPalettes.getLogoPath(availablePalettes[key]!),
       };
     }).toList();
   }
 
-  /// Resolves the absolute path to the main logo asset for the current palette.
-  String getCurrentLogoPath() {
-    return AppPalettes.getLogoPathByName(_currentPaletteName);
-  }
+  
 }

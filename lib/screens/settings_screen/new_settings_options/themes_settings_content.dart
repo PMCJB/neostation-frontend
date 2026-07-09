@@ -170,7 +170,6 @@ class ThemesSettingsContentState extends State<ThemesSettingsContent> {
       {
         'name': 'system',
         'displayName': AppLocale.systemTheme.getString(context),
-        'logoPath': paletteProvider.getCurrentLogoPath(),
       },
       ...paletteProvider.getPaletteList(),
     ];

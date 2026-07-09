@@ -33,7 +33,6 @@ class _ThemeSelectionScreenState extends State<ThemeSelectionScreen> {
         'name': 'system',
         'displayName':
             PaletteProvider.paletteDisplayNames['system'] ?? 'System',
-        'logoPath': paletteProvider.getCurrentLogoPath(),
       },
       ...paletteProvider.getPaletteList(),
     ];
