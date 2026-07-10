@@ -29,7 +29,8 @@ class SystemArtSettingsContent extends StatefulWidget {
   });
 
   @override
-  State<SystemArtSettingsContent> createState() => SystemArtSettingsContentState();
+  State<SystemArtSettingsContent> createState() =>
+      SystemArtSettingsContentState();
 }
 
 class SystemArtSettingsContentState extends State<SystemArtSettingsContent> {

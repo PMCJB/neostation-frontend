@@ -36,7 +36,8 @@ class SystemsGridFooter extends CoreFooter {
         padding: EdgeInsets.only(top: 4.r, bottom: 4.r, left: 12.r, right: 6.r),
         decoration: BoxDecoration(
           color: theme.colorScheme.tertiaryFixed,
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
               BorderRadius.circular(24.r),
           boxShadow: [
             BoxShadow(
@@ -68,8 +69,11 @@ class SystemsGridFooter extends CoreFooter {
                 padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 2.r),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface,
-                  borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-              BorderRadius.circular(12.r),
+                  borderRadius:
+                      Theme.of(
+                        context,
+                      ).extension<CornerRadii>()?.radiusInternal ??
+                      BorderRadius.circular(12.r),
                   boxShadow: [
                     BoxShadow(
                       color: theme.colorScheme.shadow.withValues(alpha: 0.3),

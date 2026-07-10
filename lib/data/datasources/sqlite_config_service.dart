@@ -95,7 +95,7 @@ class SqliteConfigService {
         emulators: detectedEmulators,
         gameViewMode: userConfig?['game_view_mode']?.toString() ?? 'list',
         systemViewMode: userConfig?['system_view_mode']?.toString() ?? 'grid',
-        paletteName: userConfig?['palette_name']?.toString() ?? 'system',
+        themeName: userConfig?['theme_name']?.toString() ?? 'system',
         showGameInfo:
             (int.tryParse(userConfig?['show_game_info']?.toString() ?? '0') ??
                 0) ==
@@ -212,8 +212,6 @@ class SqliteConfigService {
         lastScan: config.lastScan?.toIso8601String(),
         gameViewMode: config.gameViewMode,
         systemViewMode: config.systemViewMode,
-        // paletteName intentionally omitted: managed exclusively by
-        // PaletteProvider via ConfigRepository.updatePaletteName().
         showGameInfo: config.showGameInfo ? 1 : 0,
         isFullscreen: config.isFullscreen ? 1 : 0,
         bartopExitPoweroff: config.bartopExitPoweroff ? 1 : 0,
@@ -227,6 +225,7 @@ class SqliteConfigService {
         systemSortBy: config.systemSortBy,
         systemSortOrder: config.systemSortOrder,
         appLanguage: config.appLanguage,
+        themeName: config.themeName,
         hideRecentCard: config.hideRecentCard ? 1 : 0,
         activeSyncProvider: config.activeSyncProvider,
         autoUpdateApp: config.autoUpdateApp ? 1 : 0,

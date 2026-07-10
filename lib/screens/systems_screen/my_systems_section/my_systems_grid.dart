@@ -25,7 +25,7 @@ import 'my_systems_carousel.dart';
 import 'package:neostation/widgets/custom_notification.dart';
 import 'package:neostation/widgets/system_emulator_settings_dialog.dart';
 import 'package:neostation/sync/sync_manager.dart';
-import 'package:neostation/providers/palette_provider.dart';
+import 'package:neostation/providers/theme_provider.dart';
 import '../../game_screen/android_apps/android_apps_grid.dart';
 import 'package:neostation/widgets/header_sort_dropdown.dart';
 import 'package:neostation/widgets/systems_grid_footer.dart';
@@ -172,8 +172,11 @@ class MySystems extends StatelessWidget {
               padding: EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
-                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                  BorderRadius.circular(12.r),
+                borderRadius:
+                    Theme.of(
+                      context,
+                    ).extension<CornerRadii>()?.radiusInternal ??
+                    BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(
@@ -676,11 +679,8 @@ class MySystems extends StatelessWidget {
     final String? systemBackground = hasCustomBg ? customBg : themeBg;
     final bool isBackgroundAsset = false;
 
-    final paletteProvider = Provider.of<PaletteProvider>(
-      context,
-      listen: false,
-    );
-    final isOled = paletteProvider.isOled;
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isOled = themeProvider.isOled;
 
     secondaryState.updateState(
       systemName: system.title ?? "NEOSTATION",
@@ -977,11 +977,8 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
     final String? themeBg = hasCustomBg ? null : _themeBackgrounds[folder];
     final String? systemBackground = hasCustomBg ? customBg : themeBg;
 
-    final paletteProvider = Provider.of<PaletteProvider>(
-      context,
-      listen: false,
-    );
-    final isOled = paletteProvider.isOled;
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isOled = themeProvider.isOled;
 
     // Recent game cards drive the secondary with the game's own art (fanart +
     // wheel) through the game-selected path, matching the game-view browse
@@ -1732,8 +1729,11 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                        BorderRadius.circular(14.r),
+                      borderRadius:
+                          Theme.of(
+                            context,
+                          ).extension<CornerRadii>()?.radiusExternal ??
+                          BorderRadius.circular(14.r),
                       gradient: LinearGradient(
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,

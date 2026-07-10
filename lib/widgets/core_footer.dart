@@ -147,14 +147,16 @@ class GamepadControl extends StatelessWidget {
         canRequestFocus: false,
         splashColor: contentColor.withValues(alpha: 0.2),
         highlightColor: Colors.transparent,
-        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+        borderRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
             BorderRadius.circular(6.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 4.r),
           decoration: BoxDecoration(
             color: gradient == null ? buttonBg : null,
             gradient: gradient,
-            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
                 BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(

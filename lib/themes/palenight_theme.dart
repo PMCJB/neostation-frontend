@@ -28,7 +28,7 @@ const Color _onSuccessColor = Color(0xFF292D3E);
 const Color _infoColor = Color(0xFF82AAFF);
 const Color _onInfoColor = Color(0xFF292D3E);
 
-final ThemeData palenightPalette = ThemeData(
+final ThemeData palenightTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.dark(
     primary: _primaryColor,

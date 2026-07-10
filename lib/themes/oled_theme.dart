@@ -31,7 +31,7 @@ const Color _onSuccessColor = Color(0xFF004c39);
 const Color _infoColor = Color(0xFF00bafe);
 const Color _onInfoColor = Color(0xFF042e49);
 
-final ThemeData oledPalette = ThemeData(
+final ThemeData oledTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.dark(
     primary: _primaryColor,

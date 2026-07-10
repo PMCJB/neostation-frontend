@@ -1,49 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
-const Color _primaryColor = Color(0xFF422ad5);
-const Color _onPrimaryColor = Color(0xFFe0e7ff);
-const Color _secondaryColor = Color(0xFFf43098);
-const Color _onSecondaryColor = Color(0xFFf9e4f0);
-const Color _tertiaryColor = Color(0xFF00d3bb);
-const Color _onTertiaryColor = Color(0xFF084d49);
-const Color _tertiaryFixedColor = Color(0xFF09090b);
-const Color _onTertiaryFixedColor = Color(0xFFe4e4e7);
-const Color _surfaceColor = Color(0xFFffffff);
-const Color _onSurfaceColor = Color(0xFF18181b);
+const Color _primaryColor = Color(0xFF268BD2);
+const Color _onPrimaryColor = Color(0xFFFDF6E3);
+const Color _secondaryColor = Color(0xFF2AA198);
+const Color _onSecondaryColor = Color(0xFFFDF6E3);
+const Color _tertiaryColor = Color(0xFF859900);
+const Color _onTertiaryColor = Color(0xFFFDF6E3);
+const Color _surfaceColor = Color(0xFFEEE8D5);
+const Color _onSurfaceColor = Color(0xFF657B83);
+const Color _errorColor = Color(0xFFDC322F);
+const Color _onErrorColor = Color(0xFFFDF6E3);
+const Color _outlineColor = Color(0xFF93A1A1);
+const Color _shadowColor = Color(0x1A000000);
 
-const Color _outlineColor = Color(0xFFe8e8e8);
-const Color _shadowColor = Color(0xFF09090b);
+const Color _backgroundColor = Color(0xFFFDF6E3);
 
-const Color _backgroundColor = Color(0xFFeeeeee);
+const Color _batteryFull = Color(0xFF859900);
+const Color _batteryMedium = Color(0xFFB58900);
+const Color _batteryLow = Color(0xFFDC322F);
+const Color _batteryPower = Color(0xFF268BD2);
 
-const Color _batteryFull = Color(0xFF00d390);
-const Color _batteryMedium = Color(0xFFfcb700);
-const Color _batteryLow = Color(0xFFff627d);
-const Color _batteryPower = Color(0xFF0284C7);
+const Color _warningColor = Color(0xFFB58900);
+const Color _onWarningColor = Color(0xFFFDF6E3);
+const Color _successColor = Color(0xFF859900);
+const Color _onSuccessColor = Color(0xFFFDF6E3);
+const Color _infoColor = Color(0xFF268BD2);
+const Color _onInfoColor = Color(0xFFFDF6E3);
 
-const Color _errorColor = Color(0xFFff627d);
-const Color _onErrorColor = Color(0xFF4d0218);
-const Color _warningColor = Color(0xFFfcb700);
-const Color _onWarningColor = Color(0xFF793205);
-const Color _successColor = Color(0xFF00d390);
-const Color _onSuccessColor = Color(0xFF084d49);
-const Color _infoColor = Color(0xFF00bafe);
-const Color _onInfoColor = Color(0xFF042e49);
-
-final ThemeData nslightPalette = ThemeData(
+final ThemeData solarizedLightTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.light(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
-    tertiaryFixed: _tertiaryFixedColor,
     surface: _surfaceColor,
 
     onPrimary: _onPrimaryColor,
     onSecondary: _onSecondaryColor,
     onTertiary: _onTertiaryColor,
-    onTertiaryFixed: _onTertiaryFixedColor,
     onSurface: _onSurfaceColor,
 
     error: _errorColor,
@@ -85,7 +80,7 @@ final ThemeData nslightPalette = ThemeData(
   ),
 );
 
-class NSlightCustomColors {
+class SolarizedLightCustomColors {
   Color get batteryFull => _batteryFull;
   Color get batteryMedium => _batteryMedium;
   Color get batteryLow => _batteryLow;

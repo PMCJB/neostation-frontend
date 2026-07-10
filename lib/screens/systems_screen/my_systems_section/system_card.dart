@@ -8,7 +8,6 @@ import 'package:neostation/services/sfx_service.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../../../themes/corner_radii.dart';
 import '../../../widgets/marquee_text.dart';
@@ -210,18 +209,22 @@ class _SystemCardState extends State<SystemCard> {
         child: Container(
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
-            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
                 BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.1),
                 blurRadius: 5.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
                 BorderRadius.circular(9.r),
             child: InkWell(
               focusNode: _focusNode,
@@ -286,7 +289,10 @@ class _SystemCardState extends State<SystemCard> {
                 tintColor:
                     widget.info.color1AsColor ??
                     Theme.of(context).colorScheme.primary,
-                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternalRadius ??
+                borderRadius:
+                    Theme.of(
+                      context,
+                    ).extension<CornerRadii>()?.radiusInternalRadius ??
                     12.r,
                 opacity: 1.0,
               ),
@@ -310,7 +316,8 @@ class _SystemCardState extends State<SystemCard> {
     if (hasCustomBg && ImageUtils.isGif(customBgPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
               BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
@@ -327,7 +334,8 @@ class _SystemCardState extends State<SystemCard> {
     if (!hasCustomBg && ImageUtils.isGif(_themeBackgroundPath)) {
       return Positioned.fill(
         child: ClipRRect(
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
               BorderRadius.circular(9.r),
           child: Container(
             color: Theme.of(context).colorScheme.surface,
@@ -348,8 +356,9 @@ class _SystemCardState extends State<SystemCard> {
 
     return Positioned.fill(
       child: ClipRRect(
-        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-              BorderRadius.circular(9.r),
+        borderRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+            BorderRadius.circular(9.r),
         child: hasActiveBg
             ? Image.file(
                 File(activeBgPath),

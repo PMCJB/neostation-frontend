@@ -3,10 +3,10 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:neostation/providers/palette_provider.dart';
+import 'package:neostation/providers/theme_provider.dart';
 import 'package:neostation/responsive.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:neostation/themes/app_palettes.dart';
+import 'package:neostation/themes/app_themes.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/services/permission_service.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
@@ -146,11 +146,11 @@ class HeaderState extends State<Header> {
 
   @override
   Widget build(BuildContext context) {
-    final customColors = AppPalettes.getCustomColors(context);
+    final customColors = AppThemes.getCustomColors(context);
     // Soft horizontal gradient derived from headerColors.background (left->right)
 
-    return Consumer2<PaletteProvider, SqliteConfigProvider>(
-      builder: (context, paletteProvider, configProvider, child) {
+    return Consumer2<ThemeProvider, SqliteConfigProvider>(
+      builder: (context, themeProvider, configProvider, child) {
         return Container(
           decoration: BoxDecoration(
             color: Colors.transparent,
@@ -175,8 +175,11 @@ class HeaderState extends State<Header> {
                   padding: EdgeInsets.symmetric(horizontal: 2.r),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(8.r),
+                    borderRadius:
+                        Theme.of(
+                          context,
+                        ).extension<CornerRadii>()?.radiusExternal ??
+                        BorderRadius.circular(8.r),
                     // normal black shadow
                     boxShadow: [
                       BoxShadow(
@@ -207,8 +210,11 @@ class HeaderState extends State<Header> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.primary,
-                                borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(4.r),
+                                borderRadius:
+                                    Theme.of(context)
+                                        .extension<CornerRadii>()
+                                        ?.radiusInternal ??
+                                    BorderRadius.circular(4.r),
                               ),
                             ),
                           ),
@@ -288,8 +294,11 @@ class HeaderState extends State<Header> {
                   ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
-                    borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14),
+                    borderRadius:
+                        Theme.of(
+                          context,
+                        ).extension<CornerRadii>()?.radiusExternal ??
+                        BorderRadius.circular(14),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

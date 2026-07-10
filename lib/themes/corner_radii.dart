@@ -20,56 +20,37 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
   const CornerRadii({
     required double radiusExternal,
     required double radiusInternal,
-  })  : _radiusExternal = radiusExternal,
-        _radiusInternal = radiusInternal;
-  
+  }) : _radiusExternal = radiusExternal,
+       _radiusInternal = radiusInternal;
 
   /// Sharp corners (no radius). Useful for themes like Cyberpunk.
   factory CornerRadii.zero() {
-    return const CornerRadii(
-      radiusExternal: 0,
-      radiusInternal: 0,
-    );
+    return const CornerRadii(radiusExternal: 0, radiusInternal: 0);
   }
 
-    /// Default radii used by every theme for now. Override per theme later.
+  /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.xs() {
-    return const CornerRadii(
-      radiusExternal: 3,
-      radiusInternal: 2,
-    );
+    return const CornerRadii(radiusExternal: 3, radiusInternal: 2);
   }
 
-      /// Default radii used by every theme for now. Override per theme later.
+  /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.sm() {
-    return const CornerRadii(
-      radiusExternal: 8,
-      radiusInternal: 5,
-    );
+    return const CornerRadii(radiusExternal: 8, radiusInternal: 5);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.m() {
-    return const CornerRadii(
-      radiusExternal: 14,
-      radiusInternal: 9,
-    );
+    return const CornerRadii(radiusExternal: 14, radiusInternal: 9);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.l() {
-    return const CornerRadii(
-      radiusExternal: 18,
-      radiusInternal: 12,
-    );
+    return const CornerRadii(radiusExternal: 18, radiusInternal: 12);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.xl() {
-    return const CornerRadii(
-      radiusExternal: 24,
-      radiusInternal: 18,
-    );
+    return const CornerRadii(radiusExternal: 24, radiusInternal: 18);
   }
 
   /// Scaled [BorderRadius] tokens (uses flutter_screenutil).
@@ -91,10 +72,7 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
   }
 
   @override
-  CornerRadii copyWith({
-    double? radiusExternal,
-    double? radiusInternal,
-  }) {
+  CornerRadii copyWith({double? radiusExternal, double? radiusInternal}) {
     return CornerRadii(
       radiusExternal: radiusExternal ?? _radiusExternal,
       radiusInternal: radiusInternal ?? _radiusInternal,

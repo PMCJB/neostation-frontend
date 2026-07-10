@@ -1,38 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
-const Color _primaryColor = Color(0xFF268BD2);
-const Color _onPrimaryColor = Color(0xFF002B36);
-const Color _secondaryColor = Color(0xFF2AA198);
-const Color _onSecondaryColor = Color(0xFF002B36);
-const Color _tertiaryColor = Color(0xFF859900);
-const Color _onTertiaryColor = Color(0xFF002B36);
-final Color _surfaceColor = HSLColor.fromColor(
-  const Color(0xFF002B36),
-).withLightness(0.25).toColor();
-const Color _onSurfaceColor = Color(0xFF839496);
-const Color _errorColor = Color(0xFFDC322F);
-const Color _onErrorColor = Color(0xFF002B36);
-const Color _outlineColor = Color(0xFF586E75);
-const Color _shadowColor = Color(0xFF000000);
+const Color _primaryColor = Color(0xFF4078F2);
+const Color _onPrimaryColor = Color(0xFFFFFFFF);
+const Color _secondaryColor = Color(0xFF50A14F);
+const Color _onSecondaryColor = Color(0xFFFFFFFF);
+const Color _tertiaryColor = Color(0xFFC18401);
+const Color _onTertiaryColor = Color(0xFFFFFFFF);
+const Color _surfaceColor = Color(0xFFE5E5E6);
+const Color _onSurfaceColor = Color(0xFF383A42);
+const Color _errorColor = Color(0xFFE45649);
 
-const Color _backgroundColor = Color(0xFF002B36);
+const Color _shadowColor = Color(0x1A000000);
 
-const Color _batteryFull = Color(0xFF859900);
-const Color _batteryMedium = Color(0xFFB58900);
-const Color _batteryLow = Color(0xFFDC322F);
-const Color _batteryPower = Color(0xFF268BD2);
+const Color _backgroundColor = Color(0xFFFAFAFA);
 
-const Color _warningColor = Color(0xFFB58900);
-const Color _onWarningColor = Color(0xFF002B36);
-const Color _successColor = Color(0xFF859900);
-const Color _onSuccessColor = Color(0xFF002B36);
-const Color _infoColor = Color(0xFF268BD2);
-const Color _onInfoColor = Color(0xFF002B36);
+const Color _batteryFull = Color(0xFF50A14F);
+const Color _batteryMedium = Color(0xFFC18401);
+const Color _batteryLow = Color(0xFFE45649);
+const Color _batteryPower = Color(0xFF4078F2);
 
-final ThemeData solarizedDarkPalette = ThemeData(
+const Color _onErrorColor = Color(0xFFFFFFFF);
+const Color _outlineColor = Color(0xFFA0A1A7);
+const Color _warningColor = Color(0xFFC18401);
+const Color _onWarningColor = Color(0xFFFFFFFF);
+const Color _successColor = Color(0xFF50A14F);
+const Color _onSuccessColor = Color(0xFFFFFFFF);
+const Color _infoColor = Color(0xFF4078F2);
+const Color _onInfoColor = Color(0xFFFFFFFF);
+
+final ThemeData abyssTheme = ThemeData(
   useMaterial3: true,
-  colorScheme: ColorScheme.dark(
+  colorScheme: ColorScheme.light(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
@@ -82,7 +81,7 @@ final ThemeData solarizedDarkPalette = ThemeData(
   ),
 );
 
-class SolarizedDarkCustomColors {
+class AbyssCustomColors {
   Color get batteryFull => _batteryFull;
   Color get batteryMedium => _batteryMedium;
   Color get batteryLow => _batteryLow;
@@ -90,13 +89,10 @@ class SolarizedDarkCustomColors {
 
   Color get errorColor => _errorColor;
   Color get onErrorColor => _onErrorColor;
-
   Color get successColor => _successColor;
   Color get onSuccessColor => _onSuccessColor;
-
   Color get infoColor => _infoColor;
   Color get onInfoColor => _onInfoColor;
-
   Color get warningColor => _warningColor;
   Color get onWarningColor => _onWarningColor;
 }

@@ -6,10 +6,10 @@ Welcome to the NeoStation theme system. This document will explain how to create
 
 ## 📋 Theme Structure
 
-Each theme is defined in a `*_palette.dart` file within the `lib/themes/` folder.
+Each theme is defined in a `*_theme.dart` file within the `lib/themes/` folder.
 
 ```dart
-// Example: my_theme_palette.dart
+// Example: my_theme_theme.dart
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
@@ -20,7 +20,7 @@ const Color _secondaryColor = Color(0xFF4CAF50);   // Secondary color
 const Color _surfaceColor = Color(0xFF1D232A);    // Surface background
 
 // 2. ThemeData configuration
-final ThemeData myThemePalette = ThemeData(
+final ThemeData myThemeTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.dark(),
 
@@ -46,7 +46,7 @@ class MyThemeCustomColors {
 
 ---
 
-## 🎨 Required Color Palette
+## 🎨 Required Color Theme
 
 ### **Essential Colors**
 
@@ -87,18 +87,18 @@ const Color _batteryLow = Color(0xFFff627d);     // Low battery
 
 ---
 
-## 🎨 DaisyUI Color Palette Reference
+## 🎨 DaisyUI Color Theme Reference
 
-We recommend reviewing **DaisyUI** as a reference for professional color palettes:
+We recommend reviewing **DaisyUI** as a reference for professional color themes:
 
 🔗 [https://daisyui.com/docs/themes/](https://daisyui.com/docs/themes/)
 
-### **Recommended Palettes for Inspiration:**
+### **Recommended Themes for Inspiration:**
 
 1. **dracula** - Popular dark theme for developers
-2. **nord** - Very balanced arctic palette
+2. **nord** - Very balanced arctic theme
 3. **solarized** - Classic, with good contrast and warm/cool colors
-4. **catppuccin** - Modern pastel palette, very pleasant
+4. **catppuccin** - Modern pastel theme, very pleasant
 5. **tokyo-night** - Optimized for developers
 
 ---
@@ -106,7 +106,7 @@ We recommend reviewing **DaisyUI** as a reference for professional color palette
 ## ✅ Checklist for a Well-Built Theme
 
 - [ ] **Adequate contrast** → Ensure text is readable on all backgrounds
-- [ ] **Harmonious palette** → Primary, secondary, and tertiary colors should work together
+- [ ] **Harmonious theme** → Primary, secondary, and tertiary colors should work together
 - [ ] **Accessibility** → Complies with WCAG 2.1 standards for contrast
 - [ ] **Consistency** → Follows the pattern established in other project themes
 - [ ] **Distinctive primary color** → Primary should stand out without being aggressive
@@ -115,37 +115,37 @@ We recommend reviewing **DaisyUI** as a reference for professional color palette
 
 ## 🔧 Integrating Your New Theme
 
-Once you've created `my_theme_palette.dart`, you must:
+Once you've created `my_theme_theme.dart`, you must:
 
-### **1. Add to `lib/themes/app_palettes.dart`**
+### **1. Add to `lib/themes/app_themes.dart`**
 
 ```dart
-import 'lib/my_theme_palette.dart' as my_theme;  // At the beginning of the file
+import 'lib/my_theme_theme.dart' as my_theme;  // At the beginning of the file
 
-class AppPalettes {
-  static ThemeData get myThemePalette => my_theme.myThemePalette;
+class AppThemes {
+  static ThemeData get myThemeTheme => my_theme.myThemeTheme;
   
   static dynamic get myThemeCustomColors => my_theme.MyThemeCustomColors();
 
-  switch (paletteName) {
+  switch (themeName) {
     case 'my_theme':
-      return myThemePalette;
+      return myThemeTheme;
   }
 }
 ```
 
-### **2. Update `lib/providers/palette_provider.dart`**
+### **2. Update `lib/providers/theme_provider.dart`**
 
-In `availablePalettes`:
+In `availableThemes`:
 ```dart
-static final Map<String, ThemeData> availablePalettes = {
-  'my_theme': AppPalettes.myThemePalette,
+static final Map<String, ThemeData> availableThemes = {
+  'my_theme': AppThemes.myThemeThemes,
 };
 ```
 
-In `paletteDisplayNames`:
+In `themeDisplayNames`:
 ```dart
-static const Map<String, String> paletteDisplayNames = {
+static const Map<String, String> themeDisplayNames = {
   'my_theme': 'My Theme',
 };
 ```
@@ -154,14 +154,14 @@ static const Map<String, String> paletteDisplayNames = {
 
 ## 🎨 Design Tips
 
-### **Dark Palettes**
+### **Dark Themes**
 
 - **Surface**: Very dark gray, almost black (#1a1f26)
 - **Primary**: Vibrant color but not overly saturated
 - **OnSurface**: White or very light gray (#ecf9ff)
 - Avoid pure neon colors on black backgrounds → strains eyes
 
-### **Light Palettes**
+### **Light Themes**
 
 - **Surface**: White or very light gray (#f8fafb)
 - **Primary**: Solid color, not aggressive
@@ -173,7 +173,7 @@ static const Map<String, String> paletteDisplayNames = {
 ## 📝 Complete Example: "Cyberpunk" Theme (Adapted)
 
 ```dart
-// lib/themes/cyberpunk_palette.dart
+// lib/themes/cyberpunk_theme.dart
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
@@ -184,7 +184,7 @@ const Color _secondaryColor = Color(0xFFbc13fe);    // Electric violet
 const Color _surfaceColor = Color(0xFF0d1117);      // Main background
 const Color _onSurfaceColor = Color(0xFFC9D1D9);    // Main text
 
-final ThemeData cyberpunkPalette = ThemeData(
+final ThemeData cyberpunkTheme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.dark(
     primary: _primaryColor,

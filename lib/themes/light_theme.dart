@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
-const Color _primaryColor = Color(0xFF5e81ac);
-const Color _onPrimaryColor = Color(0xFF03060b);
-const Color _secondaryColor = Color(0xFF81a1c1);
-const Color _onSecondaryColor = Color(0xFF06090d);
-const Color _tertiaryColor = Color(0xFF88c0d0);
-const Color _onTertiaryColor = Color(0xFF070d10);
-const Color _tertiaryFixedColor = Color(0xFF4c566a);
-const Color _onTertiaryFixedColor = Color(0xFFd8dee9);
-const Color _surfaceColor = Color(0xFFeceff4);
-const Color _onSurfaceColor = Color(0xFF2e3440);
+const Color _primaryColor = Color(0xFF422ad5);
+const Color _onPrimaryColor = Color(0xFFe0e7ff);
+const Color _secondaryColor = Color(0xFFf43098);
+const Color _onSecondaryColor = Color(0xFFf9e4f0);
+const Color _tertiaryColor = Color(0xFF00d3bb);
+const Color _onTertiaryColor = Color(0xFF084d49);
+const Color _tertiaryFixedColor = Color(0xFF09090b);
+const Color _onTertiaryFixedColor = Color(0xFFe4e4e7);
+const Color _surfaceColor = Color(0xFFffffff);
+const Color _onSurfaceColor = Color(0xFF18181b);
 
-const Color _outlineColor = Color(0xFFd8dee9);
-const Color _shadowColor = Color(0xFF2e3440);
+const Color _outlineColor = Color(0xFFe8e8e8);
+const Color _shadowColor = Color(0xFF09090b);
 
-const Color _backgroundColor = Color(0xFFd8dee9);
+const Color _backgroundColor = Color(0xFFeeeeee);
 
-const Color _batteryFull = Color(0xFFa3be8d);
-const Color _batteryMedium = Color(0xFFebcb8b);
-const Color _batteryLow = Color(0xFFbf616a);
-const Color _batteryPower = Color(0xFFb48ead);
+const Color _batteryFull = Color(0xFF00d390);
+const Color _batteryMedium = Color(0xFFfcb700);
+const Color _batteryLow = Color(0xFFff627d);
+const Color _batteryPower = Color(0xFF0284C7);
 
-const Color _errorColor = Color(0xFFbf616a);
-const Color _onErrorColor = Color(0xFF0d0304);
-const Color _warningColor = Color(0xFFebcb8b);
-const Color _onWarningColor = Color(0xFF130f07);
-const Color _successColor = Color(0xFFa3be8d);
-const Color _onSuccessColor = Color(0xFF0a0d07);
-const Color _infoColor = Color(0xFFb48ead);
-const Color _onInfoColor = Color(0xFF0c070b);
+const Color _errorColor = Color(0xFFff627d);
+const Color _onErrorColor = Color(0xFF4d0218);
+const Color _warningColor = Color(0xFFfcb700);
+const Color _onWarningColor = Color(0xFF793205);
+const Color _successColor = Color(0xFF00d390);
+const Color _onSuccessColor = Color(0xFF084d49);
+const Color _infoColor = Color(0xFF00bafe);
+const Color _onInfoColor = Color(0xFF042e49);
 
-final ThemeData nordPalette = ThemeData(
+final ThemeData lightTheme = ThemeData(
   useMaterial3: true,
-  colorScheme: ColorScheme.dark(
+  colorScheme: ColorScheme.light(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
@@ -85,7 +85,7 @@ final ThemeData nordPalette = ThemeData(
   ),
 );
 
-class NordCustomColors {
+class LightCustomColors {
   Color get batteryFull => _batteryFull;
   Color get batteryMedium => _batteryMedium;
   Color get batteryLow => _batteryLow;
@@ -93,10 +93,13 @@ class NordCustomColors {
 
   Color get errorColor => _errorColor;
   Color get onErrorColor => _onErrorColor;
+
   Color get successColor => _successColor;
   Color get onSuccessColor => _onSuccessColor;
+
   Color get infoColor => _infoColor;
   Color get onInfoColor => _onInfoColor;
+
   Color get warningColor => _warningColor;
   Color get onWarningColor => _onWarningColor;
 }
