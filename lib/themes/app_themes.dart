@@ -11,10 +11,10 @@ import 'dracula_theme.dart' as dracula;
 import 'nord_theme.dart' as nord;
 import 'coffee_theme.dart' as coffee;
 import 'tokyo_night_theme.dart' as tokyo_night;
-import 'solarized_light_theme.dart' as solarized_light;
+import 'retro_theme.dart' as retro;
 import 'abyss_theme.dart' as abyss;
 import 'cyberpunk_theme.dart' as cyberpunk;
-import 'solarized_dark_theme.dart' as solarized_dark;
+import 'aqua_theme.dart' as aqua;
 import 'palenight_theme.dart' as palenight;
 import 'horizon_theme.dart' as horizon;
 
@@ -32,11 +32,10 @@ class AppThemes {
   static ThemeData get nordTheme => nord.nordTheme;
   static ThemeData get coffeeTheme => coffee.coffeeTheme;
   static ThemeData get tokyoNightTheme => tokyo_night.tokyoNightTheme;
-  static ThemeData get solarizedLightTheme =>
-      solarized_light.solarizedLightTheme;
+  static ThemeData get retroTheme => retro.retroTheme;
   static ThemeData get abyssTheme => abyss.abyssTheme;
   static ThemeData get cyberpunkTheme => cyberpunk.cyberpunkTheme;
-  static ThemeData get solarizedDarkTheme => solarized_dark.solarizedDarkTheme;
+  static ThemeData get aquaTheme => aqua.aquaTheme;
   static ThemeData get palenightTheme => palenight.palenightTheme;
   static ThemeData get horizonTheme => horizon.horizonTheme;
 
@@ -50,12 +49,10 @@ class AppThemes {
   static dynamic get coffeeCustomColors => coffee.CoffeeCustomColors();
   static dynamic get tokyoNightCustomColors =>
       tokyo_night.TokyoNightCustomColors();
-  static dynamic get solarizedLightCustomColors =>
-      solarized_light.SolarizedLightCustomColors();
+  static dynamic get retroCustomColors => retro.RetroCustomColors();
   static dynamic get abyssCustomColors => abyss.AbyssCustomColors();
   static dynamic get cyberpunkCustomColors => cyberpunk.CyberpunkCustomColors();
-  static dynamic get solarizedDarkCustomColors =>
-      solarized_dark.SolarizedDarkCustomColors();
+  static dynamic get aquaCustomColors => aqua.AquaCustomColors();
   static dynamic get palenightCustomColors => palenight.PalenightCustomColors();
   static dynamic get horizonCustomColors => horizon.HorizonCustomColors();
 
@@ -88,14 +85,14 @@ class AppThemes {
           return coffee.CoffeeCustomColors();
         case 'tokyo_night':
           return tokyo_night.TokyoNightCustomColors();
-        case 'solarized_light':
-          return solarized_light.SolarizedLightCustomColors();
+        case 'retro':
+          return retro.RetroCustomColors();
         case 'abyss':
           return abyss.AbyssCustomColors();
         case 'cyberpunk':
           return cyberpunk.CyberpunkCustomColors();
-        case 'solarized_dark':
-          return solarized_dark.SolarizedDarkCustomColors();
+        case 'aqua':
+          return aqua.AquaCustomColors();
         case 'palenight':
           return palenight.PalenightCustomColors();
         case 'horizon':
@@ -133,18 +130,18 @@ class AppThemes {
     } else if (surface == tokyoNightTheme.colorScheme.surface ||
         secondary == tokyoNightTheme.colorScheme.secondary) {
       return tokyo_night.TokyoNightCustomColors();
-    } else if (surface == solarizedLightTheme.colorScheme.surface ||
-        secondary == solarizedLightTheme.colorScheme.secondary) {
-      return solarized_light.SolarizedLightCustomColors();
+    } else if (surface == retroTheme.colorScheme.surface ||
+        secondary == retroTheme.colorScheme.secondary) {
+      return retro.RetroCustomColors();
     } else if (surface == abyssTheme.colorScheme.surface ||
         secondary == abyssTheme.colorScheme.secondary) {
       return abyss.AbyssCustomColors();
     } else if (surface == cyberpunkTheme.colorScheme.surface ||
         secondary == cyberpunkTheme.colorScheme.secondary) {
       return cyberpunk.CyberpunkCustomColors();
-    } else if (surface == solarizedDarkTheme.colorScheme.surface ||
-        secondary == solarizedDarkTheme.colorScheme.secondary) {
-      return solarized_dark.SolarizedDarkCustomColors();
+    } else if (surface == aquaTheme.colorScheme.surface ||
+        secondary == aquaTheme.colorScheme.secondary) {
+      return aqua.AquaCustomColors();
     } else if (surface == palenightTheme.colorScheme.surface ||
         secondary == palenightTheme.colorScheme.secondary) {
       return palenight.PalenightCustomColors();
@@ -174,14 +171,14 @@ class AppThemes {
         return coffeeTheme;
       case 'tokyo_night':
         return tokyoNightTheme;
-      case 'solarized_light':
-        return solarizedLightTheme;
+      case 'retro':
+        return retroTheme;
       case 'abyss':
         return abyssTheme;
       case 'cyberpunk':
         return cyberpunkTheme;
-      case 'solarized_dark':
-        return solarizedDarkTheme;
+      case 'aqua':
+        return aquaTheme;
       case 'palenight':
         return palenightTheme;
       case 'horizon':

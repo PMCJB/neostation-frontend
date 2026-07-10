@@ -175,6 +175,10 @@ class HeaderState extends State<Header> {
                   padding: EdgeInsets.symmetric(horizontal: 2.r),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                      width: 1.r,
+                    ),
                     borderRadius:
                         Theme.of(
                           context,
@@ -185,8 +189,8 @@ class HeaderState extends State<Header> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.shadow.withValues(alpha: 0.25),
-                        blurRadius: 2.r,
+                        ).colorScheme.shadow.withValues(alpha: 0.1),
+                        blurRadius: 4.r,
                         offset: Offset(2.0.r, 2.0.r),
                       ),
                     ],
@@ -294,11 +298,24 @@ class HeaderState extends State<Header> {
                   ),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.surface,
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outline,
+                      width: 1.r,
+                    ),
                     borderRadius:
                         Theme.of(
                           context,
                         ).extension<CornerRadii>()?.radiusExternal ??
                         BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.shadow.withValues(alpha: 0.1),
+                        blurRadius: 4.r,
+                        offset: Offset(2.0.r, 2.0.r),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

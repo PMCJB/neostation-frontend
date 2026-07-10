@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:neostation/utils/color.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:neostation/l10n/app_locale.dart';
 
@@ -150,6 +151,7 @@ class GamepadControl extends StatelessWidget {
         borderRadius:
             Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
             BorderRadius.circular(6.r),
+
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 4.r),
           decoration: BoxDecoration(
@@ -158,10 +160,11 @@ class GamepadControl extends StatelessWidget {
             borderRadius:
                 Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
                 BorderRadius.circular(6.r),
+            border: Border.all(color: lightenColor(buttonBg, 0.05), width: 1.r),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.shadow.withValues(alpha: 0.3),
-                blurRadius: 2.r,
+                color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 4.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),
             ],

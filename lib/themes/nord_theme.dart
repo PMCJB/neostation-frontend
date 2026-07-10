@@ -12,7 +12,7 @@ const Color _onTertiaryFixedColor = Color(0xFFd8dee9);
 const Color _surfaceColor = Color(0xFFeceff4);
 const Color _onSurfaceColor = Color(0xFF2e3440);
 
-const Color _outlineColor = Color(0xFFd8dee9);
+const Color _outlineColor = Color(0xFFF7FAFF);
 const Color _shadowColor = Color(0xFF2e3440);
 
 const Color _backgroundColor = Color(0xFFd8dee9);
@@ -54,7 +54,7 @@ final ThemeData nordTheme = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.m()],
+  extensions: [CornerRadii.xs()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

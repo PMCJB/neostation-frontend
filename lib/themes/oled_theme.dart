@@ -12,7 +12,7 @@ const Color _onTertiaryFixedColor = Color(0xFFecf9ff);
 const Color _surfaceColor = Color(0xFF141414);
 const Color _onSurfaceColor = Color(0xFFecf9ff);
 
-const Color _outlineColor = Color(0xFF323841);
+const Color _outlineColor = Color(0xFF181818);
 const Color _shadowColor = Color(0xFF000000);
 
 const Color _backgroundColor = Color(0xFF000000);
@@ -54,7 +54,7 @@ final ThemeData oledTheme = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.xs()],
+  extensions: [CornerRadii.m()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

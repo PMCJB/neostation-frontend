@@ -12,7 +12,7 @@ const Color _onTertiaryFixedColor = Color(0xFFe4e4e7);
 const Color _surfaceColor = Color(0xFF1d232a);
 const Color _onSurfaceColor = Color(0xFFecf9ff);
 
-const Color _outlineColor = Color(0xFF323841);
+const Color _outlineColor = Color(0xFF212830);
 const Color _shadowColor = Color(0xFF09090b);
 
 const Color _backgroundColor = Color(0xFF15191e);
@@ -54,7 +54,7 @@ final ThemeData darkTheme = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.sm()],
+  extensions: [CornerRadii.m()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

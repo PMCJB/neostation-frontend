@@ -1,33 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:neostation/themes/corner_radii.dart';
 
-const Color _primaryColor = Color(0xFF4078F2);
-const Color _onPrimaryColor = Color(0xFFFFFFFF);
-const Color _secondaryColor = Color(0xFF50A14F);
-const Color _onSecondaryColor = Color(0xFFFFFFFF);
-const Color _tertiaryColor = Color(0xFFC18401);
-const Color _onTertiaryColor = Color(0xFFFFFFFF);
-const Color _surfaceColor = Color(0xFFE5E5E6);
-const Color _onSurfaceColor = Color(0xFF383A42);
-const Color _errorColor = Color(0xFFE45649);
+const Color _primaryColor = Color(0xFFbdff00);
+const Color _onPrimaryColor = Color(0xFF417600);
+const Color _secondaryColor = Color(0xFFcebef4);
+const Color _onSecondaryColor = Color(0xFF564775);
+const Color _tertiaryColor = Color(0xFF505050);
+const Color _onTertiaryColor = Color(0xFFf8f8f8);
+const Color _tertiaryFixedColor = Color(0xFF003743);
+const Color _onTertiaryFixedColor = Color(0xFFffd6a7);
+const Color _surfaceColor = Color(0xFF001e29);
+const Color _onSurfaceColor = Color(0xFFffd6a7);
 
-const Color _shadowColor = Color(0x1A000000);
+const Color _outlineColor = Color(0xFF002330);
+const Color _shadowColor = Color(0xFF000611);
 
-const Color _backgroundColor = Color(0xFFFAFAFA);
+const Color _backgroundColor = Color(0xFF000611);
 
-const Color _batteryFull = Color(0xFF50A14F);
-const Color _batteryMedium = Color(0xFFC18401);
-const Color _batteryLow = Color(0xFFE45649);
-const Color _batteryPower = Color(0xFF4078F2);
+const Color _batteryFull = Color(0xFF01df72);
+const Color _batteryMedium = Color(0xFFffbf00);
+const Color _batteryLow = Color(0xFFf04e4f);
+const Color _batteryPower = Color(0xFF00bafe);
 
-const Color _onErrorColor = Color(0xFFFFFFFF);
-const Color _outlineColor = Color(0xFFA0A1A7);
-const Color _warningColor = Color(0xFFC18401);
-const Color _onWarningColor = Color(0xFFFFFFFF);
-const Color _successColor = Color(0xFF50A14F);
-const Color _onSuccessColor = Color(0xFFFFFFFF);
-const Color _infoColor = Color(0xFF4078F2);
-const Color _onInfoColor = Color(0xFFFFFFFF);
+const Color _errorColor = Color(0xFFf04e4f);
+const Color _onErrorColor = Color(0xFF690000);
+const Color _warningColor = Color(0xFFffbf00);
+const Color _onWarningColor = Color(0xFF854200);
+const Color _successColor = Color(0xFF01df72);
+const Color _onSuccessColor = Color(0xFF022d14);
+const Color _infoColor = Color(0xFF00bafe);
+const Color _onInfoColor = Color(0xFF042e49);
 
 final ThemeData abyssTheme = ThemeData(
   useMaterial3: true,
@@ -35,11 +37,13 @@ final ThemeData abyssTheme = ThemeData(
     primary: _primaryColor,
     secondary: _secondaryColor,
     tertiary: _tertiaryColor,
+    tertiaryFixed: _tertiaryFixedColor,
     surface: _surfaceColor,
 
     onPrimary: _onPrimaryColor,
     onSecondary: _onSecondaryColor,
     onTertiary: _onTertiaryColor,
+    onTertiaryFixed: _onTertiaryFixedColor,
     onSurface: _onSurfaceColor,
 
     error: _errorColor,
@@ -50,7 +54,7 @@ final ThemeData abyssTheme = ThemeData(
 
   cardColor: _backgroundColor,
   scaffoldBackgroundColor: _backgroundColor,
-  extensions: [CornerRadii.m()],
+  extensions: [CornerRadii.s()],
 
   textTheme: TextTheme(
     displayLarge: TextStyle(

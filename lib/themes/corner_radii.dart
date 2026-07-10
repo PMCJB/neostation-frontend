@@ -34,23 +34,23 @@ class CornerRadii extends ThemeExtension<CornerRadii> {
   }
 
   /// Default radii used by every theme for now. Override per theme later.
-  factory CornerRadii.sm() {
+  factory CornerRadii.s() {
     return const CornerRadii(radiusExternal: 8, radiusInternal: 5);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.m() {
-    return const CornerRadii(radiusExternal: 14, radiusInternal: 9);
+    return const CornerRadii(radiusExternal: 14, radiusInternal: 10);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.l() {
-    return const CornerRadii(radiusExternal: 18, radiusInternal: 12);
+    return const CornerRadii(radiusExternal: 16, radiusInternal: 12);
   }
 
   /// Default radii used by every theme for now. Override per theme later.
   factory CornerRadii.xl() {
-    return const CornerRadii(radiusExternal: 24, radiusInternal: 18);
+    return const CornerRadii(radiusExternal: 24, radiusInternal: 20);
   }
 
   /// Scaled [BorderRadius] tokens (uses flutter_screenutil).

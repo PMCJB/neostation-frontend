@@ -212,12 +212,16 @@ class _SystemCardState extends State<SystemCard> {
             borderRadius:
                 Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
                 BorderRadius.circular(14.r),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+              width: 1.r,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(
                   context,
                 ).colorScheme.shadow.withValues(alpha: 0.1),
-                blurRadius: 5.r,
+                blurRadius: 4.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),
             ],
@@ -238,7 +242,7 @@ class _SystemCardState extends State<SystemCard> {
               highlightColor: Colors.transparent,
               splashColor: Colors.transparent,
               child: Padding(
-                padding: EdgeInsets.all(6.r),
+                padding: EdgeInsets.all(4.r),
                 child: widget.info.isGame
                     ? Stack(
                         key: _contentStackKey,
