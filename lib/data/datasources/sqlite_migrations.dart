@@ -291,6 +291,9 @@ class SqliteMigrations {
       case 95:
         await _migrateToVersion95(db);
         break;
+      case 96:
+        await _migrateToVersion96(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -4675,9 +4678,29 @@ class SqliteMigrations {
     }
   }
 
-  /// Migration v95: Rename theme_name column to theme_name in user_config.
   static Future<void> _migrateToVersion95(Database db) async {
-    _log.i('Migration v95: Rename palette_name to theme_name in user_config');
+    _log.i('Migration v95: Adding game_carousel_card_style to user_config');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('game_carousel_card_style')) {
+        db.execute(
+          "ALTER TABLE user_config ADD COLUMN game_carousel_card_style TEXT DEFAULT 'fanart'",
+        );
+        _log.i('Column game_carousel_card_style added via v95');
+      } else {
+        _log.i('Column game_carousel_card_style already exists');
+      }
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v95: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v96: Rename palette_name column to theme_name in user_config.
+  static Future<void> _migrateToVersion96(Database db) async {
+    _log.i('Migration v96: Rename palette_name to theme_name in user_config');
     try {
       final tableInfo = db.select('PRAGMA table_info(user_config)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
@@ -4694,9 +4717,9 @@ class SqliteMigrations {
         _log.i('Column theme_name added to user_config');
       }
 
-      _log.i('Migration v95 completed');
+      _log.i('Migration v96 completed');
     } catch (e, stackTrace) {
-      _log.e('Error in migration v95: $e');
+      _log.e('Error in migration v96: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
