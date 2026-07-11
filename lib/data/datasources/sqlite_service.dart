@@ -718,8 +718,9 @@ class SqliteService {
             final args = platformData['launch_arguments'].toString();
 
             // Extract package and activity from "-n package/activity"
-            final componentMatch =
-                RegExp(r'-n\s+([^\s/]+)/([^\s]+)').firstMatch(args);
+            final componentMatch = RegExp(
+              r'-n\s+([^\s/]+)/([^\s]+)',
+            ).firstMatch(args);
             if (componentMatch != null) {
               packageName ??= componentMatch.group(1);
               var activity = componentMatch.group(2)!;

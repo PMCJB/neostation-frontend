@@ -1683,8 +1683,8 @@ class GameService {
       await platform.invokeMethod('setGamepadBlock', {'block': true});
 
       final romPath = game.romPath!;
-      final dataUri = romPath.startsWith('content://') ||
-              romPath.startsWith('file://')
+      final dataUri =
+          romPath.startsWith('content://') || romPath.startsWith('file://')
           ? romPath
           : Uri.file(romPath).toString();
 
