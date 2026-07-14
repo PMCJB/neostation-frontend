@@ -2728,7 +2728,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
             Container(
               width: 180.r,
               height: availableHeight,
-              margin: EdgeInsets.only(left: 12.r, top: 12.r, bottom: 12.r),
+              margin: EdgeInsets.only(left: 58.r, top: 12.r, bottom: 12.r),
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
@@ -2773,11 +2773,11 @@ class _SystemGamesListState extends State<SystemGamesList> {
           ],
         ),
 
-        // Floating action buttons in the upper-left corner of the details area.
+        // Floating action buttons on the left side of the game list.
         if (!isMusic)
           Positioned(
             top: 12.r,
-            left: 180.r + 12.r + 8.r,
+            left: 12.r,
             child: _buildGameListActionButtons(),
           ),
       ],
@@ -2838,10 +2838,30 @@ class _SystemGamesListState extends State<SystemGamesList> {
     );
   }
 
-  /// Floating action buttons for the game list (back, view mode, random).
+  /// Floating action buttons for the game list (back, view mode, random,
+  /// favorite, scrape). Arranged vertically on the left side of the game list.
   Widget _buildGameListActionButtons() {
     final dropdownState = GameViewModeDropdown.globalKey.currentState;
     final viewModeKey = GlobalKey();
+    final selectedGame = _selectedGame;
+
+    final isFavorite = selectedGame?.isFavorite ?? false;
+    final hasScreenScraper =
+        widget.system.screenscraperId != null &&
+        widget.system.screenscraperId != 0;
+    final isScraping =
+        selectedGame != null &&
+        _scrapingGameRomnames.contains(selectedGame.romname);
+
+    final description =
+        _localizedDescription ??
+        (selectedGame?.getDescriptionForLanguage('en').isEmpty == true
+            ? AppLocale.noDescription.getString(context)
+            : selectedGame?.getDescriptionForLanguage('en') ?? '');
+    final isDescriptionMissing =
+        description.isEmpty ||
+        description == AppLocale.noDescription.getString(context) ||
+        description.trim().isEmpty;
 
     return Container(
       padding: EdgeInsets.all(6.r),
@@ -2849,7 +2869,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
         color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(10.r),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildIconButton(
@@ -2859,7 +2879,33 @@ class _SystemGamesListState extends State<SystemGamesList> {
             foregroundColor: Theme.of(context).colorScheme.onError,
             onTap: _goBack,
           ),
-          SizedBox(width: 6.r),
+          SizedBox(height: 6.r),
+          _buildIconButton(
+            iconPath: 'assets/images/gamepad/Xbox_Y_button.png',
+            symbol: isFavorite
+                ? Symbols.favorite_rounded
+                : Symbols.favorite_border_rounded,
+            color: isFavorite
+                ? Colors.redAccent
+                : Theme.of(context).colorScheme.tertiary,
+            foregroundColor:
+                isFavorite ? Colors.white : Theme.of(context).colorScheme.onPrimary,
+            onTap: selectedGame != null ? _toggleFavorite : () {},
+          ),
+          SizedBox(height: 6.r),
+          if (hasScreenScraper && selectedGame != null) ...[
+            _buildIconButton(
+              iconPath: 'assets/images/gamepad/Xbox_View_button.png',
+              symbol: isDescriptionMissing
+                  ? Symbols.search_rounded
+                  : Symbols.refresh_rounded,
+              color: Theme.of(context).colorScheme.tertiary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              onTap: _onScrapeCurrentGame,
+              isLoading: isScraping,
+            ),
+            SizedBox(height: 6.r),
+          ],
           _buildIconButton(
             key: viewModeKey,
             iconPath: 'assets/images/gamepad/Xbox_X_button.png',
@@ -2871,7 +2917,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
               dropdownState?.showDropdownFrom(viewModeKey);
             },
           ),
-          SizedBox(width: 6.r),
+          SizedBox(height: 6.r),
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Left Stick Click.png',
             symbol: Symbols.casino_rounded,
@@ -2884,6 +2930,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
     );
   }
 
+  /// Square action button (1:1 aspect ratio) with a gamepad hint icon and
+  /// a Material Symbols icon stacked vertically. Optionally shows a loading
+  /// indicator and disables taps while an async operation is in progress.
   Widget _buildIconButton({
     Key? key,
     required String iconPath,
@@ -2891,18 +2940,21 @@ class _SystemGamesListState extends State<SystemGamesList> {
     required Color color,
     Color? foregroundColor,
     required VoidCallback onTap,
+    bool isLoading = false,
   }) {
     final fg = foregroundColor ?? Colors.white;
+    const double buttonSize = 28.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         key: key,
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         borderRadius: BorderRadius.circular(6.r),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 4.r, vertical: 3.r),
+          width: buttonSize.r,
+          height: buttonSize.r,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.85),
+            color: color.withValues(alpha: isLoading ? 0.5 : 0.85),
             borderRadius: BorderRadius.circular(6.r),
             boxShadow: [
               BoxShadow(
@@ -2912,19 +2964,31 @@ class _SystemGamesListState extends State<SystemGamesList> {
               ),
             ],
           ),
-          child: Row(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                iconPath,
-                width: 14.r,
-                height: 14.r,
-                color: fg,
-                colorBlendMode: BlendMode.srcIn,
-              ),
-              SizedBox(width: 3.r),
-              Icon(symbol, size: 14.r, color: fg),
-            ],
+            children: isLoading
+                ? [
+                    SizedBox(
+                      width: 14.r,
+                      height: 14.r,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.r,
+                        color: fg,
+                      ),
+                    ),
+                  ]
+                : [
+                    Image.asset(
+                      iconPath,
+                      width: 11.r,
+                      height: 11.r,
+                      color: fg,
+                      colorBlendMode: BlendMode.srcIn,
+                    ),
+                    SizedBox(height: 1.r),
+                    Icon(symbol, size: 11.r, color: fg),
+                  ],
           ),
         ),
       ),

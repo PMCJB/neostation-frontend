@@ -809,16 +809,11 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
               game: _game,
               isMusicSystem: _effectiveSystem.folderName == 'music',
               hasScreenScraper: _hasScreenScraper,
-              isScrapingGame: _isScrapingGame || widget.isExternallyScraping,
-              localizedDescription: widget.localizedDescription,
               isSecondaryScreenActive: widget.isSecondaryScreenActive,
-              isFavorite: _game.isFavorite ?? false,
               cloudSyncEnabled: _cloudSyncEnabled,
               syncProvider: widget.syncProvider,
               syncIconController: _syncIconController,
               onPlayGame: () => widget.onPlayGame?.call(),
-              onToggleFavorite: _toggleFavorite,
-              onScrapeGame: _onScrapeGameCompact,
               onShowAchievements: () => _setTab(DetailTab.achievements),
               hasRetroAchievements: _hasRetroAchievements,
               isLoadingAchievements: _isLoadingAchievements,
@@ -874,18 +869,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
           ],
         ),
     );
-  }
-
-  /// Toggles the 'Favorite' status in the local database and notifies observers.
-  Future<void> _toggleFavorite() async {
-    await GameService.toggleFavorite(_game);
-    if (mounted) {
-      await context.read<SqliteConfigProvider>().refreshDetectedSystems();
-    }
-    setState(() {
-      _game = _game.copyWith(isFavorite: !(_game.isFavorite ?? false));
-    });
-    widget.onFavoriteToggled?.call();
   }
 
   /// Orchestrates a quick-access metadata scrape.
