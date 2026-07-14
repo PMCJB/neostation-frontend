@@ -106,6 +106,8 @@ class GameDetailsCardList extends StatefulWidget {
   final bool isNavigatingFast;
   final VoidCallback? onBack;
 
+ 
+
   const GameDetailsCardList({
     super.key,
     required this.game,
@@ -782,22 +784,16 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     );
     return Card(
       color: Colors.transparent,
-      margin: EdgeInsets.only(left: 8.r),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0.r)),
-      child: Container(
-        height: 220.r,
-        color: Colors.transparent,
+        shadowColor: Colors.transparent,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Background Layer: Dynamic fanart with aesthetic transitions.
-            _buildCardBackground(),
-
             // Header Layer: Tab navigation and system status.
             Positioned(
-              left: -0.5.r,
-              right: -0.5.r,
-              top: -0.5.r,
+              left: 0.r,
+              right: 0.r,
+              top: 0.r,
               child: GameDetailsTabsHeader(
                 isGameInfoHidden: _isGameInfoHidden,
                 hasRetroAchievements: _hasRetroAchievements,
@@ -877,7 +873,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
               ),
           ],
         ),
-      ),
     );
   }
 
@@ -914,58 +909,7 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
   }
 
   /// Renders the background fanart with smooth cross-fades and scale animations.
-  Widget _buildCardBackground() {
-    final imageSystemFolder = _effectiveSystem.primaryFolderName;
-    final fanartPath = _game.getImagePath(
-      imageSystemFolder,
-      'fanarts',
-      widget.fileProvider,
-    );
-
-    return Positioned.fill(
-      child: ClipRRect(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 512),
-          switchInCurve: Curves.easeOutExpo,
-          switchOutCurve: Curves.easeInCubic,
-          layoutBuilder: (currentChild, previousChildren) {
-            return Stack(
-              fit: StackFit.expand,
-              alignment: Alignment.center,
-              children: [...previousChildren, ?currentChild],
-            );
-          },
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: ScaleTransition(
-                scale: Tween<double>(begin: 1.0, end: 1.1).animate(
-                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
-                ),
-                child: child,
-              ),
-            );
-          },
-          child: Builder(
-            key: ValueKey('fanart_${_game.romPath ?? _game.romname}'),
-            builder: (context) {
-              final file = File(fanartPath);
-              if (file.existsSync()) {
-                return Image.file(
-                  file,
-                  key: ValueKey('${file.path}_$_imageVersion'),
-                  fit: BoxFit.cover,
-                  cacheWidth: 1920,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ),
-      ),
-    );
-  }
+  
 
   /// Directs primary gamepad inputs (A Button) based on the currently active tab.
   void _handleTriggerAction() {
