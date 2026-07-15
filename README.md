@@ -223,14 +223,17 @@ If you discover a security vulnerability, please follow the instructions in [`SE
 - **@misobadev**
   - Ko-fi: https://ko-fi.com/neostation
 
-### Official Collaborators
-
-These collaborators work very hard to make NeoStation what it is today.
+### Official Co-Maintainers
 
 - **@androosio**
   - Ko-fi: https://ko-fi.com/androosio
+
+### Official Collaborators
+
 - **@ItsRetroPup**
   - Ko-fi: https://ko-fi.com/retropup84752
+
+These co-maintainers and collaborators work very hard to make NeoStation what it is today.
 
 ## License
 
