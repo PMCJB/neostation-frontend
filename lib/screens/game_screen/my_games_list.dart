@@ -1394,9 +1394,11 @@ class _SystemGamesListState extends State<SystemGamesList> {
     );
   }
 
-  /// Square action button (1:1 aspect ratio) with a gamepad hint icon and
-  /// a Material Symbols icon stacked vertically. Optionally shows a loading
-  /// indicator and disables taps while an async operation is in progress.
+  /// Square action button (1:1 aspect ratio) with a large Material Symbols
+  /// icon centered inside and a small gamepad hint badge overlapping the
+  /// bottom edge, half inside and half outside the button.
+  /// Optionally shows a loading indicator and disables taps while an async
+  /// operation is in progress.
   Widget _buildIconButton({
     Key? key,
     required String iconPath,
@@ -1407,7 +1409,13 @@ class _SystemGamesListState extends State<SystemGamesList> {
     bool isLoading = false,
   }) {
     final fg = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
-    const double buttonSize = 28.0;
+    const double buttonSize = 32.0;
+    const double badgeSize = 12.0;
+    const double mainIconSize = 18.0;
+    final cornerRadius =
+        Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+        BorderRadius.circular(14.r);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1416,50 +1424,69 @@ class _SystemGamesListState extends State<SystemGamesList> {
         highlightColor: Colors.transparent,
         key: key,
         onTap: isLoading ? null : onTap,
-        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+        borderRadius: cornerRadius,
         child: Container(
           width: buttonSize.r,
           height: buttonSize.r,
           decoration: BoxDecoration(
             color: color,
-            borderRadius:
-                Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+            borderRadius: cornerRadius,
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.3),
                 blurRadius: 2.r,
                 offset: Offset(1.r, 1.r),
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: isLoading
-                ? [
-                    SizedBox(
-                      width: 14.r,
-                      height: 14.r,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.r,
-                        color: fg,
+          child: isLoading
+              ? Center(
+                  child: SizedBox(
+                    width: 16.r,
+                    height: 16.r,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.r,
+                      color: fg,
+                    ),
+                  ),
+                )
+              : Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(symbol, size: mainIconSize.r, color: fg),
+                    Positioned(
+                      bottom: -(badgeSize / 2).r,
+                      child: Container(
+                        width: badgeSize.r,
+                        height: badgeSize.r,
+                        padding: EdgeInsets.all(1.5.r),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.25),
+                              blurRadius: 2.r,
+                              offset: Offset(0, 1.r),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          iconPath,
+                          width: (badgeSize - 3).r,
+                          height: (badgeSize - 3).r,
+                          color: fg,
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
                       ),
                     ),
-                  ]
-                : [
-                    Image.asset(
-                      iconPath,
-                      width: 11.r,
-                      height: 11.r,
-                      color: fg,
-                      colorBlendMode: BlendMode.srcIn,
-                    ),
-                    SizedBox(height: 1.r),
-                    Icon(symbol, size: 11.r, color: fg),
                   ],
-          ),
+                ),
         ),
       ),
     );
