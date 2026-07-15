@@ -229,7 +229,7 @@ These collaborators work very hard to make NeoStation what it is today.
 
 - **@androosio**
   - Ko-fi: https://ko-fi.com/androosio
-- **@retropup**
+- **@ItsRetroPup**
   - Ko-fi: https://ko-fi.com/retropup84752
 
 ## License
