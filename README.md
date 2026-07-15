@@ -220,7 +220,7 @@ If you discover a security vulnerability, please follow the instructions in [`SE
 
 ### Lead
 
-- **@misoba**
+- **@misobadev**
   - Ko-fi: https://ko-fi.com/neostation
 
 ### Official Collaborators
