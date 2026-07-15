@@ -1313,7 +1313,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
     final viewModeKey = GlobalKey();
     final selectedGame = _selectedGame;
 
-    final isFavorite = selectedGame?.isFavorite ?? false;
     final hasScreenScraper =
         widget.system.screenscraperId != null &&
         widget.system.screenscraperId != 0;
@@ -1334,8 +1333,10 @@ class _SystemGamesListState extends State<SystemGamesList> {
     return Container(
       padding: EdgeInsets.all(6.r),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(10.r),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+        borderRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+            BorderRadius.circular(14.r),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1343,22 +1344,16 @@ class _SystemGamesListState extends State<SystemGamesList> {
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Xbox_B_button.png',
             symbol: Symbols.arrow_back_rounded,
-            color: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
+            color: Theme.of(context).colorScheme.secondary,
+            foregroundColor: Theme.of(context).colorScheme.onSecondary,
             onTap: _goBack,
           ),
           SizedBox(height: 6.r),
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Xbox_Y_button.png',
-            symbol: isFavorite
-                ? Symbols.favorite_rounded
-                : Symbols.favorite_border_rounded,
-            color: isFavorite
-                ? Colors.redAccent
-                : Theme.of(context).colorScheme.tertiary,
-            foregroundColor: isFavorite
-                ? Colors.white
-                : Theme.of(context).colorScheme.onPrimary,
+            symbol: Symbols.favorite_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: selectedGame != null ? _toggleFavorite : () {},
           ),
           SizedBox(height: 6.r),
@@ -1368,7 +1363,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
               symbol: isDescriptionMissing
                   ? Symbols.search_rounded
                   : Symbols.refresh_rounded,
-              color: Theme.of(context).colorScheme.tertiary,
+              color: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
               onTap: _onScrapeCurrentGame,
               isLoading: isScraping,
@@ -1379,7 +1374,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
             key: viewModeKey,
             iconPath: 'assets/images/gamepad/Xbox_X_button.png',
             symbol: Symbols.grid_view_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
+            color: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: () {
               SfxService().playNavSound();
@@ -1390,7 +1385,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Left Stick Click.png',
             symbol: Symbols.casino_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
+            color: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: _showRandomGameDialog,
           ),
@@ -1407,27 +1402,33 @@ class _SystemGamesListState extends State<SystemGamesList> {
     required String iconPath,
     required IconData symbol,
     required Color color,
-    Color? foregroundColor,
+    required foregroundColor,
     required VoidCallback onTap,
     bool isLoading = false,
   }) {
-    final fg = foregroundColor ?? Colors.white;
+    final fg = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
     const double buttonSize = 28.0;
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         key: key,
         onTap: isLoading ? null : onTap,
-        borderRadius: BorderRadius.circular(6.r),
+        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                BorderRadius.circular(14.r),
         child: Container(
           width: buttonSize.r,
           height: buttonSize.r,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: isLoading ? 0.5 : 0.85),
-            borderRadius: BorderRadius.circular(6.r),
+            color: color,
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                BorderRadius.circular(14.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.3),
                 blurRadius: 2.r,
                 offset: Offset(1.r, 1.r),
               ),
