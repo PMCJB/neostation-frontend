@@ -1193,9 +1193,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
           children: [
             // Sidebar: Interactive list of games or music tracks.
             Container(
-              width: 180.r,
+              width: 200.r,
               height: availableHeight,
-              margin: EdgeInsets.only(left: 58.r, top: 12.r, bottom: 12.r),
+              margin: EdgeInsets.only(left: 60.r, top: 12.r, bottom: 12.r),
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
@@ -1226,7 +1226,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
                     ).extension<CornerRadii>()?.radiusInternal ??
                     BorderRadius.circular(9.r),
                 child: SizedBox(
-                  width: 180.r,
+                  width: 200.r,
                   height: availableHeight,
                   child: _buildGamesListPanel(),
                 ),
@@ -1337,6 +1337,10 @@ class _SystemGamesListState extends State<SystemGamesList> {
         borderRadius:
             Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
             BorderRadius.circular(14.r),
+        border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1.r,
+                ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1344,8 +1348,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Xbox_B_button.png',
             symbol: Symbols.arrow_back_rounded,
-            color: Theme.of(context).colorScheme.secondary,
-            foregroundColor: Theme.of(context).colorScheme.onSecondary,
+            color: Theme.of(context).colorScheme.error,
+            foregroundColor: Theme.of(context).colorScheme.onError,
             onTap: _goBack,
           ),
           SizedBox(height: 6.r),
@@ -1409,9 +1413,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
     bool isLoading = false,
   }) {
     final fg = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
-    const double buttonSize = 32.0;
-    const double badgeSize = 12.0;
-    const double mainIconSize = 18.0;
+    const double buttonSize = 24.0;
+    const double badgeSize = 14.0;
+    const double mainIconSize = 14.0;
     final cornerRadius =
         Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
         BorderRadius.circular(14.r);
@@ -1426,6 +1430,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
         onTap: isLoading ? null : onTap,
         borderRadius: cornerRadius,
         child: Container(
+          margin: EdgeInsets.only(bottom: 8.r),
           width: buttonSize.r,
           height: buttonSize.r,
           decoration: BoxDecoration(
@@ -1458,13 +1463,12 @@ class _SystemGamesListState extends State<SystemGamesList> {
                   children: [
                     Icon(symbol, size: mainIconSize.r, color: fg),
                     Positioned(
-                      bottom: -(badgeSize / 2).r,
+                      bottom: -(badgeSize / 1.5).r,
                       child: Container(
                         width: badgeSize.r,
                         height: badgeSize.r,
-                        padding: EdgeInsets.all(1.5.r),
                         decoration: BoxDecoration(
-                          color: color,
+                          color: Theme.of(context).colorScheme.surface,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -1472,7 +1476,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
                                 context,
                               ).colorScheme.shadow.withValues(alpha: 0.25),
                               blurRadius: 2.r,
-                              offset: Offset(0, 1.r),
+                              offset: Offset(2.r, 2.r),
                             ),
                           ],
                         ),
@@ -1480,7 +1484,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
                           iconPath,
                           width: (badgeSize - 3).r,
                           height: (badgeSize - 3).r,
-                          color: fg,
+                          color: Theme.of(context).colorScheme.onSurface,
                           colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
