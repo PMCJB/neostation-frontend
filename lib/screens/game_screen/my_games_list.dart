@@ -39,8 +39,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../providers/system_background_provider.dart';
 import '../../models/secondary_display_state.dart';
 import '../../widgets/game_view_mode_dropdown.dart';
+import '../../widgets/neo_sync_status_icon.dart';
 import '../../constants/system_folder_names.dart';
 import '../../themes/corner_radii.dart';
+import '../../sync/i_sync_provider.dart';
 
 part 'my_games_list/gamepad_nav.dart';
 part 'my_games_list/favorites_reorder.dart';
@@ -1199,7 +1201,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
               decoration: BoxDecoration(
                 color: Theme.of(
                   context,
-                ).colorScheme.surface.withValues(alpha: 0.90),
+                ).colorScheme.surface.withValues(alpha: 0.9),
                 borderRadius:
                     Theme.of(
                       context,
@@ -1247,7 +1249,12 @@ class _SystemGamesListState extends State<SystemGamesList> {
           Positioned(
             top: 12.r,
             left: 12.r,
-            child: _buildGameListActionButtons(),
+            child: Consumer<SyncManager>(
+              builder:
+                  (context, syncManager, child) => _buildGameListActionButtons(
+                    syncProvider: syncManager.active,
+                  ),
+            ),
           ),
       ],
     );
@@ -1308,7 +1315,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
 
   /// Floating action buttons for the game list (back, view mode, random,
   /// favorite, scrape). Arranged vertically on the left side of the game list.
-  Widget _buildGameListActionButtons() {
+  Widget _buildGameListActionButtons({ISyncProvider? syncProvider}) {
     final dropdownState = GameViewModeDropdown.globalKey.currentState;
     final viewModeKey = GlobalKey();
     final selectedGame = _selectedGame;
@@ -1393,6 +1400,17 @@ class _SystemGamesListState extends State<SystemGamesList> {
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: _showRandomGameDialog,
           ),
+          // Compact NeoSync status indicator, separated from the main
+          // action buttons and showing only a descriptive icon.
+          if (syncProvider != null && selectedGame != null) ...[
+            SizedBox(height: 12.r),
+            NeoSyncStatusIcon(
+              system: widget.system,
+              game: selectedGame,
+              syncProvider: syncProvider,
+              size: 24.0,
+            ),
+          ],
         ],
       ),
     );
