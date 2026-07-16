@@ -4,6 +4,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/services/sfx_service.dart';
+import 'package:neostation/themes/app_themes.dart';
 import '../../../../models/system_model.dart';
 import '../../../../models/game_model.dart';
 import '../../../../models/retro_achievements_game_info.dart';
@@ -171,17 +172,25 @@ class GameDetailsFooter extends StatelessWidget {
         final isFocused = Focus.of(context).hasFocus;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 110.r,
-          height: 40.r,
+          width: 120.r,
+          height: 45.r,
           decoration: BoxDecoration(
             color: isFocused
                 ? const Color(0xFF36F184)
                 : const Color(0xFF2ECC71),
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(14.r),
+            border: Border.all(
+              color: Color(0xFF36F184),
+              width: 1.r,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 2.r,
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 4.r,
                 offset: Offset(2.0.r, 2.0.r),
               ),
             ],
@@ -194,20 +203,21 @@ class GameDetailsFooter extends StatelessWidget {
               hoverColor: Colors.transparent,
               highlightColor: Colors.transparent,
               splashColor: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12.r),
+              borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(14.r),
               onTap: () {
                 SfxService().playEnterSound();
                 onPlayGame();
               },
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.r),
+                padding: EdgeInsets.only(left: 0.r, right: 10.r),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Image.asset(
                       'assets/images/gamepad/Xbox_A_button.png',
-                      width: 22.r,
-                      height: 22.r,
+                      width: 32.r,
+                      height: 32.r,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     SizedBox(width: 8.r),
@@ -297,7 +307,7 @@ class GameDetailsFooter extends StatelessWidget {
           width: 120.r,
           height: 45.r,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
             borderRadius:
                 Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
                 BorderRadius.circular(14.r),
@@ -350,18 +360,19 @@ class GameDetailsFooter extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      progressText.toUpperCase(),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 12.r,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                        overflow: TextOverflow.ellipsis
+                    SizedBox(
+                      width: 70.r,
+                      child: Text(
+                        progressText.toUpperCase(),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 10.r,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-
                     ),
                     SizedBox(height: 4.r),
                     SizedBox(
@@ -401,9 +412,10 @@ class _SteamStyleRating extends StatelessWidget {
     // Normalizes a 0-20 score to a 0.0-10.0 scale for color interpolation.
     final ratingValue = (game.rating / 2).clamp(0.0, 10.0);
     final colorRatio = (ratingValue - 1) / 9;
+    final customColors = AppThemes.getCustomColors(context);
     final ratingColor = Color.lerp(
-      Colors.redAccent,
-      Colors.lightGreenAccent,
+      customColors.errorColor,
+      customColors.successColor,
       colorRatio,
     )!;
 
