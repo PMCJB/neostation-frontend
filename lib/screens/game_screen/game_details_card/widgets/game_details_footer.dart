@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:outlined_text/outlined_text.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/services/sfx_service.dart';
 import '../../../../models/system_model.dart';
@@ -97,35 +98,37 @@ class GameDetailsFooter extends StatelessWidget {
                                 color: Colors.white,
                                 fontSize: 20.r,
                                 fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 2.r,
-                                    color: Colors.black,
-                                    offset: const Offset(0, 0),
-                                  ),
-                                ],
                               ),
+                              strokes: [
+                                OutlinedTextStroke(
+                                  color: Colors.black.withValues(alpha: 0.85),
+                                  width: 2.5.r,
+                                ),
+                              ],
                             ),
                             if (game.showRomFileNameSubtitle) ...[
-                              Text(
-                                game.romname,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.72),
-                                  fontSize: 12.r,
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.15,
-                                  shadows: [
-                                    Shadow(
-                                      blurRadius: 2.r,
-                                      color: Colors.black.withValues(
-                                        alpha: 0.45,
-                                      ),
-                                      offset: const Offset(2, 2),
+                              OutlinedText(
+                                text: Text(
+                                  game.romname,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(
+                                      alpha: 0.72,
                                     ),
-                                  ],
+                                    fontSize: 12.r,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.15,
+                                  ),
                                 ),
+                                strokes: [
+                                  OutlinedTextStroke(
+                                    color: Colors.black.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    width: 1.5.r,
+                                  ),
+                                ],
                               ),
                             ],
                           ],
