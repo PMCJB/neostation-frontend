@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/services/sfx_service.dart';
 
 import '../../../../themes/corner_radii.dart';
@@ -119,11 +120,10 @@ class GameDetailsTabsHeader extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Row(
+                            Row(
                             children: [
                               _TabItem(
-                                iconPath:
-                                    'assets/images/icons/gamepad-bulk.png',
+                                icon: Symbols.gamepad_rounded,
                                 tab: DetailTab.general,
                                 width: tabWidth,
                                 isSelected: currentTab == DetailTab.general,
@@ -131,8 +131,7 @@ class GameDetailsTabsHeader extends StatelessWidget {
                               ),
                               if (!isGameInfoHidden)
                                 _TabItem(
-                                  iconPath:
-                                      'assets/images/icons/image-bulk.png',
+                                  icon: Symbols.image_rounded,
                                   tab: DetailTab.gameInfo,
                                   width: tabWidth,
                                   isSelected: currentTab == DetailTab.gameInfo,
@@ -140,8 +139,7 @@ class GameDetailsTabsHeader extends StatelessWidget {
                                 ),
                               if (hasRetroAchievements)
                                 _TabItem(
-                                  iconPath:
-                                      'assets/images/icons/trophy-bulk.png',
+                                  icon: Symbols.emoji_events_rounded,
                                   tab: DetailTab.achievements,
                                   width: tabWidth,
                                   isSelected:
@@ -150,7 +148,7 @@ class GameDetailsTabsHeader extends StatelessWidget {
                                 ),
                               if (showSettings)
                                 _TabItem(
-                                  iconPath: 'assets/images/icons/gear-bulk.png',
+                                  icon: Symbols.settings_rounded,
                                   tab: DetailTab.settings,
                                   width: tabWidth,
                                   isSelected: currentTab == DetailTab.settings,
@@ -181,14 +179,14 @@ class GameDetailsTabsHeader extends StatelessWidget {
 
 /// An individual tab selector icon with click/tap handling.
 class _TabItem extends StatelessWidget {
-  final String iconPath;
+  final IconData icon;
   final DetailTab tab;
   final double width;
   final bool isSelected;
   final ValueChanged<DetailTab> onTap;
 
   const _TabItem({
-    required this.iconPath,
+    required this.icon,
     required this.tab,
     required this.width,
     required this.isSelected,
@@ -214,10 +212,9 @@ class _TabItem extends StatelessWidget {
           width: width,
           height: 36.r,
           alignment: Alignment.center,
-          child: Image.asset(
-            iconPath,
-            width: 18.r,
-            height: 18.r,
+          child: Icon(
+            icon,
+            size: 18.r,
             color: isSelected
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurface,
