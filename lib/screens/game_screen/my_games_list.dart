@@ -1430,17 +1430,16 @@ class _SystemGamesListState extends State<SystemGamesList> {
     required VoidCallback onTap,
     bool isLoading = false,
   }) {
-    final fg = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
     const double buttonWidth = 26.0;
     const double buttonHeight = 34.0;
-    const double badgeHeight = 14.0;
+    const double badgeHeight = 18.0;
     const double mainIconSize = 12.0;
     final cornerRadius =
         Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
         BorderRadius.circular(14.r);
     final badgeRadius = BorderRadius.only(
-      bottomLeft: cornerRadius.bottomLeft,
-      bottomRight: cornerRadius.bottomRight,
+      topLeft: cornerRadius.topLeft,
+      topRight: cornerRadius.topRight,
     );
 
     return Material(
@@ -1459,12 +1458,12 @@ class _SystemGamesListState extends State<SystemGamesList> {
           decoration: BoxDecoration(
             color: Theme.of(
                   context,
-                ).colorScheme.surface,
+                ).colorScheme.primary,
             borderRadius: cornerRadius,
             border: Border.all(
               color: color,
               width: 2.r,
-              strokeAlign: BorderSide.strokeAlignOutside
+              strokeAlign: BorderSide.strokeAlignCenter
             ),
             boxShadow: [
               BoxShadow(
@@ -1483,31 +1482,32 @@ class _SystemGamesListState extends State<SystemGamesList> {
                     height: 16.r,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.r,
-                      color: fg,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 )
               : Column(
                   children: [
-                    // Main action icon centered in the upper area.
-                    Expanded(
-                      child: Center(
-                        child: Icon(symbol, size: mainIconSize.r, color: Theme.of(
-                  context,
-                ).colorScheme.onSurface),
-                      ),
-                    ),
-                    // Gamepad hint badge anchored to the bottom of the button,
+                    // Action icon badge anchored to the top of the button,
                     // spanning the full width with a low height so it shows
                     // less than half of the button.
                     Container(
                       height: badgeHeight.r,
                       width: double.infinity,
-                      isAntiAlias: true,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: badgeRadius,
                       ),
+                      child: Center(
+                        child: Icon(
+                          symbol,
+                          size: mainIconSize.r,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    // Gamepad hint icon centered in the lower area.
+                    Expanded(
                       child: Center(
                         child: Image.asset(
                           iconPath,
