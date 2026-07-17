@@ -16,6 +16,7 @@ import 'package:neostation/screens/app_screen.dart';
 import 'package:neostation/widgets/game_view_mode_dropdown.dart';
 import 'package:neostation/widgets/native_carousel.dart';
 import 'package:neostation/widgets/game_view_footer.dart';
+import 'package:neostation/widgets/game_action_buttons.dart';
 import 'package:neostation/constants/system_folder_names.dart';
 
 class GamesCarousel extends StatefulWidget {
@@ -406,138 +407,6 @@ class _GamesCarouselState extends State<GamesCarousel> {
     return '';
   }
 
-  Widget _buildGridHeader() {
-    final dropdownState = GameViewModeDropdown.globalKey.currentState;
-    final viewModeKey = GlobalKey();
-    final shortName =
-        (widget.system.shortName != null && widget.system.shortName!.isNotEmpty)
-        ? widget.system.shortName!
-        : widget.system.realName;
-    return Container(
-      padding: EdgeInsets.only(left: 8.r, right: 8.r, top: 8.r, bottom: 4.r),
-      color: Scaffold.of(context).widget.backgroundColor,
-      child: Row(
-        children: [
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Xbox_B_button.png',
-            symbol: Symbols.arrow_back_rounded,
-            color: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
-            onTap: widget.onBack,
-          ),
-          SizedBox(width: 6.r),
-          _buildIconButton(
-            key: viewModeKey,
-            iconPath: 'assets/images/gamepad/Xbox_X_button.png',
-            symbol: Symbols.view_carousel_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: () {
-              SfxService().playNavSound();
-              dropdownState?.showDropdownFrom(viewModeKey);
-            },
-          ),
-          SizedBox(width: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Left Stick Click.png',
-            symbol: Symbols.casino_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: widget.onRandom,
-          ),
-          SizedBox(width: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Xbox_View_button.png',
-            symbol: Symbols.search_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: widget.onScrape,
-          ),
-          SizedBox(width: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Xbox_Y_button.png',
-            symbol: Symbols.favorite_rounded,
-            color: Theme.of(context).colorScheme.tertiary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: widget.onFavorite,
-          ),
-          SizedBox(width: 10.r),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.4),
-                width: 1.r,
-              ),
-            ),
-            child: Text(
-              shortName,
-              style: TextStyle(
-                fontSize: 12.r,
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.primary,
-                letterSpacing: 0.5.r,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildIconButton({
-    Key? key,
-    required String iconPath,
-    required IconData symbol,
-    required Color color,
-    Color? foregroundColor,
-    required VoidCallback? onTap,
-  }) {
-    final fg = foregroundColor ?? Colors.white;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        key: key,
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6.r),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 5.r, vertical: 4.r),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(6.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 2.r,
-                offset: Offset(1.r, 1.r),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                iconPath,
-                width: 16.r,
-                height: 16.r,
-                color: fg,
-                colorBlendMode: BlendMode.srcIn,
-              ),
-              SizedBox(width: 4.r),
-              Icon(symbol, size: 16.r, color: fg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildFanartCard(GameModel game, bool isSelected) {
     final theme = Theme.of(context);
     final folder = _folderForGame(game);
@@ -871,22 +740,24 @@ class _GamesCarouselState extends State<GamesCarousel> {
       children: [
         Column(
           children: [
-            SizedBox(height: 36.r),
             Expanded(
-              child: NativeCarousel(
-                key: _carouselKey,
-                itemCount: widget.games.length,
-                initialIndex: _currentIndex.clamp(0, widget.games.length - 1),
-                itemBuilder: (context, index) {
-                  final game = widget.games[index];
-                  return KeyedSubtree(
-                    key: ValueKey(game.romname),
-                    child: isFanart
-                        ? _buildFanartCard(game, index == _currentIndex)
-                        : _buildBoxCard(game, index == _currentIndex),
-                  );
-                },
-                onPageChanged: _onPageChanged,
+              child: Padding(
+                padding: EdgeInsets.only(left: 60.r),
+                child: NativeCarousel(
+                  key: _carouselKey,
+                  itemCount: widget.games.length,
+                  initialIndex: _currentIndex.clamp(0, widget.games.length - 1),
+                  itemBuilder: (context, index) {
+                    final game = widget.games[index];
+                    return KeyedSubtree(
+                      key: ValueKey(game.romname),
+                      child: isFanart
+                          ? _buildFanartCard(game, index == _currentIndex)
+                          : _buildBoxCard(game, index == _currentIndex),
+                    );
+                  },
+                  onPageChanged: _onPageChanged,
+                ),
               ),
             ),
             SizedBox(
@@ -960,7 +831,28 @@ class _GamesCarouselState extends State<GamesCarousel> {
             SizedBox(height: 8.r),
           ],
         ),
-        Positioned(top: 0, left: 0, right: 0, child: _buildGridHeader()),
+        Positioned(
+          top: 12.r,
+          left: 12.r,
+          child: GameActionButtons(
+            system: widget.system,
+            selectedGame: currentGame,
+            onBack: widget.onBack,
+            onFavorite: widget.onFavorite ?? () {},
+            onRandom: widget.onRandom ?? () {},
+            onViewMode: () {
+              SfxService().playNavSound();
+              GameViewModeDropdown.globalKey.currentState?.showDropdown();
+            },
+            onScrape: widget.onScrape,
+            hasScreenScraper:
+                widget.system.screenscraperId != null &&
+                widget.system.screenscraperId != 0,
+            isScraping:
+                widget.scrapingGameRomnames.contains(currentGame.romname),
+            isDescriptionMissing: true,
+          ),
+        ),
       ],
     );
   }

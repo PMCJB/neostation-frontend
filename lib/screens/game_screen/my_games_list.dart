@@ -39,10 +39,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../providers/system_background_provider.dart';
 import '../../models/secondary_display_state.dart';
 import '../../widgets/game_view_mode_dropdown.dart';
-import '../../widgets/neo_sync_status_icon.dart';
+import '../../widgets/game_action_buttons.dart';
 import '../../constants/system_folder_names.dart';
 import '../../themes/corner_radii.dart';
-import '../../sync/i_sync_provider.dart';
 
 part 'my_games_list/gamepad_nav.dart';
 part 'my_games_list/favorites_reorder.dart';
@@ -1266,8 +1265,39 @@ class _SystemGamesListState extends State<SystemGamesList> {
             top: 12.r,
             left: 12.r,
             child: Consumer<SyncManager>(
-              builder: (context, syncManager, child) =>
-                  _buildGameListActionButtons(syncProvider: syncManager.active),
+              builder: (context, syncManager, child) {
+                final selectedGame = _selectedGame;
+                final description =
+                    _localizedDescription ??
+                    (selectedGame?.getDescriptionForLanguage('en').isEmpty ==
+                            true
+                        ? AppLocale.noDescription.getString(context)
+                        : selectedGame?.getDescriptionForLanguage('en') ?? '');
+                final isDescriptionMissing =
+                    description.isEmpty ||
+                    description == AppLocale.noDescription.getString(context) ||
+                    description.trim().isEmpty;
+                return GameActionButtons(
+                  system: widget.system,
+                  selectedGame: selectedGame,
+                  syncProvider: syncManager.active,
+                  onBack: _goBack,
+                  onFavorite: _toggleFavorite,
+                  onRandom: _showRandomGameDialog,
+                  onViewMode: () {
+                    SfxService().playNavSound();
+                    GameViewModeDropdown.globalKey.currentState?.showDropdown();
+                  },
+                  onScrape: _onScrapeCurrentGame,
+                  hasScreenScraper:
+                      widget.system.screenscraperId != null &&
+                      widget.system.screenscraperId != 0,
+                  isScraping:
+                      selectedGame != null &&
+                      _scrapingGameRomnames.contains(selectedGame.romname),
+                  isDescriptionMissing: isDescriptionMissing,
+                );
+              },
             ),
           ),
       ],
@@ -1323,216 +1353,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
           }
           return const SizedBox.shrink();
         },
-      ),
-    );
-  }
-
-  /// Floating action buttons for the game list (back, view mode, random,
-  /// favorite, scrape). Arranged vertically on the left side of the game list.
-  Widget _buildGameListActionButtons({ISyncProvider? syncProvider}) {
-    final dropdownState = GameViewModeDropdown.globalKey.currentState;
-    final viewModeKey = GlobalKey();
-    final selectedGame = _selectedGame;
-
-    final hasScreenScraper =
-        widget.system.screenscraperId != null &&
-        widget.system.screenscraperId != 0;
-    final isScraping =
-        selectedGame != null &&
-        _scrapingGameRomnames.contains(selectedGame.romname);
-
-    final description =
-        _localizedDescription ??
-        (selectedGame?.getDescriptionForLanguage('en').isEmpty == true
-            ? AppLocale.noDescription.getString(context)
-            : selectedGame?.getDescriptionForLanguage('en') ?? '');
-    final isDescriptionMissing =
-        description.isEmpty ||
-        description == AppLocale.noDescription.getString(context) ||
-        description.trim().isEmpty;
-
-    return Container(
-      padding: EdgeInsets.all(6.r),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-        borderRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-            BorderRadius.circular(14.r),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-          width: 1.r,
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Xbox_B_button.png',
-            symbol: Symbols.arrow_back_rounded,
-            color: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: _goBack,
-          ),
-          SizedBox(height: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Xbox_Y_button.png',
-            symbol: Symbols.favorite_rounded,
-            color: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: selectedGame != null ? _toggleFavorite : () {},
-          ),
-          SizedBox(height: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Left Stick Click.png',
-            symbol: Symbols.casino_rounded,
-            color: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: _showRandomGameDialog,
-          ),
-          SizedBox(height: 6.r),
-          _buildIconButton(
-            key: viewModeKey,
-            iconPath: 'assets/images/gamepad/Xbox_X_button.png',
-            symbol: Symbols.grid_view_rounded,
-            color: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: () {
-              SfxService().playNavSound();
-              dropdownState?.showDropdownFrom(viewModeKey);
-            },
-          ),
-          if (hasScreenScraper && selectedGame != null) ...[
-            SizedBox(height: 6.r),
-            _buildIconButton(
-              iconPath: 'assets/images/gamepad/Xbox_View_button.png',
-              symbol: isDescriptionMissing
-                  ? Symbols.search_rounded
-                  : Symbols.refresh_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              onTap: _onScrapeCurrentGame,
-              isLoading: isScraping,
-            ),
-          ],
-          // Compact NeoSync status indicator, separated from the main
-          // action buttons and showing only a descriptive icon.
-          if (syncProvider != null && selectedGame != null) ...[
-            SizedBox(height: 12.r),
-            NeoSyncStatusIcon(
-              system: widget.system,
-              game: selectedGame,
-              syncProvider: syncProvider,
-              size: 24.0,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Square action button (1:1 aspect ratio) with a large Material Symbols
-  /// icon centered inside and a small gamepad hint badge overlapping the
-  /// bottom edge, half inside and half outside the button.
-  /// Optionally shows a loading indicator and disables taps while an async
-  /// operation is in progress.
-  Widget _buildIconButton({
-    Key? key,
-    required String iconPath,
-    required IconData symbol,
-    required Color color,
-    required foregroundColor,
-    required VoidCallback onTap,
-    bool isLoading = false,
-  }) {
-    const double buttonWidth = 26.0;
-    const double buttonHeight = 34.0;
-    const double badgeHeight = 18.0;
-    const double mainIconSize = 12.0;
-    final cornerRadius =
-        Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-        BorderRadius.circular(14.r);
-    final badgeRadius = BorderRadius.only(
-      topLeft: cornerRadius.topLeft,
-      topRight: cornerRadius.topRight,
-    );
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        focusColor: Colors.transparent,
-        hoverColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        key: key,
-        onTap: isLoading ? null : onTap,
-        borderRadius: cornerRadius,
-        child: Container(
-          margin: EdgeInsets.only(bottom: 2.r),
-          width: buttonWidth.r,
-          height: buttonHeight.r,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: cornerRadius,
-            border: Border.all(
-              color: color,
-              width: 2.r,
-              strokeAlign: BorderSide.strokeAlignCenter,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.shadow.withValues(alpha: 0.3),
-                blurRadius: 2.r,
-                offset: Offset(1.r, 1.r),
-              ),
-            ],
-          ),
-          child: isLoading
-              ? Center(
-                  child: SizedBox(
-                    width: 16.r,
-                    height: 16.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.r,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Action icon badge anchored to the top of the button,
-                    // spanning the full width with a low height so it shows
-                    // less than half of the button.
-                    Container(
-                      height: badgeHeight.r,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: badgeRadius,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          symbol,
-                          size: mainIconSize.r,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    // Gamepad hint icon centered in the lower area.
-                    Expanded(
-                      child: Center(
-                        child: Image.asset(
-                          iconPath,
-                          width: 14.r,
-                          height: 14.r,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          colorBlendMode: BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-        ),
       ),
     );
   }
