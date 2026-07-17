@@ -96,9 +96,9 @@ class GameDetailsFooter extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 shadows: [
                                   Shadow(
-                                    blurRadius: 2.r,
+                                    blurRadius: 1.r,
                                     color: Colors.black,
-                                    offset: const Offset(0, 0),
+                                    offset: const Offset(2, 2),
                                   ),
                                 ],
                               ),
@@ -115,10 +115,8 @@ class GameDetailsFooter extends StatelessWidget {
                                   height: 1.15,
                                   shadows: [
                                     Shadow(
-                                      blurRadius: 2.r,
-                                      color: Colors.black.withValues(
-                                        alpha: 0.45,
-                                      ),
+                                      blurRadius: 1.r,
+                                      color: Colors.black,
                                       offset: const Offset(2, 2),
                                     ),
                                   ],

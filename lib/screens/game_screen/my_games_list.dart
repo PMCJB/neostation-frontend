@@ -1355,8 +1355,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
           _buildIconButton(
             iconPath: 'assets/images/gamepad/Xbox_B_button.png',
             symbol: Symbols.arrow_back_rounded,
-            color: Theme.of(context).colorScheme.error,
-            foregroundColor: Theme.of(context).colorScheme.onError,
+            color: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: _goBack,
           ),
           SizedBox(height: 6.r),
@@ -1368,19 +1368,14 @@ class _SystemGamesListState extends State<SystemGamesList> {
             onTap: selectedGame != null ? _toggleFavorite : () {},
           ),
           SizedBox(height: 6.r),
-          if (hasScreenScraper && selectedGame != null) ...[
-            _buildIconButton(
-              iconPath: 'assets/images/gamepad/Xbox_View_button.png',
-              symbol: isDescriptionMissing
-                  ? Symbols.search_rounded
-                  : Symbols.refresh_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              onTap: _onScrapeCurrentGame,
-              isLoading: isScraping,
-            ),
-            SizedBox(height: 6.r),
-          ],
+          _buildIconButton(
+            iconPath: 'assets/images/gamepad/Left Stick Click.png',
+            symbol: Symbols.casino_rounded,
+            color: Theme.of(context).colorScheme.primary,
+            foregroundColor: Theme.of(context).colorScheme.onPrimary,
+            onTap: _showRandomGameDialog,
+          ),
+          SizedBox(height: 6.r),
           _buildIconButton(
             key: viewModeKey,
             iconPath: 'assets/images/gamepad/Xbox_X_button.png',
@@ -1392,14 +1387,19 @@ class _SystemGamesListState extends State<SystemGamesList> {
               dropdownState?.showDropdownFrom(viewModeKey);
             },
           ),
-          SizedBox(height: 6.r),
-          _buildIconButton(
-            iconPath: 'assets/images/gamepad/Left Stick Click.png',
-            symbol: Symbols.casino_rounded,
-            color: Theme.of(context).colorScheme.primary,
-            foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: _showRandomGameDialog,
-          ),
+          if (hasScreenScraper && selectedGame != null) ...[
+            SizedBox(height: 6.r),
+            _buildIconButton(
+              iconPath: 'assets/images/gamepad/Xbox_View_button.png',
+              symbol: isDescriptionMissing
+                  ? Symbols.search_rounded
+                  : Symbols.refresh_rounded,
+              color: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              onTap: _onScrapeCurrentGame,
+              isLoading: isScraping,
+            ),
+          ],
           // Compact NeoSync status indicator, separated from the main
           // action buttons and showing only a descriptive icon.
           if (syncProvider != null && selectedGame != null) ...[
@@ -1431,12 +1431,17 @@ class _SystemGamesListState extends State<SystemGamesList> {
     bool isLoading = false,
   }) {
     final fg = foregroundColor ?? Theme.of(context).colorScheme.onSurface;
-    const double buttonSize = 24.0;
-    const double badgeSize = 14.0;
-    const double mainIconSize = 14.0;
+    const double buttonWidth = 26.0;
+    const double buttonHeight = 34.0;
+    const double badgeHeight = 14.0;
+    const double mainIconSize = 12.0;
     final cornerRadius =
         Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
         BorderRadius.circular(14.r);
+    final badgeRadius = BorderRadius.only(
+      bottomLeft: cornerRadius.bottomLeft,
+      bottomRight: cornerRadius.bottomRight,
+    );
 
     return Material(
       color: Colors.transparent,
@@ -1448,12 +1453,19 @@ class _SystemGamesListState extends State<SystemGamesList> {
         onTap: isLoading ? null : onTap,
         borderRadius: cornerRadius,
         child: Container(
-          margin: EdgeInsets.only(bottom: 8.r),
-          width: buttonSize.r,
-          height: buttonSize.r,
+          margin: EdgeInsets.only(bottom: 2.r),
+          width: buttonWidth.r,
+          height: buttonHeight.r,
           decoration: BoxDecoration(
-            color: color,
+            color: Theme.of(
+                  context,
+                ).colorScheme.surface,
             borderRadius: cornerRadius,
+            border: Border.all(
+              color: color,
+              width: 2.r,
+              strokeAlign: BorderSide.strokeAlignOutside
+            ),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(
@@ -1475,34 +1487,33 @@ class _SystemGamesListState extends State<SystemGamesList> {
                     ),
                   ),
                 )
-              : Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.center,
+              : Column(
                   children: [
-                    Icon(symbol, size: mainIconSize.r, color: fg),
-                    Positioned(
-                      bottom: -(badgeSize / 1.5).r,
-                      child: Container(
-                        width: badgeSize.r,
-                        height: badgeSize.r,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.shadow.withValues(alpha: 0.25),
-                              blurRadius: 2.r,
-                              offset: Offset(2.r, 2.r),
-                            ),
-                          ],
-                        ),
+                    // Main action icon centered in the upper area.
+                    Expanded(
+                      child: Center(
+                        child: Icon(symbol, size: mainIconSize.r, color: Theme.of(
+                  context,
+                ).colorScheme.onSurface),
+                      ),
+                    ),
+                    // Gamepad hint badge anchored to the bottom of the button,
+                    // spanning the full width with a low height so it shows
+                    // less than half of the button.
+                    Container(
+                      height: badgeHeight.r,
+                      width: double.infinity,
+                      isAntiAlias: true,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: badgeRadius,
+                      ),
+                      child: Center(
                         child: Image.asset(
                           iconPath,
-                          width: (badgeSize - 3).r,
-                          height: (badgeSize - 3).r,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          width: 14.r,
+                          height: 14.r,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           colorBlendMode: BlendMode.srcIn,
                         ),
                       ),
