@@ -179,10 +179,7 @@ class GameDetailsFooter extends StatelessWidget {
             borderRadius:
                 Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
                 BorderRadius.circular(14.r),
-            border: Border.all(
-              color: Color(0xFF36F184),
-              width: 1.r,
-            ),
+            border: Border.all(color: Color(0xFF36F184), width: 1.r),
             boxShadow: [
               BoxShadow(
                 color: Theme.of(
@@ -201,8 +198,9 @@ class GameDetailsFooter extends StatelessWidget {
               hoverColor: Colors.transparent,
               highlightColor: Colors.transparent,
               splashColor: Colors.white.withValues(alpha: 0.1),
-              borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                  BorderRadius.circular(14.r),
               onTap: () {
                 SfxService().playEnterSound();
                 onPlayGame();
@@ -258,8 +256,6 @@ class GameDetailsFooter extends StatelessWidget {
       },
     );
   }
-
-
 
   /// Resolves the current RetroAchievements progress into a compact visual badge.
   Widget _buildCompactAchievementsIndicator(BuildContext context) {
@@ -329,8 +325,11 @@ class GameDetailsFooter extends StatelessWidget {
               children: [
                 // RetroAchievements game icon.
                 ClipRRect(
-                  borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+                  borderRadius:
+                      Theme.of(
+                        context,
+                      ).extension<CornerRadii>()?.radiusInternal ??
+                      BorderRadius.circular(14.r),
                   child: Container(
                     width: 32.r,
                     height: 32.r,
@@ -422,22 +421,20 @@ class _SteamStyleRating extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-            borderRadius:
-                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 1.r,
-            ),
+        borderRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+            BorderRadius.circular(14.r),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: 1.r,
+        ),
         boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.shadow.withValues(alpha: 0.5),
-                blurRadius: 3.r,
-                offset: Offset(2.0.r, 2.0.r),
-              ),
-            ],
+          BoxShadow(
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.5),
+            blurRadius: 3.r,
+            offset: Offset(2.0.r, 2.0.r),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

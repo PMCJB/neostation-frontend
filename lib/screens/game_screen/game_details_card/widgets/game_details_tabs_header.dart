@@ -36,7 +36,7 @@ class GameDetailsTabsHeader extends StatelessWidget {
     if (hasRetroAchievements) numTabs++;
     if (showSettings) numTabs++;
 
-    final double tabWidth = 42.r;
+    final double tabWidth = 36.r;
     final double totalTabsWidth = numTabs * tabWidth;
 
     // Resolve the visual index for the cursor animation, accounting for hidden tabs.
@@ -61,21 +61,25 @@ class GameDetailsTabsHeader extends StatelessWidget {
 
             // Tab Navigation Group: Hardware-mapped navigation controls.
             Container(
-              height: 32.r,
+              height: 36.r,
               padding: EdgeInsets.symmetric(horizontal: 8.r),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
+                color: theme.colorScheme.surface.withValues(alpha: 0.9),
                 borderRadius:
                     Theme.of(
                       context,
                     ).extension<CornerRadii>()?.radiusExternal ??
                     BorderRadius.circular(12.r),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1.r,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(
                       context,
-                    ).colorScheme.shadow.withValues(alpha: 0.25),
-                    blurRadius: 2.r,
+                    ).colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 4.r,
                     offset: Offset(2.0.r, 2.0.r),
                   ),
                 ],

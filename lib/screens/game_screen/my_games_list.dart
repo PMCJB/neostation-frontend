@@ -162,12 +162,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
   late SqliteConfigProvider _configProvider;
   late SqliteDatabaseProvider _databaseProvider;
 
-  // Cached theme-dependent colors for letter indicator — updated in didChangeDependencies.
-  Color _letterIndicatorBg = Colors.black.withValues(alpha: 0.7);
-  Color _letterIndicatorBorder = Colors.transparent;
-  Color _letterIndicatorShadow = Colors.transparent;
-  Color _letterIndicatorTextShadow = Colors.transparent;
-
   @override
   void initState() {
     super.initState();
@@ -196,11 +190,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final primary = Theme.of(context).colorScheme.primary;
-    _letterIndicatorBg = Colors.black.withValues(alpha: 0.7);
-    _letterIndicatorBorder = primary.withValues(alpha: 0.5);
-    _letterIndicatorShadow = primary.withValues(alpha: 0.3);
-    _letterIndicatorTextShadow = primary;
   }
 
   void _onSecondaryDisplayChanged() {
@@ -667,14 +656,23 @@ class _SystemGamesListState extends State<SystemGamesList> {
             width: 120.r,
             height: 120.r,
             decoration: BoxDecoration(
-              color: _letterIndicatorBg,
-              borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(color: _letterIndicatorBorder, width: 2.r),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.9),
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                  BorderRadius.circular(14.r),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.r,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: _letterIndicatorShadow,
-                  blurRadius: 30.r,
-                  spreadRadius: 5.r,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.5),
+                  blurRadius: 3.r,
+                  offset: Offset(2.r, 2.r),
                 ),
               ],
             ),
@@ -684,10 +682,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
                 style: TextStyle(
                   fontSize: 72.r,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(color: _letterIndicatorTextShadow, blurRadius: 10.r),
-                  ],
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
@@ -703,12 +698,23 @@ class _SystemGamesListState extends State<SystemGamesList> {
       child: Container(
         padding: EdgeInsets.all(32.w),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(16.r),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+              BorderRadius.circular(14.r),
           border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.outline,
             width: 1.r,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(
+                context,
+              ).colorScheme.shadow.withValues(alpha: 0.5),
+              blurRadius: 3.r,
+              offset: Offset(2.r, 2.r),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -717,15 +723,25 @@ class _SystemGamesListState extends State<SystemGamesList> {
               width: 64.r,
               height: 64.r,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(32.r),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius:
+                    Theme.of(
+                      context,
+                    ).extension<CornerRadii>()?.radiusExternal ??
+                    BorderRadius.circular(14.r),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                  width: 1.r,
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 16.r,
-                    offset: const Offset(0, 4),
+                    ).colorScheme.shadow.withValues(alpha: 0.5),
+                    blurRadius: 3.r,
+                    offset: Offset(2.r, 2.r),
                   ),
                 ],
               ),
@@ -1250,10 +1266,8 @@ class _SystemGamesListState extends State<SystemGamesList> {
             top: 12.r,
             left: 12.r,
             child: Consumer<SyncManager>(
-              builder:
-                  (context, syncManager, child) => _buildGameListActionButtons(
-                    syncProvider: syncManager.active,
-                  ),
+              builder: (context, syncManager, child) =>
+                  _buildGameListActionButtons(syncProvider: syncManager.active),
             ),
           ),
       ],
@@ -1345,9 +1359,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
             Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
             BorderRadius.circular(14.r),
         border: Border.all(
-                  color: Theme.of(context).colorScheme.outline,
-                  width: 1.r,
-                ),
+          color: Theme.of(context).colorScheme.outline,
+          width: 1.r,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1456,14 +1470,12 @@ class _SystemGamesListState extends State<SystemGamesList> {
           width: buttonWidth.r,
           height: buttonHeight.r,
           decoration: BoxDecoration(
-            color: Theme.of(
-                  context,
-                ).colorScheme.primary,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: cornerRadius,
             border: Border.all(
               color: color,
               width: 2.r,
-              strokeAlign: BorderSide.strokeAlignCenter
+              strokeAlign: BorderSide.strokeAlignCenter,
             ),
             boxShadow: [
               BoxShadow(
@@ -1574,17 +1586,27 @@ class _SystemGamesListState extends State<SystemGamesList> {
               width: 64.r,
               height: 64.r,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.white.withValues(alpha: 0.2),
-                    Colors.white.withValues(alpha: 0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(32.r),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.9),
+                borderRadius:
+                    Theme.of(
+                      context,
+                    ).extension<CornerRadii>()?.radiusExternal ??
+                    BorderRadius.circular(14.r),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: Theme.of(context).colorScheme.outline,
                   width: 1.r,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.5),
+                    blurRadius: 3.r,
+                    offset: Offset(2.r, 2.r),
+                  ),
+                ],
               ),
               child: Icon(
                 Symbols.videogame_asset_rounded,

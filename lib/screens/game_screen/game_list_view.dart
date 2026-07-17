@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:neostation/services/sfx_service.dart';
 
 import '../../services/game_service.dart';
+import '../../themes/corner_radii.dart';
 import '../../utils/centered_scroll_controller.dart';
 import '../../utils/game_utils.dart';
 import '../../providers/sqlite_config_provider.dart';
@@ -233,7 +234,20 @@ class GameListViewState extends State<GameListView>
                       child: Container(
                         decoration: BoxDecoration(
                           color: highlightColor,
-                          borderRadius: BorderRadius.circular(8.r),
+                          borderRadius:
+                              Theme.of(
+                                context,
+                              ).extension<CornerRadii>()?.radiusInternal ??
+                              BorderRadius.circular(14.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.shadow.withValues(alpha: 0.1),
+                              blurRadius: 4.r,
+                              offset: Offset(2.0.r, 2.0.r),
+                            ),
+                          ],
                         ),
                       ),
                     ),
