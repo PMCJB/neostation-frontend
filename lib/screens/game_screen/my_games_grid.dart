@@ -25,6 +25,9 @@ import 'package:neostation/widgets/game_view_footer.dart';
 import 'package:neostation/widgets/game_action_buttons.dart';
 import 'package:neostation/widgets/marquee_text.dart';
 import 'package:neostation/constants/system_folder_names.dart';
+import 'package:neostation/widgets/selection_grid/grid_navigation.dart';
+import 'package:neostation/widgets/selection_grid/selection_grid.dart';
+import 'package:neostation/widgets/selection_grid/selection_grid_geometry.dart';
 
 import '../../themes/corner_radii.dart';
 
@@ -66,7 +69,6 @@ class GamesGrid extends StatefulWidget {
 
 class _GamesGridState extends State<GamesGrid> {
   late GamepadNavigation _gamepadNav;
-  final ScrollController _scrollController = ScrollController();
   int _selectedIndex = 0;
   int _crossAxisCount = 5;
   bool _isNavigatingFast = false;
@@ -77,16 +79,14 @@ class _GamesGridState extends State<GamesGrid> {
   DateTime? _lastNavTime;
   static const Duration _fastNavThreshold = Duration(milliseconds: 150);
 
-  // Layout
-  List<_CardRect> _cardRects = [];
-  List<_RowInfo> _rows = [];
-  double _cardWidth = 0;
-  double _spX = 0;
-  double _spY = 0;
-  double? _lastLayoutWidth;
-  int? _lastLayoutCols;
-  int? _lastLayoutGameCount;
-  bool? _lastIsFanart;
+  // Layout geometry — single source of truth shared by the cards and the
+  // selection highlight (see SelectionGrid). Cached and recomputed only when
+  // width / columns / game count / card style / artwork dimensions change.
+  SelectionGridGeometry? _geometry;
+  double? _geoWidth;
+  int? _geoCols;
+  int? _geoGameCount;
+  bool? _geoIsFanart;
 
   // Image dimension cache
   static final Map<String, Size?> _imageSizeCache = {};
@@ -231,18 +231,17 @@ class _GamesGridState extends State<GamesGrid> {
     return 1.0; // 1:1 fallback
   }
 
-  double _cardHeightFor(int index) {
-    if (_isFanart) {
-      // Match systems grid card:
-      // outer padding 4.r + inner padding 8.r + square artwork (_cardWidth - 8.r) + footer 32.r.
-      return _cardWidth + 36.r;
-    }
+  // ---- Card height strategies (one per card style) ----
 
-    final aspectRatio = _box2dAspectRatio(index);
-    // Content width = card width minus inner padding (4.r each side).
-    // Outer padding is already accounted for by the row/cell layout.
-    return (_cardWidth - 8.r) / aspectRatio + 12.r;
-  }
+  /// Fanart cards are uniform: square artwork + paddings + compact footer.
+  double _fanartCardHeight(int index, double cardWidth) => cardWidth + 36.r;
+
+  /// Box2d cards derive their height from the artwork's aspect ratio.
+  ///
+  /// Content width = card width minus inner padding (4.r each side).
+  /// Outer padding is already accounted for by the row/cell layout.
+  double _box2dCardHeight(int index, double cardWidth) =>
+      (cardWidth - 8.r) / _box2dAspectRatio(index) + 12.r;
 
   final Set<String> _pendingSaves = {};
   void _scheduleAspectRatioSave(GameModel game, String ratio) {
@@ -262,94 +261,35 @@ class _GamesGridState extends State<GamesGrid> {
     });
   }
 
-  // ---- Layout (computed once, cached) ----
-  bool _needsLayout(double w) =>
-      _lastLayoutWidth != w ||
-      _lastLayoutCols != _cols ||
-      _lastLayoutGameCount != widget.games.length ||
-      _lastIsFanart != _isFanart ||
-      _needsDimReload;
-
-  void _computeLayout(double availableWidth) {
-    if (!_needsLayout(availableWidth)) return;
-    _lastLayoutWidth = availableWidth;
-    _lastLayoutCols = _cols;
-    _lastLayoutGameCount = widget.games.length;
-    _lastIsFanart = _isFanart;
+  // ---- Layout geometry (cached; recomputed only on invalidating changes) ----
+  SelectionGridGeometry _geometryFor(double contentWidth) {
+    final isFanart = _isFanart;
+    final cached = _geometry;
+    if (cached != null &&
+        _geoWidth == contentWidth &&
+        _geoCols == _cols &&
+        _geoGameCount == widget.games.length &&
+        _geoIsFanart == isFanart &&
+        !_needsDimReload) {
+      return cached;
+    }
+    _geoWidth = contentWidth;
+    _geoCols = _cols;
+    _geoGameCount = widget.games.length;
+    _geoIsFanart = isFanart;
     _needsDimReload = false;
-
-    final spX = 6.0.r;
-    final spY = 6.0.r;
-    _spX = spX;
-    _spY = spY;
-
-    final totalWidth = availableWidth - 60.r - 16.r;
-    _cardWidth = (totalWidth - (_cols - 1) * spX) / _cols;
-    final n = widget.games.length;
-    _cardRects = List.generate(
-      n,
-      (_) => _CardRect(left: 0, top: 0, width: _cardWidth, height: _cardWidth),
-    ); // placeholder
     _loadedDims.clear();
-
-    if (_isFanart) {
-      double y = 0;
-      final rows = <_RowInfo>[];
-      // Card visual height: matches the systems grid card layout.
-      // outer padding 4.r + inner padding 8.r + square artwork + footer(32).
-      final cardHeight = _cardWidth + 36.r;
-      for (int i = 0; i < n; i += _cols) {
-        final end = (i + _cols).clamp(0, n);
-        final count = end - i;
-        rows.add(
-          _RowInfo(topY: y, height: cardHeight, startIndex: i, count: count),
-        );
-        for (int idx = i; idx < end; idx++) {
-          final col = idx % _cols;
-          _cardRects[idx] = _CardRect(
-            left: col * (_cardWidth + spX),
-            top: y + spY / 2,
-            width: _cardWidth,
-            height: cardHeight,
-          );
-        }
-        y += cardHeight + spY;
-      }
-      _rows = rows;
-      return; // fanart path done
-    }
-
-    // First pass: use the static cache to get known dimensions fast
-    double y = 0;
-    int i = 0;
-    final rows = <_RowInfo>[];
-    while (i < n) {
-      double maxH = 0;
-      final end = (i + _cols).clamp(0, n);
-      final count = end - i;
-      for (int idx = i; idx < end; idx++) {
-        final h = _cardHeightFor(idx);
-        if (h > maxH) maxH = h;
-      }
-      rows.add(_RowInfo(topY: y, height: maxH, startIndex: i, count: count));
-      for (int idx = i; idx < end; idx++) {
-        final col = idx % _cols;
-        final h = _cardHeightFor(idx);
-        _cardRects[idx] = _CardRect(
-          left: col * (_cardWidth + spX),
-          top: y + (maxH + spY - h) / 2,
-          width: _cardWidth,
-          height: h,
-        );
-        if (_imageSizeCache.containsKey(_box2dPath(idx))) _loadedDims.add(idx);
-      }
-      y += maxH + spY;
-      i = end;
-    }
-    _rows = rows;
+    return _geometry = computeSelectionGridGeometry(
+      itemCount: widget.games.length,
+      columns: _cols,
+      availableWidth: contentWidth,
+      spacingX: 6.0.r,
+      spacingY: 6.0.r,
+      itemHeightFor: isFanart ? _fanartCardHeight : _box2dCardHeight,
+    );
   }
 
-  // Lazy dimension loading for newly visible cards
+  // Lazy dimension loading for newly visible cards (box2d style only)
   void _ensureDims(int index) {
     if (_isFanart) return;
     if (_loadedDims.contains(index)) return;
@@ -387,7 +327,6 @@ class _GamesGridState extends State<GamesGrid> {
           onActivate: () => _gamepadNav.activate(),
           onDeactivate: () => _gamepadNav.deactivate(),
         );
-        _ensureSelectedVisible();
         _loadAchievementsForSelectedGame();
       }
     });
@@ -420,11 +359,7 @@ class _GamesGridState extends State<GamesGrid> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final prevCols = _crossAxisCount;
     _updateCrossAxisCount();
-    if (_crossAxisCount != prevCols) {
-      _lastLayoutWidth = null;
-    }
   }
 
   void _adjustGameGridDensity(int delta) {
@@ -438,12 +373,10 @@ class _GamesGridState extends State<GamesGrid> {
         final newSize = sizes[newIndex];
         provider.updateGameGridColumns(newSize);
         _updateCrossAxisCount();
-        _lastLayoutWidth = null;
         _showCardSizeLabel(newSize);
+        // The geometry cache detects the column change on the next build and
+        // SelectionGrid re-centers the selection automatically.
         setState(() {});
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _ensureSelectedVisible();
-        });
       }
     } catch (_) {}
   }
@@ -499,19 +432,12 @@ class _GamesGridState extends State<GamesGrid> {
   @override
   void didUpdateWidget(GamesGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final prevCols = _crossAxisCount;
     _updateCrossAxisCount();
-    if (widget.games != oldWidget.games || _crossAxisCount != prevCols) {
-      _lastLayoutWidth = null;
-    }
     if (widget.selectedIndex != oldWidget.selectedIndex) {
       _selectedIndex = widget.selectedIndex.clamp(
         0,
         (widget.games.length - 1).clamp(0, 999999),
       );
-      if (mounted && _scrollController.hasClients) {
-        _ensureSelectedVisible();
-      }
       _loadAchievementsForSelectedGame();
     }
   }
@@ -542,72 +468,57 @@ class _GamesGridState extends State<GamesGrid> {
     _cardSizeLabel.dispose();
     GamepadNavigationManager.popLayer('games_grid');
     _gamepadNav.dispose();
-    _scrollController.dispose();
     super.dispose();
   }
 
   int get _cols => _crossAxisCount.clamp(1, 10);
 
   void _navigateUp() {
-    _navDelta(-_cols);
+    _moveSelection(
+      gridMoveUp(
+        index: _selectedIndex,
+        columns: _cols,
+        itemCount: widget.games.length,
+      ),
+    );
   }
 
   void _navigateDown() {
-    _navDelta(_cols);
+    _moveSelection(
+      gridMoveDown(
+        index: _selectedIndex,
+        columns: _cols,
+        itemCount: widget.games.length,
+      ),
+    );
   }
 
   void _navigateLeft() {
-    _navHoriz(-1);
+    _moveSelection(
+      gridMoveLeft(
+        index: _selectedIndex,
+        columns: _cols,
+        itemCount: widget.games.length,
+      ),
+    );
   }
 
   void _navigateRight() {
-    _navHoriz(1);
+    _moveSelection(
+      gridMoveRight(
+        index: _selectedIndex,
+        columns: _cols,
+        itemCount: widget.games.length,
+      ),
+    );
   }
 
-  void _navDelta(int delta) {
-    if (widget.games.isEmpty) return;
-    final c = _cols;
-    setState(() {
-      int ni = _selectedIndex + delta;
-      if (delta < 0 && ni < 0) {
-        final col = _selectedIndex % c;
-        ni = ((widget.games.length / c).ceil() - 1) * c + col;
-        while (ni >= widget.games.length) {
-          ni -= c;
-        }
-        if (ni < 0) ni = _selectedIndex;
-      } else if (delta > 0 && ni >= widget.games.length) {
-        ni = _selectedIndex % c;
-      }
-      _selectedIndex = ni.clamp(0, widget.games.length - 1);
-      _updateFastNav();
-    });
-    _ensureSelectedVisible();
-    _onSelectionChanged();
-    SfxService().playNavSound();
-  }
-
-  void _navHoriz(int dir) {
+  void _moveSelection(int newIndex) {
     if (widget.games.isEmpty) return;
     setState(() {
-      int ni;
-      if (dir < 0) {
-        final wrapRight = (_selectedIndex ~/ _cols) * _cols + _cols - 1;
-        ni = _selectedIndex % _cols == 0
-            ? (wrapRight < widget.games.length - 1
-                  ? wrapRight
-                  : widget.games.length - 1)
-            : _selectedIndex - 1;
-      } else {
-        final next = _selectedIndex + 1;
-        ni = (next % _cols == 0 || next >= widget.games.length)
-            ? (_selectedIndex ~/ _cols) * _cols
-            : next;
-      }
-      _selectedIndex = ni.clamp(0, widget.games.length - 1);
+      _selectedIndex = newIndex.clamp(0, widget.games.length - 1);
       _updateFastNav();
     });
-    _ensureSelectedVisible();
     _onSelectionChanged();
     SfxService().playNavSound();
   }
@@ -627,21 +538,6 @@ class _GamesGridState extends State<GamesGrid> {
     _lastNavTime = now;
   }
 
-  void _ensureSelectedVisible() {
-    if (!_scrollController.hasClients || _cardRects.isEmpty) return;
-    final rect = _cardRects[_selectedIndex.clamp(0, _cardRects.length - 1)];
-    final viewportH = _scrollController.position.viewportDimension;
-    final target = (rect.top - viewportH / 2 + rect.height / 2).clamp(
-      0.0,
-      _scrollController.position.maxScrollExtent,
-    );
-    _scrollController.animateTo(
-      target,
-      duration: Duration(milliseconds: _isNavigatingFast ? 220 : 500),
-      curve: Curves.easeOutQuart,
-    );
-  }
-
   bool get _isAllMode =>
       widget.system.folderName == SystemFolderNames.all ||
       widget.system.folderName == SystemFolderNames.favorites;
@@ -650,8 +546,9 @@ class _GamesGridState extends State<GamesGrid> {
     final systemFolderName = game.systemFolderName;
     if (systemFolderName == null || !_isAllMode) return widget.system;
     try {
-      final detectedSystems =
-          context.read<SqliteConfigProvider>().detectedSystems;
+      final detectedSystems = context
+          .read<SqliteConfigProvider>()
+          .detectedSystems;
       return detectedSystems.firstWhere(
         (s) => s.folderName == systemFolderName,
         orElse: () => widget.system,
@@ -718,13 +615,11 @@ class _GamesGridState extends State<GamesGrid> {
     SfxService().playNavSound();
     showDialog(
       context: context,
-      builder:
-          (_) => GameAchievementsDialog(
-            game: game,
-            system: _effectiveSystemFor(game),
-            retroAchievementsProvider:
-                context.read<RetroAchievementsProvider>(),
-          ),
+      builder: (_) => GameAchievementsDialog(
+        game: game,
+        system: _effectiveSystemFor(game),
+        retroAchievementsProvider: context.read<RetroAchievementsProvider>(),
+      ),
     );
   }
 
@@ -764,49 +659,22 @@ class _GamesGridState extends State<GamesGrid> {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  _computeLayout(constraints.maxWidth);
-
                   final theme = Theme.of(context);
                   final fp = widget.fileProvider;
-                  final targetWidth = (_cardWidth * 1.5).toInt();
 
-                  final selRect = _selectedIndex < _cardRects.length
-                      ? _cardRects[_selectedIndex]
-                      : _cardRects.first;
-                  final hlDuration = Duration(
-                    milliseconds: _isNavigatingFast ? 120 : 300,
+                  // Single source of truth for the grid's outer insets —
+                  // consumed by BOTH the geometry and the scroll padding, so
+                  // the cards and the selector always share one coordinate
+                  // space and cannot drift apart.
+                  final padL = 60.0.r;
+                  final padR = 16.0.r;
+                  final padT = 12.0.r;
+                  final padB = 80.0.r;
+
+                  final geometry = _geometryFor(
+                    constraints.maxWidth - padL - padR,
                   );
-
-                  Widget buildRow(BuildContext ctx, int rowIndex) {
-                    final row = _rows[rowIndex];
-                    final cards = <Widget>[];
-                    for (int j = 0; j < row.count; j++) {
-                      final idx = row.startIndex + j;
-                      final rect = _cardRects[idx];
-                      _ensureDims(idx);
-                      final card = _buildCard(
-                        idx,
-                        rect,
-                        fp,
-                        targetWidth,
-                        theme,
-                      );
-                      cards.add(
-                        SizedBox(
-                          width: rect.width,
-                          height: rect.height,
-                          child: card,
-                        ),
-                      );
-                    }
-                    return SizedBox(
-                      height: row.height + _spY,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: _interleaveSpacing(cards, _spX),
-                      ),
-                    );
-                  }
+                  final targetWidth = (geometry.cardWidth * 1.5).toInt();
 
                   return Listener(
                     onPointerDown: _handlePointerDown,
@@ -816,74 +684,26 @@ class _GamesGridState extends State<GamesGrid> {
                     behavior: HitTestBehavior.translucent,
                     child: Stack(
                       children: [
-                        CustomScrollView(
-                          controller: _scrollController,
-                          slivers: [
-                            SliverPadding(
-                              padding: EdgeInsets.only(
-                                top: 12.r,
-                                bottom: 80.r,
-                                left: 60.r,
-                                right: 16.r,
-                              ),
-                              sliver: SliverList.builder(
-                                itemCount: _rows.length,
-                                itemBuilder: buildRow,
-                              ),
-                            ),
-                          ],
-                        ),
-                        AnimatedPositioned(
-                          key: ValueKey(
-                            'game_selector_${_cols}_$_isFanart',
+                        SelectionGrid(
+                          geometry: geometry,
+                          padding: EdgeInsets.only(
+                            left: padL,
+                            right: padR,
+                            top: padT,
+                            bottom: padB,
                           ),
-                          duration: hlDuration,
-                          curve: Curves.easeOutQuart,
-                          left: selRect.left + 60.r + 2.r,
-                          top: selRect.top + 12.r + 2.r,
-                          width: selRect.width - 4.r,
-                          height: selRect.height - 4.r,
-                          child: ListenableBuilder(
-                            listenable: _scrollController,
-                            builder: (_, child) {
-                              final offset = _scrollController.hasClients
-                                  ? _scrollController.offset
-                                  : 0.0;
-                              return Transform.translate(
-                                offset: Offset(0, -offset),
-                                child: IgnorePointer(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius:
-                                          Theme.of(context)
-                                              .extension<CornerRadii>()
-                                              ?.radiusExternal ??
-                                          BorderRadius.circular(14.r),
-                                      gradient: LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [
-                                          theme.colorScheme.primary.withValues(
-                                            alpha: 0.28,
-                                          ),
-                                          theme.colorScheme.primary.withValues(
-                                            alpha: 0.08,
-                                          ),
-                                          Colors.transparent,
-                                        ],
-                                        stops: const [0.0, 0.35, 1.0],
-                                      ),
-                                      border: Border.all(
-                                        color: theme.colorScheme.primary
-                                            .withValues(alpha: 0.55),
-                                        width: 2.r,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                          selectedIndex: _selectedIndex,
+                          isNavigatingFast: _isNavigatingFast,
+                          // On a discontinuous layout change (density or card
+                          // style) the highlight re-creates and jumps to the
+                          // new rect instead of sliding across the screen.
+                          highlightKey: ValueKey(
+                            'games_grid_highlight_${geometry.columns}_$_isFanart',
                           ),
+                          itemBuilder: (context, index, cellSize) {
+                            _ensureDims(index);
+                            return _buildCard(index, fp, targetWidth, theme);
+                          },
                         ),
                         ValueListenableBuilder<String?>(
                           valueListenable: _cardSizeLabel,
@@ -949,13 +769,9 @@ class _GamesGridState extends State<GamesGrid> {
           left: 12.r,
           child: GameActionButtons(
             system: widget.system,
-            selectedGame:
-                widget.games.isNotEmpty
-                    ? widget.games[_selectedIndex.clamp(
-                      0,
-                      widget.games.length - 1,
-                    )]
-                    : null,
+            selectedGame: widget.games.isNotEmpty
+                ? widget.games[_selectedIndex.clamp(0, widget.games.length - 1)]
+                : null,
             onBack: widget.onBack,
             onFavorite: widget.onFavorite,
             onRandom: widget.onRandom,
@@ -967,15 +783,13 @@ class _GamesGridState extends State<GamesGrid> {
             hasScreenScraper:
                 widget.system.screenscraperId != null &&
                 widget.system.screenscraperId != 0,
-            isScraping:
-                widget.scrapingGameRomnames.contains(
-                  widget.games.isNotEmpty
-                      ? widget.games[_selectedIndex.clamp(
-                        0,
-                        widget.games.length - 1,
-                      )].romname
-                      : '',
-                ),
+            isScraping: widget.scrapingGameRomnames.contains(
+              widget.games.isNotEmpty
+                  ? widget
+                        .games[_selectedIndex.clamp(0, widget.games.length - 1)]
+                        .romname
+                  : '',
+            ),
             isDescriptionMissing: true,
           ),
         ),
@@ -983,29 +797,28 @@ class _GamesGridState extends State<GamesGrid> {
     );
   }
 
-  List<Widget> _interleaveSpacing(List<Widget> items, double spacing) {
-    if (items.isEmpty) return items;
-    final result = <Widget>[items.first];
-    for (int i = 1; i < items.length; i++) {
-      result.add(SizedBox(width: spacing));
-      result.add(items[i]);
-    }
-    return result;
-  }
+  // ---- Card builders (one per card style) ----
 
   Widget _buildCard(
     int index,
-    _CardRect rect,
     FileProvider fp,
     int targetWidth,
     ThemeData theme,
   ) {
     final game = widget.games[index];
-
     if (_isFanart) {
-      return _buildFanartGridCard(index, rect, game, theme);
+      return _buildFanartGridCard(index, game, theme);
     }
+    return _buildBox2dGridCard(index, game, fp, targetWidth, theme);
+  }
 
+  Widget _buildBox2dGridCard(
+    int index,
+    GameModel game,
+    FileProvider fp,
+    int targetWidth,
+    ThemeData theme,
+  ) {
     final box2dPath = game.getImagePath(_folderForGame(game), 'box2d', fp);
     final aspectRatio = _box2dAspectRatio(index);
 
@@ -1056,9 +869,9 @@ class _GamesGridState extends State<GamesGrid> {
                     aspectRatio: aspectRatio,
                     child: ClipRRect(
                       borderRadius:
-                          Theme.of(context)
-                              .extension<CornerRadii>()
-                              ?.radiusInternal ??
+                          Theme.of(
+                            context,
+                          ).extension<CornerRadii>()?.radiusInternal ??
                           BorderRadius.circular(9.r),
                       child: Stack(
                         fit: StackFit.expand,
@@ -1112,8 +925,7 @@ class _GamesGridState extends State<GamesGrid> {
   }
 
   Widget _buildScrapeProgress(GameModel game) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     final progress = widget.scrapeProgress[game.romname] ?? 0.0;
     return Container(
       height: 20.r,
@@ -1152,12 +964,7 @@ class _GamesGridState extends State<GamesGrid> {
     );
   }
 
-  Widget _buildFanartGridCard(
-    int index,
-    _CardRect rect,
-    GameModel game,
-    ThemeData theme,
-  ) {
+  Widget _buildFanartGridCard(int index, GameModel game, ThemeData theme) {
     final fanartPath = _fanartPath(index);
     final screenshotPath = _screenshotPath(index);
     final wheelsPath = _wheelsPath(index);
@@ -1217,9 +1024,9 @@ class _GamesGridState extends State<GamesGrid> {
                         aspectRatio: 1,
                         child: ClipRRect(
                           borderRadius:
-                              Theme.of(context)
-                                  .extension<CornerRadii>()
-                                  ?.radiusInternal ??
+                              Theme.of(
+                                context,
+                              ).extension<CornerRadii>()?.radiusInternal ??
                               BorderRadius.circular(9.r),
                           child: Stack(
                             fit: StackFit.expand,
@@ -1270,12 +1077,6 @@ class _GamesGridState extends State<GamesGrid> {
                       ),
                       Container(
                         height: 24.r,
-                        padding: EdgeInsets.only(
-                          left: 0.r,
-                          right: 0.r,
-                          top: 0.r,
-                          bottom: 0.r,
-                        ),
                         margin: EdgeInsetsGeometry.only(top: 8.r),
                         child: Center(
                           child: hasWheel
@@ -1285,9 +1086,8 @@ class _GamesGridState extends State<GamesGrid> {
                                   height: 24.r,
                                   fit: BoxFit.contain,
                                   cacheWidth: 256,
-                                  errorBuilder: (ctx, e, s) => _buildGameLabel(
-                                    game,
-                                  ),
+                                  errorBuilder: (ctx, e, s) =>
+                                      _buildGameLabel(game),
                                 )
                               : _buildGameLabel(game),
                         ),
@@ -1350,28 +1150,4 @@ class _GamesGridState extends State<GamesGrid> {
       ),
     );
   }
-
-}
-
-class _RowInfo {
-  final double topY;
-  final double height;
-  final int startIndex;
-  final int count;
-  const _RowInfo({
-    required this.topY,
-    required this.height,
-    required this.startIndex,
-    required this.count,
-  });
-}
-
-class _CardRect {
-  final double left, top, width, height;
-  const _CardRect({
-    required this.left,
-    required this.top,
-    required this.width,
-    required this.height,
-  });
 }
