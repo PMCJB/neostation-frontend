@@ -9,6 +9,7 @@ import 'package:neostation/providers/retro_achievements_provider.dart';
 import 'package:neostation/services/retro_achievements_helper.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/services/gamepad/gamepad_navigation_manager.dart';
+import 'package:neostation/themes/corner_radii.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import '../tabs/game_details_achievements_tab.dart';
 
@@ -101,17 +102,24 @@ class _GameAchievementsDialogState extends State<GameAchievementsDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final size = MediaQuery.of(context).size;
+    final radii =
+        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
 
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      insetPadding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 12.r),
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.r, vertical: 24.r),
       child: Container(
+        constraints: BoxConstraints(
+          maxWidth: size.width * 0.7,
+          maxHeight: size.height * 0.7,
+        ),
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: radii.radiusExternal,
           border: Border.all(
             color: theme.colorScheme.outline.withValues(alpha: 0.5),
             width: 1.r,
@@ -125,7 +133,7 @@ class _GameAchievementsDialogState extends State<GameAchievementsDialog> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12.r),
+          borderRadius: radii.radiusExternal,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -134,50 +142,26 @@ class _GameAchievementsDialogState extends State<GameAchievementsDialog> {
               GameDetailsAchievementsTab(
                 gameInfo: _gameInfo,
                 isLoading: _isLoading,
+                topOffset: 0,
+                bottomOffset: 0,
+                leftOffset: 0,
+                rightOffset: 0,
+                headerAction: HeaderActionButton(
+                  icon: Image.asset(
+                    'assets/images/gamepad/Xbox_B_button.png',
+                    width: 12.r,
+                    height: 12.r,
+                    color: theme.colorScheme.onPrimary,
+                  ),
+                  label: AppLocale.back.getString(context).toUpperCase(),
+                  onTap: () => Navigator.of(context).pop(),
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
                 onRefresh: () {
                   SfxService().playNavSound();
                   _loadAchievements(forceRefresh: true);
                 },
-              ),
-
-              // Floating close action for touch and gamepad hint.
-              Positioned(
-                top: 8.r,
-                right: 8.r,
-                child: Material(
-                  color: theme.colorScheme.surface.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(8.r),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.r,
-                        vertical: 6.r,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            'assets/images/gamepad/Xbox_B_button.png',
-                            width: 16.r,
-                            height: 16.r,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          SizedBox(width: 4.r),
-                          Text(
-                            AppLocale.back.getString(context),
-                            style: TextStyle(
-                              color: theme.colorScheme.onSurface,
-                              fontSize: 12.r,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),

@@ -38,47 +38,55 @@ class GameViewFooter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 8.r),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Identity section: title and optional ROM subtitle.
-          MarqueeText(
-            text: GameUtils.formatGameName(game.name),
-            isActive: true,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18.r,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  blurRadius: 2.r,
-                  color: Colors.black,
-                  offset: const Offset(0, 0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MarqueeText(
+                  text: GameUtils.formatGameName(game.name),
+                  isActive: true,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.r,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 2.r,
+                        color: Colors.black,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
+                  ),
                 ),
+                if (game.showRomFileNameSubtitle) ...[
+                  Text(
+                    game.romname,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.72),
+                      fontSize: 12.r,
+                      fontWeight: FontWeight.w400,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 2.r,
+                          color: Colors.black.withValues(alpha: 0.45),
+                          offset: const Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          if (game.showRomFileNameSubtitle) ...[
-            Text(
-              game.romname,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 12.r,
-                fontWeight: FontWeight.w400,
-                shadows: [
-                  Shadow(
-                    blurRadius: 2.r,
-                    color: Colors.black.withValues(alpha: 0.45),
-                    offset: const Offset(2, 2),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          SizedBox(height: 8.r),
+
+          SizedBox(width: 12.r),
 
           // Action/status section: rating, RetroAchievements, play.
           ExcludeFocus(
@@ -96,7 +104,6 @@ class GameViewFooter extends StatelessWidget {
                   ),
                   SizedBox(width: 8.r),
                 ],
-                const Spacer(),
                 _buildPlayButton(context),
               ],
             ),
@@ -110,6 +117,8 @@ class GameViewFooter extends StatelessWidget {
     final playTimeText = GameUtils.formatPlayTime(game.playTime ?? 0);
     return Builder(
       builder: (context) {
+        final radii =
+            Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
         final isFocused = Focus.of(context).hasFocus;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -119,9 +128,7 @@ class GameViewFooter extends StatelessWidget {
             color: isFocused
                 ? const Color(0xFF36F184)
                 : const Color(0xFF2ECC71),
-            borderRadius:
-                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
+            borderRadius: radii.radiusExternal,
             border: Border.all(color: const Color(0xFF36F184), width: 1.r),
             boxShadow: [
               BoxShadow(
@@ -141,9 +148,7 @@ class GameViewFooter extends StatelessWidget {
               hoverColor: Colors.transparent,
               highlightColor: Colors.transparent,
               splashColor: Colors.white.withValues(alpha: 0.1),
-              borderRadius:
-                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                  BorderRadius.circular(14.r),
+              borderRadius: radii.radiusExternal,
               onTap: () {
                 SfxService().playEnterSound();
                 onPlay();
@@ -209,6 +214,8 @@ class _SteamStyleRating extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radii =
+        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     final ratingValue = (game.rating / 2).clamp(0.0, 10.0);
     final colorRatio = (ratingValue - 1) / 9;
     final customColors = AppThemes.getCustomColors(context);
@@ -223,9 +230,7 @@ class _SteamStyleRating extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-        borderRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-            BorderRadius.circular(14.r),
+        borderRadius: radii.radiusExternal,
         border: Border.all(
           color: Theme.of(context).colorScheme.outline,
           width: 1.r,
@@ -272,6 +277,9 @@ class _CompactAchievementsIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radii =
+        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+
     final noAchievements =
         !isLoading && (gameInfo == null || gameInfo!.numAchievements == 0);
 
@@ -305,15 +313,13 @@ class _CompactAchievementsIndicator extends StatelessWidget {
         hoverColor: Colors.transparent,
         highlightColor: Colors.transparent,
         splashColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: radii.radiusInternal,
         child: Container(
           width: 120.r,
           height: 45.r,
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: 0.9),
-            borderRadius:
-                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
+            borderRadius: radii.radiusExternal,
             border: Border.all(
               color: theme.colorScheme.outline,
               width: 1.r,
@@ -331,11 +337,7 @@ class _CompactAchievementsIndicator extends StatelessWidget {
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      Theme.of(
-                        context,
-                      ).extension<CornerRadii>()?.radiusInternal ??
-                      BorderRadius.circular(14.r),
+                  borderRadius: radii.radiusInternal,
                   child: Container(
                     width: 32.r,
                     height: 32.r,
@@ -380,7 +382,7 @@ class _CompactAchievementsIndicator extends StatelessWidget {
                     SizedBox(
                       width: 70.r,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4.r),
+                        borderRadius: radii.radiusInternal,
                         child: LinearProgressIndicator(
                           value: isLoading ? null : progress,
                           minHeight: 5.r,

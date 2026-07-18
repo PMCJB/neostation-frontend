@@ -286,7 +286,8 @@ class _GamesGridState extends State<GamesGrid> {
     if (_isFanart) {
       double y = 0;
       final rows = <_RowInfo>[];
-      // Card visual height: square artwork area plus system-card-style footer.
+      // Card visual height: square artwork area plus paddings and compact footer.
+      // Padding(2) + Container + Padding(4) + AspectRatio(1) + footer(24).
       final cardHeight = _cardWidth + 36.r;
       for (int i = 0; i < n; i += _cols) {
         final end = (i + _cols).clamp(0, n);
@@ -410,7 +411,11 @@ class _GamesGridState extends State<GamesGrid> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final prevCols = _crossAxisCount;
     _updateCrossAxisCount();
+    if (_crossAxisCount != prevCols) {
+      _lastLayoutWidth = null;
+    }
   }
 
   void _adjustGameGridDensity(int delta) {
@@ -820,7 +825,9 @@ class _GamesGridState extends State<GamesGrid> {
                           ],
                         ),
                         AnimatedPositioned(
-                          key: const ValueKey('game_selector'),
+                          key: ValueKey(
+                            'game_selector_${_cols}_$_isFanart',
+                          ),
                           duration: hlDuration,
                           curve: Curves.easeOutQuart,
                           left: selRect.left + 60.r + 2.r,
@@ -1145,12 +1152,6 @@ class _GamesGridState extends State<GamesGrid> {
                 hoverColor: Colors.transparent,
                 highlightColor: Colors.transparent,
                 splashColor: Colors.transparent,
-      onTap: () {
-        setState(() => _selectedIndex = index);
-        widget.onGameSelected(game);
-        SfxService().playNavSound();
-        _loadAchievementsForSelectedGame();
-      },
                 child: Padding(
                   padding: EdgeInsets.all(4.r),
                   child: Column(
@@ -1177,21 +1178,6 @@ class _GamesGridState extends State<GamesGrid> {
                                 )
                               else
                                 _buildFallbackCard(game, theme),
-                              if (bgPath.isNotEmpty)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      colors: [
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.5),
-                                        Colors.black.withValues(alpha: 0.85),
-                                      ],
-                                      stops: const [0.5, 0.75, 1.0],
-                                    ),
-                                  ),
-                                ),
                               if (game.isFavorite == true)
                                 Positioned(
                                   top: 6.r,
@@ -1225,9 +1211,8 @@ class _GamesGridState extends State<GamesGrid> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 4.r),
                       Container(
-                        height: 32.r,
+                        height: 24.r,
                         padding: EdgeInsets.symmetric(horizontal: 2.r),
                         child: Center(
                           child: hasWheel
@@ -1235,7 +1220,7 @@ class _GamesGridState extends State<GamesGrid> {
                                   File(wheelsPath),
                                   key: ValueKey('wheel_${game.romname}'),
                                   fit: BoxFit.contain,
-                                  cacheWidth: 256,
+                                  cacheWidth: 128,
                                   errorBuilder: (ctx, e, s) => _buildGameLabel(
                                     game,
                                   ),
