@@ -5,12 +5,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/models/game_model.dart';
+import 'package:neostation/models/retro_achievements_game_info.dart';
 import 'package:neostation/models/system_model.dart';
 import 'package:neostation/providers/file_provider.dart';
+import 'package:neostation/providers/retro_achievements_provider.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/providers/system_background_provider.dart';
 import 'package:neostation/services/game_service.dart';
+import 'package:neostation/services/retro_achievements_helper.dart';
 import 'package:neostation/services/sfx_service.dart';
+import 'package:neostation/screens/game_screen/game_details_card/dialogs/game_achievements_dialog.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/screens/app_screen.dart';
 import 'package:neostation/widgets/game_view_mode_dropdown.dart';
@@ -64,6 +68,10 @@ class _GamesCarouselState extends State<GamesCarousel> {
   final Map<String, double> _letterWidthCache = {};
   final Map<String, bool> _fileExistsCache = {};
   int _lastBgIndex = -1;
+
+  GameInfoAndUserProgress? _currentGameInfo;
+  bool _isLoadingAchievements = false;
+  String? _achievementsTargetRomname;
 
   static final Map<String, Size?> _imgSizeCache = {};
 
@@ -198,6 +206,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToCurrentLetter();
       _updateBackground();
+      _loadAchievementsForSelectedGame();
     });
   }
 
@@ -288,6 +297,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
     }
     _scrollToCurrentLetter();
     _updateBackground();
+    _loadAchievementsForSelectedGame();
   }
 
   void _updateBackground() {
@@ -330,6 +340,92 @@ class _GamesCarouselState extends State<GamesCarousel> {
     context.read<SystemBackgroundProvider>().updateImage(
       imageProvider,
       imagePath: imagePath,
+    );
+  }
+
+  bool get _isAllMode =>
+      widget.system.folderName == SystemFolderNames.all ||
+      widget.system.folderName == SystemFolderNames.favorites;
+
+  SystemModel _effectiveSystemFor(GameModel game) {
+    final systemFolderName = game.systemFolderName;
+    if (systemFolderName == null || !_isAllMode) return widget.system;
+    try {
+      final detectedSystems =
+          context.read<SqliteConfigProvider>().detectedSystems;
+      return detectedSystems.firstWhere(
+        (s) => s.folderName == systemFolderName,
+        orElse: () => widget.system,
+      );
+    } catch (e) {
+      return widget.system;
+    }
+  }
+
+  bool _hasRetroAchievementsFor(GameModel game) {
+    final system = _effectiveSystemFor(game);
+    return system.raId != null && system.raId != '0' && system.raId!.isNotEmpty;
+  }
+
+  Future<void> _loadAchievementsForSelectedGame() async {
+    if (widget.games.isEmpty) return;
+    final game = widget.games[_currentIndex.clamp(0, widget.games.length - 1)];
+
+    if (!_hasRetroAchievementsFor(game)) {
+      if (mounted) {
+        setState(() {
+          _currentGameInfo = null;
+          _isLoadingAchievements = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoadingAchievements = true);
+    }
+    _achievementsTargetRomname = game.romname;
+
+    try {
+      final provider = context.read<RetroAchievementsProvider>();
+      final info = await RetroAchievementsHelper.loadGameInfo(
+        game: game,
+        provider: provider,
+        effectiveSystem: _effectiveSystemFor(game),
+        isAllMode: _isAllMode,
+      );
+
+      if (mounted && _achievementsTargetRomname == game.romname) {
+        setState(() {
+          _currentGameInfo = info;
+          _isLoadingAchievements = false;
+        });
+      }
+    } catch (e) {
+      if (mounted && _achievementsTargetRomname == game.romname) {
+        setState(() {
+          _currentGameInfo = null;
+          _isLoadingAchievements = false;
+        });
+      }
+    }
+  }
+
+  void _showAchievementsDialog() {
+    if (widget.games.isEmpty) return;
+    final game = widget.games[_currentIndex.clamp(0, widget.games.length - 1)];
+    if (!_hasRetroAchievementsFor(game)) return;
+
+    SfxService().playNavSound();
+    showDialog(
+      context: context,
+      builder:
+          (_) => GameAchievementsDialog(
+            game: game,
+            system: _effectiveSystemFor(game),
+            retroAchievementsProvider:
+                context.read<RetroAchievementsProvider>(),
+          ),
     );
   }
 
@@ -827,7 +923,14 @@ class _GamesCarouselState extends State<GamesCarousel> {
                 ),
               ),
             ),
-            GameViewFooter(game: currentGame, onPlay: widget.onPlay),
+            GameViewFooter(
+              game: currentGame,
+              onPlay: widget.onPlay,
+              hasRetroAchievements: _hasRetroAchievementsFor(currentGame),
+              isLoadingAchievements: _isLoadingAchievements,
+              currentGameInfo: _currentGameInfo,
+              onShowAchievements: _showAchievementsDialog,
+            ),
             SizedBox(height: 8.r),
           ],
         ),

@@ -4,169 +4,400 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/models/game_model.dart';
+import 'package:neostation/models/retro_achievements_game_info.dart';
 import 'package:neostation/services/sfx_service.dart';
+import 'package:neostation/themes/app_themes.dart';
 import 'package:neostation/utils/game_utils.dart';
-import 'marquee_text.dart';
+import 'package:neostation/widgets/marquee_text.dart';
+import '../../themes/corner_radii.dart';
 
+/// A reusable footer used by the game grid and carousel views.
+///
+/// Mirrors the layout of the details list footer: the game name and optional ROM
+/// subtitle are anchored to the left, while the rating, RetroAchievements
+/// summary, and Play button are grouped on the right.
 class GameViewFooter extends StatelessWidget {
   final GameModel game;
   final VoidCallback onPlay;
+  final bool hasRetroAchievements;
+  final bool isLoadingAchievements;
+  final GameInfoAndUserProgress? currentGameInfo;
+  final VoidCallback? onShowAchievements;
 
-  const GameViewFooter({super.key, required this.game, required this.onPlay});
+  const GameViewFooter({
+    super.key,
+    required this.game,
+    required this.onPlay,
+    this.hasRetroAchievements = false,
+    this.isLoadingAchievements = false,
+    this.currentGameInfo,
+    this.onShowAchievements,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 8.r),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (game.rating > 0) ...[
-            _RatingBadge(game: game),
-            SizedBox(width: 8.r),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MarqueeText(
-                  text: GameUtils.formatGameName(game.name),
-                  isActive: true,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.r,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 2.r,
-                        color: Colors.black,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
-                  ),
+          // Identity section: title and optional ROM subtitle.
+          MarqueeText(
+            text: GameUtils.formatGameName(game.name),
+            isActive: true,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18.r,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  blurRadius: 2.r,
+                  color: Colors.black,
+                  offset: const Offset(0, 0),
                 ),
-                if (game.showRomFileNameSubtitle) ...[
-                  Text(
-                    game.romname,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.72),
-                      fontSize: 11.r,
-                      fontWeight: FontWeight.w400,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 2.r,
-                          color: Colors.black.withValues(alpha: 0.45),
-                          offset: const Offset(2, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
-          SizedBox(width: 12.r),
-          _buildPlayButton(context),
+          if (game.showRomFileNameSubtitle) ...[
+            Text(
+              game.romname,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontSize: 12.r,
+                fontWeight: FontWeight.w400,
+                shadows: [
+                  Shadow(
+                    blurRadius: 2.r,
+                    color: Colors.black.withValues(alpha: 0.45),
+                    offset: const Offset(2, 2),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          SizedBox(height: 8.r),
+
+          // Action/status section: rating, RetroAchievements, play.
+          ExcludeFocus(
+            child: Row(
+              children: [
+                if (game.rating > 0) ...[
+                  _SteamStyleRating(game: game),
+                  SizedBox(width: 8.r),
+                ],
+                if (hasRetroAchievements) ...[
+                  _CompactAchievementsIndicator(
+                    isLoading: isLoadingAchievements,
+                    gameInfo: currentGameInfo,
+                    onTap: onShowAchievements,
+                  ),
+                  SizedBox(width: 8.r),
+                ],
+                const Spacer(),
+                _buildPlayButton(context),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildPlayButton(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8.r),
-        onTap: () {
-          SfxService().playEnterSound();
-          onPlay();
-        },
-        child: Container(
-          height: 32.r,
-          padding: EdgeInsets.symmetric(horizontal: 10.r),
+    final playTimeText = GameUtils.formatPlayTime(game.playTime ?? 0);
+    return Builder(
+      builder: (context) {
+        final isFocused = Focus.of(context).hasFocus;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 120.r,
+          height: 45.r,
           decoration: BoxDecoration(
-            color: const Color(0xFF2ECC71),
-            borderRadius: BorderRadius.circular(8.r),
+            color: isFocused
+                ? const Color(0xFF36F184)
+                : const Color(0xFF2ECC71),
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(14.r),
+            border: Border.all(color: const Color(0xFF36F184), width: 1.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 2.r,
-                offset: Offset(2.r, 2.r),
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 4.r,
+                offset: Offset(2.0.r, 2.0.r),
               ),
             ],
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/images/gamepad/Xbox_A_button.png',
-                width: 16.r,
-                height: 16.r,
-                color: theme.colorScheme.onPrimary,
-              ),
-              SizedBox(width: 6.r),
-              Text(
-                AppLocale.playButton.getString(context),
-                style: TextStyle(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14.r,
-                  letterSpacing: 1.5,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              canRequestFocus: false,
+              focusColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              splashColor: Colors.white.withValues(alpha: 0.1),
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                  BorderRadius.circular(14.r),
+              onTap: () {
+                SfxService().playEnterSound();
+                onPlay();
+              },
+              child: Padding(
+                padding: EdgeInsets.only(left: 0.r, right: 10.r),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/images/gamepad/Xbox_A_button.png',
+                      width: 32.r,
+                      height: 32.r,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    SizedBox(width: 8.r),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLocale.playButton.getString(context),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 14.r,
+                            letterSpacing: 1.5,
+                            height: 1.0,
+                          ),
+                        ),
+                        if (playTimeText.isNotEmpty && playTimeText != '0s')
+                          Text(
+                            playTimeText.toUpperCase(),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimary.withValues(alpha: 0.8),
+                              fontSize: 8.r,
+                              fontWeight: FontWeight.bold,
+                              height: 1.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
 
-class _RatingBadge extends StatelessWidget {
+/// A Steam-inspired rating badge that interpolates color based on the score intensity.
+class _SteamStyleRating extends StatelessWidget {
   final GameModel game;
-  const _RatingBadge({required this.game});
+
+  const _SteamStyleRating({required this.game});
 
   @override
   Widget build(BuildContext context) {
     final ratingValue = (game.rating / 2).clamp(0.0, 10.0);
     final colorRatio = (ratingValue - 1) / 9;
+    final customColors = AppThemes.getCustomColors(context);
     final ratingColor = Color.lerp(
-      Colors.redAccent,
-      Colors.lightGreenAccent,
+      customColors.errorColor,
+      customColors.successColor,
       colorRatio,
     )!;
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 5.r),
+      height: 45.r,
+      padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
       decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(6.r),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+        borderRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+            BorderRadius.circular(14.r),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: 1.r,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 2.r,
-            offset: Offset(2.r, 2.r),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.5),
+            blurRadius: 3.r,
+            offset: Offset(2.0.r, 2.0.r),
           ),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Symbols.star_rounded, color: ratingColor, size: 16.r),
-          SizedBox(width: 5.r),
+          Icon(Symbols.star_rounded, color: ratingColor, size: 24.r),
+          SizedBox(width: 6.r),
           Text(
             ratingValue.toStringAsFixed(1),
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 15.r,
-              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 22.r,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Compact RetroAchievements indicator reused from the details footer.
+class _CompactAchievementsIndicator extends StatelessWidget {
+  final bool isLoading;
+  final GameInfoAndUserProgress? gameInfo;
+  final VoidCallback? onTap;
+
+  const _CompactAchievementsIndicator({
+    required this.isLoading,
+    this.gameInfo,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final noAchievements =
+        !isLoading && (gameInfo == null || gameInfo!.numAchievements == 0);
+
+    final awarded = gameInfo?.numAwardedToUser ?? 0;
+    final total = gameInfo?.numAchievements ?? 0;
+    final progress = total > 0 ? awarded / total : 0.0;
+
+    final progressText = isLoading
+        ? AppLocale.loading.getString(context)
+        : (noAchievements
+              ? AppLocale.noAchievements.getString(context)
+              : '$awarded/$total');
+
+    final theme = Theme.of(context);
+    final statusColor = noAchievements ? theme.colorScheme.onSurface : Colors.orange;
+
+    final gameIconUrl = gameInfo?.imageIcon.isNotEmpty == true
+        ? 'https://media.retroachievements.org${gameInfo!.imageIcon}'
+        : null;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          if (onTap == null) return;
+          SfxService().playNavSound();
+          onTap!();
+        },
+        canRequestFocus: false,
+        focusColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        splashColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8.r),
+        child: Container(
+          width: 120.r,
+          height: 45.r,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface.withValues(alpha: 0.9),
+            borderRadius:
+                Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                BorderRadius.circular(14.r),
+            border: Border.all(
+              color: theme.colorScheme.outline,
+              width: 1.r,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow.withValues(alpha: 0.1),
+                blurRadius: 4.r,
+                offset: Offset(2.0.r, 2.0.r),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4.r, vertical: 4.r),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius:
+                      Theme.of(
+                        context,
+                      ).extension<CornerRadii>()?.radiusInternal ??
+                      BorderRadius.circular(14.r),
+                  child: Container(
+                    width: 32.r,
+                    height: 32.r,
+                    color: theme.colorScheme.surface,
+                    child: gameIconUrl != null
+                        ? Image.network(
+                            gameIconUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Icon(
+                              Symbols.emoji_events_rounded,
+                              color: statusColor,
+                              size: 16.r,
+                            ),
+                          )
+                        : Icon(
+                            Symbols.emoji_events_rounded,
+                            color: statusColor,
+                            size: 16.r,
+                          ),
+                  ),
+                ),
+                SizedBox(width: 4.r),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 70.r,
+                      child: Text(
+                        progressText.toUpperCase(),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 10.r,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(height: 4.r),
+                    SizedBox(
+                      width: 70.r,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4.r),
+                        child: LinearProgressIndicator(
+                          value: isLoading ? null : progress,
+                          minHeight: 5.r,
+                          backgroundColor: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            statusColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

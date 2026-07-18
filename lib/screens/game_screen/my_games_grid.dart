@@ -6,20 +6,27 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/models/game_model.dart';
+import 'package:neostation/models/retro_achievements_game_info.dart';
 import 'package:neostation/models/system_model.dart';
 import 'package:neostation/providers/file_provider.dart';
+import 'package:neostation/providers/retro_achievements_provider.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
+import 'package:neostation/services/retro_achievements_helper.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/utils/game_utils.dart';
 import 'package:neostation/widgets/game_view_mode_dropdown.dart';
+import 'package:neostation/screens/game_screen/game_details_card/dialogs/game_achievements_dialog.dart';
 import 'package:neostation/services/game_service.dart';
 import 'package:neostation/repositories/game_repository.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:neostation/widgets/game_view_footer.dart';
 import 'package:neostation/widgets/game_action_buttons.dart';
+import 'package:neostation/widgets/marquee_text.dart';
 import 'package:neostation/constants/system_folder_names.dart';
+
+import '../../themes/corner_radii.dart';
 
 class GamesGrid extends StatefulWidget {
   final SystemModel system;
@@ -63,6 +70,10 @@ class _GamesGridState extends State<GamesGrid> {
   int _selectedIndex = 0;
   int _crossAxisCount = 5;
   bool _isNavigatingFast = false;
+
+  GameInfoAndUserProgress? _currentGameInfo;
+  bool _isLoadingAchievements = false;
+  String? _achievementsTargetRomname;
   DateTime? _lastNavTime;
   static const Duration _fastNavThreshold = Duration(milliseconds: 150);
 
@@ -263,7 +274,7 @@ class _GamesGridState extends State<GamesGrid> {
     _spX = spX;
     _spY = spY;
 
-    final totalWidth = availableWidth - 32;
+    final totalWidth = availableWidth - 60.r - 16.r;
     _cardWidth = (totalWidth - (_cols - 1) * spX) / _cols;
     final n = widget.games.length;
     _cardRects = List.generate(
@@ -275,11 +286,13 @@ class _GamesGridState extends State<GamesGrid> {
     if (_isFanart) {
       double y = 0;
       final rows = <_RowInfo>[];
+      // Card visual height: square artwork area plus system-card-style footer.
+      final cardHeight = _cardWidth + 36.r;
       for (int i = 0; i < n; i += _cols) {
         final end = (i + _cols).clamp(0, n);
         final count = end - i;
         rows.add(
-          _RowInfo(topY: y, height: _cardWidth, startIndex: i, count: count),
+          _RowInfo(topY: y, height: cardHeight, startIndex: i, count: count),
         );
         for (int idx = i; idx < end; idx++) {
           final col = idx % _cols;
@@ -287,10 +300,10 @@ class _GamesGridState extends State<GamesGrid> {
             left: col * (_cardWidth + spX),
             top: y + spY / 2,
             width: _cardWidth,
-            height: _cardWidth,
+            height: cardHeight,
           );
         }
-        y += _cardWidth + spY;
+        y += cardHeight + spY;
       }
       _rows = rows;
       return; // fanart path done
@@ -365,6 +378,7 @@ class _GamesGridState extends State<GamesGrid> {
           onDeactivate: () => _gamepadNav.deactivate(),
         );
         _ensureSelectedVisible();
+        _loadAchievementsForSelectedGame();
       }
     });
   }
@@ -484,6 +498,7 @@ class _GamesGridState extends State<GamesGrid> {
       if (mounted && _scrollController.hasClients) {
         _ensureSelectedVisible();
       }
+      _loadAchievementsForSelectedGame();
     }
   }
 
@@ -586,6 +601,7 @@ class _GamesGridState extends State<GamesGrid> {
   void _onSelectionChanged() {
     if (_selectedIndex < widget.games.length) {
       widget.onGameSelected(widget.games[_selectedIndex]);
+      _loadAchievementsForSelectedGame();
     }
   }
 
@@ -609,6 +625,92 @@ class _GamesGridState extends State<GamesGrid> {
       target,
       duration: Duration(milliseconds: _isNavigatingFast ? 220 : 500),
       curve: Curves.easeOutQuart,
+    );
+  }
+
+  bool get _isAllMode =>
+      widget.system.folderName == SystemFolderNames.all ||
+      widget.system.folderName == SystemFolderNames.favorites;
+
+  SystemModel _effectiveSystemFor(GameModel game) {
+    final systemFolderName = game.systemFolderName;
+    if (systemFolderName == null || !_isAllMode) return widget.system;
+    try {
+      final detectedSystems =
+          context.read<SqliteConfigProvider>().detectedSystems;
+      return detectedSystems.firstWhere(
+        (s) => s.folderName == systemFolderName,
+        orElse: () => widget.system,
+      );
+    } catch (e) {
+      return widget.system;
+    }
+  }
+
+  bool _hasRetroAchievementsFor(GameModel game) {
+    final system = _effectiveSystemFor(game);
+    return system.raId != null && system.raId != '0' && system.raId!.isNotEmpty;
+  }
+
+  Future<void> _loadAchievementsForSelectedGame() async {
+    if (widget.games.isEmpty) return;
+    final game = widget.games[_selectedIndex.clamp(0, widget.games.length - 1)];
+
+    if (!_hasRetroAchievementsFor(game)) {
+      if (mounted) {
+        setState(() {
+          _currentGameInfo = null;
+          _isLoadingAchievements = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _isLoadingAchievements = true);
+    }
+    _achievementsTargetRomname = game.romname;
+
+    try {
+      final provider = context.read<RetroAchievementsProvider>();
+      final info = await RetroAchievementsHelper.loadGameInfo(
+        game: game,
+        provider: provider,
+        effectiveSystem: _effectiveSystemFor(game),
+        isAllMode: _isAllMode,
+      );
+
+      if (mounted && _achievementsTargetRomname == game.romname) {
+        setState(() {
+          _currentGameInfo = info;
+          _isLoadingAchievements = false;
+        });
+      }
+    } catch (e) {
+      if (mounted && _achievementsTargetRomname == game.romname) {
+        setState(() {
+          _currentGameInfo = null;
+          _isLoadingAchievements = false;
+        });
+      }
+    }
+  }
+
+  void _showAchievementsDialog() {
+    if (widget.games.isEmpty) return;
+    final game = widget.games[_selectedIndex.clamp(0, widget.games.length - 1)];
+    if (!_hasRetroAchievementsFor(game)) return;
+
+    SfxService().playNavSound();
+    showDialog(
+      context: context,
+      builder:
+          (_) => GameAchievementsDialog(
+            game: game,
+            system: _effectiveSystemFor(game),
+            retroAchievementsProvider:
+                context.read<RetroAchievementsProvider>(),
+          ),
     );
   }
 
@@ -705,10 +807,10 @@ class _GamesGridState extends State<GamesGrid> {
                           slivers: [
                             SliverPadding(
                               padding: EdgeInsets.only(
-                                top: 12,
-                                bottom: 80,
-                                left: 60,
-                                right: 16,
+                                top: 12.r,
+                                bottom: 80.r,
+                                left: 60.r,
+                                right: 16.r,
                               ),
                               sliver: SliverList.builder(
                                 itemCount: _rows.length,
@@ -721,10 +823,10 @@ class _GamesGridState extends State<GamesGrid> {
                           key: const ValueKey('game_selector'),
                           duration: hlDuration,
                           curve: Curves.easeOutQuart,
-                          left: selRect.left + 16,
-                          top: selRect.top + 12,
-                          width: selRect.width,
-                          height: selRect.height,
+                          left: selRect.left + 60.r + 2.r,
+                          top: selRect.top + 12.r + 2.r,
+                          width: selRect.width - 4.r,
+                          height: selRect.height - 4.r,
                           child: ListenableBuilder(
                             listenable: _scrollController,
                             builder: (_, child) {
@@ -736,11 +838,30 @@ class _GamesGridState extends State<GamesGrid> {
                                 child: IgnorePointer(
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: theme.colorScheme.secondary,
-                                        width: 4.r,
+                                      borderRadius:
+                                          Theme.of(context)
+                                              .extension<CornerRadii>()
+                                              ?.radiusExternal ??
+                                          BorderRadius.circular(14.r),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [
+                                          theme.colorScheme.primary.withValues(
+                                            alpha: 0.28,
+                                          ),
+                                          theme.colorScheme.primary.withValues(
+                                            alpha: 0.08,
+                                          ),
+                                          Colors.transparent,
+                                        ],
+                                        stops: const [0.0, 0.35, 1.0],
                                       ),
-                                      borderRadius: BorderRadius.circular(12.r),
+                                      border: Border.all(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.55),
+                                        width: 2.r,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -793,6 +914,17 @@ class _GamesGridState extends State<GamesGrid> {
               game: widget
                   .games[_selectedIndex.clamp(0, widget.games.length - 1)],
               onPlay: widget.onPlay,
+              hasRetroAchievements:
+                  widget.games.isNotEmpty &&
+                  _hasRetroAchievementsFor(
+                    widget.games[_selectedIndex.clamp(
+                      0,
+                      widget.games.length - 1,
+                    )],
+                  ),
+              isLoadingAchievements: _isLoadingAchievements,
+              currentGameInfo: _currentGameInfo,
+              onShowAchievements: _showAchievementsDialog,
             ),
           ],
         ),
@@ -978,99 +1110,160 @@ class _GamesGridState extends State<GamesGrid> {
         setState(() => _selectedIndex = index);
         widget.onGameSelected(game);
         SfxService().playNavSound();
+        _loadAchievementsForSelectedGame();
       },
       child: RepaintBoundary(
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
-                blurRadius: 2.r,
-                offset: Offset(2.r, 2.r),
+        child: Padding(
+          padding: EdgeInsets.all(2.r),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+                  BorderRadius.circular(14.r),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.r,
               ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.r),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                if (bgPath.isNotEmpty)
-                  Image.file(
-                    File(bgPath),
-                    key: ValueKey('fanart_bg_${game.romname}'),
-                    fit: BoxFit.cover,
-                    cacheWidth: 388,
-                    errorBuilder: (ctx, e, s) =>
-                        _buildFallbackCard(game, theme),
-                  )
-                else
-                  _buildFallbackCard(game, theme),
-                if (bgPath.isNotEmpty)
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.5),
-                          Colors.black.withValues(alpha: 0.85),
-                        ],
-                        stops: const [0.5, 0.75, 1.0],
-                      ),
-                    ),
-                  ),
-                if (hasWheel)
-                  Positioned(
-                    left: 10.r,
-                    right: 10.r,
-                    bottom: 5.r,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 6.r,
-                        vertical: 4.r,
-                      ),
-                      child: Image.file(
-                        File(wheelsPath),
-                        key: ValueKey('wheel_${game.romname}'),
-                        fit: BoxFit.contain,
-                        cacheWidth: 388,
-                        errorBuilder: (ctx, e, s) => const SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                if (game.isFavorite == true)
-                  Positioned(
-                    top: 6.r,
-                    right: 6.r,
-                    child: Container(
-                      width: 22.r,
-                      height: 22.r,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Symbols.favorite_rounded,
-                        size: 12.r,
-                        color: Colors.redAccent,
-                      ),
-                    ),
-                  ),
-                if (widget.scrapingGameRomnames.contains(game.romname))
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _buildScrapeProgress(game),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.1),
+                  blurRadius: 4.r,
+                  offset: Offset(2.0.r, 2.0.r),
+                ),
               ],
+            ),
+            child: ClipRRect(
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                  BorderRadius.circular(9.r),
+              child: InkWell(
+                canRequestFocus: false,
+                focusColor: Colors.transparent,
+                hoverColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+      onTap: () {
+        setState(() => _selectedIndex = index);
+        widget.onGameSelected(game);
+        SfxService().playNavSound();
+        _loadAchievementsForSelectedGame();
+      },
+                child: Padding(
+                  padding: EdgeInsets.all(4.r),
+                  child: Column(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 1,
+                        child: ClipRRect(
+                          borderRadius:
+                              Theme.of(context)
+                                  .extension<CornerRadii>()
+                                  ?.radiusInternal ??
+                              BorderRadius.circular(9.r),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              if (bgPath.isNotEmpty)
+                                Image.file(
+                                  File(bgPath),
+                                  key: ValueKey('fanart_bg_${game.romname}'),
+                                  fit: BoxFit.cover,
+                                  cacheWidth: 512,
+                                  errorBuilder: (ctx, e, s) =>
+                                      _buildFallbackCard(game, theme),
+                                )
+                              else
+                                _buildFallbackCard(game, theme),
+                              if (bgPath.isNotEmpty)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.5),
+                                        Colors.black.withValues(alpha: 0.85),
+                                      ],
+                                      stops: const [0.5, 0.75, 1.0],
+                                    ),
+                                  ),
+                                ),
+                              if (game.isFavorite == true)
+                                Positioned(
+                                  top: 6.r,
+                                  right: 6.r,
+                                  child: Container(
+                                    width: 22.r,
+                                    height: 22.r,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.45,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Symbols.favorite_rounded,
+                                      size: 12.r,
+                                      color: Colors.redAccent,
+                                    ),
+                                  ),
+                                ),
+                              if (widget.scrapingGameRomnames.contains(
+                                game.romname,
+                              ))
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  bottom: 0,
+                                  child: _buildScrapeProgress(game),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 4.r),
+                      Container(
+                        height: 32.r,
+                        padding: EdgeInsets.symmetric(horizontal: 2.r),
+                        child: Center(
+                          child: hasWheel
+                              ? Image.file(
+                                  File(wheelsPath),
+                                  key: ValueKey('wheel_${game.romname}'),
+                                  fit: BoxFit.contain,
+                                  cacheWidth: 256,
+                                  errorBuilder: (ctx, e, s) => _buildGameLabel(
+                                    game,
+                                  ),
+                                )
+                              : _buildGameLabel(game),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGameLabel(GameModel game) {
+    final displayName = game.name.isNotEmpty ? game.name : game.romname;
+    return MarqueeText(
+      text: GameUtils.formatGameName(displayName).toUpperCase(),
+      isActive: false,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
+        fontSize: 8.r,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0.5,
       ),
     );
   }

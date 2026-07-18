@@ -12,8 +12,7 @@ import '../../../providers/retro_achievements_provider.dart';
 import '../../../sync/i_sync_provider.dart';
 import '../../../models/retro_achievements_game_info.dart';
 import '../../../repositories/game_repository.dart';
-import '../../../repositories/retro_achievements_repository.dart';
-import '../../../services/retroachievements_hash_service.dart';
+import '../../../services/retro_achievements_helper.dart';
 import '../../../utils/gamepad_nav.dart';
 import 'package:flutter/foundation.dart';
 
@@ -539,92 +538,19 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     });
 
     try {
-      if (!widget.retroAchievementsProvider.isConnected) {
-        if (mounted) {
-          setState(() {
-            _currentGameInfo = null;
-            _isLoadingAchievements = false;
-          });
-        }
-        return;
-      }
-
-      final summary = widget.retroAchievementsProvider.userSummary;
-
-      // Identify if the hardware system requires a specialized hash generation algorithm.
-      final hasSpecificGenerator =
-          RetroAchievementsHashService.hasSpecificHashGenerator(
-            gameTarget.systemFolderName,
-          );
-
-      String? md5Hash = gameTarget.raHash;
-
-      if (hasSpecificGenerator) {
-        // Core systems (e.g., PSX, GBA): Always generate hashes for precise matching.
-        if (md5Hash == null || md5Hash.isEmpty) {
-          md5Hash = await RetroAchievementsHashService.generateHashForGame(
-            gameTarget,
-          );
-        }
-      } else {
-        // Fallback systems: Generate MD5 only for files < 512MB to maintain performance.
-        if (md5Hash == null || md5Hash.isEmpty) {
-          if (gameTarget.romPath != null) {
-            final file = File(gameTarget.romPath!);
-            if (await file.exists()) {
-              final fileSize = await file.length();
-              const maxSize = 512 * 1024 * 1024;
-
-              if (fileSize < maxSize) {
-                md5Hash =
-                    await RetroAchievementsHashService.generateHashForGame(
-                      gameTarget,
-                    );
-              }
-            }
-          }
-        }
-      }
-
-      if (widget.game.romname != gameTarget.romname) {
-        return;
-      }
-
-      // Resolve the RetroAchievements internal GameID using local cache or API resolution.
-      final gameId = await _findGameIdForCurrentGame(
-        summary,
-        md5Hash,
-        hasSpecificGenerator,
+      final gameInfo = await RetroAchievementsHelper.loadGameInfo(
+        game: gameTarget,
+        provider: widget.retroAchievementsProvider,
+        effectiveSystem: _effectiveSystem,
+        isAllMode: widget.isAllMode,
+        forceRefresh: forceRefresh,
       );
 
       if (widget.game.romname != gameTarget.romname) return;
 
-      if (gameId == null) {
-        if (mounted) {
-          setState(() {
-            _currentGameInfo = null;
-            _isLoadingAchievements = false;
-          });
-        }
-        return;
-      }
-
-      final gameInfo = await widget.retroAchievementsProvider
-          .getGameInfoAndUserProgress(
-            gameId,
-            forceRefresh: forceRefresh,
-            md5Hash: md5Hash,
-          );
-
       if (mounted && widget.game.romname == gameTarget.romname) {
-        // Evict existing badge images from the global cache during forced refreshes.
-        if (forceRefresh && _currentGameInfo != null) {
-          for (final ach in _currentGameInfo!.achievements.values) {
-            final baseUrl =
-                'https://media.retroachievements.org/Badge/${ach.badgeName}';
-            NetworkImage('$baseUrl.png').evict();
-            NetworkImage('${baseUrl}_lock.png').evict();
-          }
+        if (forceRefresh) {
+          RetroAchievementsHelper.evictBadgeCache(_currentGameInfo);
         }
 
         setState(() {
@@ -691,85 +617,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     );
     await configProvider.toggleVideoSound();
     await _applyVideoMuteState();
-  }
-
-  /// Resolves the internal RetroAchievements GameID via MD5 hash or optimized filename lookup.
-  Future<int?> _findGameIdForCurrentGame(
-    dynamic summary,
-    String? md5Hash,
-    bool hasSpecificGenerator,
-  ) async {
-    // Strategy 1: Exact Hash matching against local RA database.
-    if (md5Hash != null && md5Hash.isNotEmpty) {
-      try {
-        final gameId = await RetroAchievementsRepository.findGameIdByHash(
-          md5Hash,
-        );
-        if (gameId != null) return gameId;
-      } catch (e) {
-        _log.e('Hash lookup failure: $e');
-      }
-    }
-
-    if (hasSpecificGenerator) {
-      return null;
-    }
-
-    // Strategy 2: Filename normalization and metadata matching.
-    try {
-      var filenameWithoutExt = widget.game.romname.contains('.')
-          ? widget.game.romname.substring(
-              0,
-              widget.game.romname.lastIndexOf('.'),
-            )
-          : widget.game.romname;
-
-      // Sanitize filename: remove regional metadata and bracketed flags for broader matching.
-      filenameWithoutExt = filenameWithoutExt
-          .replaceAll(RegExp(r'\([^)]*\)'), '')
-          .replaceAll(RegExp(r'\[[^\]]*\]'), '')
-          .trim();
-
-      final systemFolderName =
-          widget.isAllMode && _game.systemFolderName != null
-          ? _game.systemFolderName!
-          : _effectiveSystem.primaryFolderName;
-
-      final gameId = await RetroAchievementsRepository.findGameIdByFilename(
-        systemFolderName,
-        filenameWithoutExt,
-      );
-      if (gameId != null) return gameId;
-    } catch (e) {
-      _log.e('Database metadata search failed: $e');
-    }
-
-    // Strategy 3: Heuristic matching against user's 'Recently Played' history.
-    try {
-      final gameName = widget.game.name.toLowerCase();
-      final normalizedLocal = gameName
-          .replaceAll(RegExp(r'[^\w\s]'), '')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim()
-          .toLowerCase();
-
-      for (final recentlyPlayed in summary?.recentlyPlayed ?? const []) {
-        final raGameName = recentlyPlayed.title.toLowerCase();
-        final normalizedRA = raGameName
-            .replaceAll(RegExp(r'[^\w\s]'), '')
-            .replaceAll(RegExp(r'\s+'), ' ')
-            .trim()
-            .toLowerCase();
-
-        if (normalizedLocal == normalizedRA) {
-          return recentlyPlayed.gameId;
-        }
-      }
-    } catch (e) {
-      _log.e('Recent history metadata resolution failed: $e');
-    }
-
-    return null;
   }
 
   @override
