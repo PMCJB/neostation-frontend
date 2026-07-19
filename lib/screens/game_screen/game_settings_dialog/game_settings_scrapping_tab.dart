@@ -13,6 +13,7 @@ import 'package:neostation/providers/file_provider.dart';
 import 'package:neostation/repositories/game_repository.dart';
 import 'package:neostation/repositories/scraper_repository.dart';
 import 'package:neostation/repositories/system_repository.dart';
+import 'package:neostation/screens/game_screen/my_games_carousel.dart';
 import 'package:neostation/screens/game_screen/my_games_grid.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/screenscraper_service.dart';
@@ -201,6 +202,20 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
     ];
   }
 
+  /// Evicts Flutter's [ImageCache] entries for the given artwork [paths] and
+  /// clears live images so every visible widget reloads the fresh files.
+  Future<void> _evictArtworkFromFlutterCache(Iterable<String> paths) async {
+    final imageCache = PaintingBinding.instance.imageCache;
+    for (final path in paths) {
+      final file = File(path);
+      if (await file.exists()) {
+        await FileImage(file).evict();
+      }
+    }
+    imageCache.clear();
+    imageCache.clearLiveImages();
+  }
+
   Future<void> _forceRescrape() async {
     if (_isScraping) return;
     final romPath = widget.game.romPath;
@@ -240,13 +255,9 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
       );
 
       // Bust cached artwork so the fresh media shows up everywhere.
-      for (final path in _artworkPaths()) {
-        final file = File(path);
-        if (await file.exists()) {
-          await FileImage(file).evict();
-        }
-      }
+      await _evictArtworkFromFlutterCache(_artworkPaths());
       GamesGrid.evictArtworkCaches(_artworkPaths());
+      GamesCarousel.evictArtworkCaches(_artworkPaths());
 
       if (mounted) {
         AppNotification.showNotification(
@@ -286,8 +297,9 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
       final targetPath = _pathForImageType(type);
       await File(targetPath).parent.create(recursive: true);
       await File(srcPath).copy(targetPath);
-      await FileImage(File(targetPath)).evict();
+      await _evictArtworkFromFlutterCache([targetPath]);
       GamesGrid.evictArtworkCaches([targetPath]);
+      GamesCarousel.evictArtworkCaches([targetPath]);
 
       // Keep the grid's layout math correct for the new boxart dimensions.
       if (type == 'box2d' && widget.game.systemId != null) {

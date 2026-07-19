@@ -15,7 +15,6 @@ import 'package:neostation/services/retro_achievements_helper.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/utils/game_utils.dart';
-import 'package:neostation/widgets/game_view_mode_dropdown.dart';
 import 'package:neostation/screens/game_screen/game_details_card/dialogs/game_achievements_dialog.dart';
 import 'package:neostation/services/game_service.dart';
 import 'package:neostation/repositories/game_repository.dart';
@@ -42,7 +41,6 @@ class GamesGrid extends StatefulWidget {
   final VoidCallback onFavorite;
   final VoidCallback onRandom;
   final VoidCallback? onSettings;
-  final VoidCallback? onScrape;
   final Set<String> scrapingGameRomnames;
   final Map<String, double> scrapeProgress;
 
@@ -58,7 +56,6 @@ class GamesGrid extends StatefulWidget {
     required this.onFavorite,
     required this.onRandom,
     this.onSettings,
-    this.onScrape,
     this.scrapingGameRomnames = const {},
     this.scrapeProgress = const {},
   });
@@ -500,13 +497,7 @@ class _GamesGridState extends State<GamesGrid> {
       onSelectItem: widget.onPlay,
       onBack: widget.onBack,
       onFavorite: widget.onFavorite,
-      onXButton: () {
-        try {
-          GameViewModeDropdown.globalKey.currentState?.showDropdown();
-        } catch (_) {}
-      },
-      onLeftStickClick: widget.onRandom,
-      onSelectButton: widget.onScrape,
+      onXButton: widget.onRandom,
       onSettings: widget.onSettings,
     );
   }

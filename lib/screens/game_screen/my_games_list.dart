@@ -99,7 +99,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
   VoidCallback? _secondaryOverlayAction; // Maps to RB (Scrape/Refresh).
   bool Function(bool isRight)?
   _tabNavigationAction; // Facilitates tab switching via bumpers.
-  VoidCallback? _startActionCallback; // Maps to Start button.
   bool Function()? _isPlayingGameBlocked; // Validation for launch readiness.
 
   // Secondary display hardware management (OEM support).
@@ -146,7 +145,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
   final Set<String> _scrapingGameRomnames = {};
   final Map<String, double> _scrapeProgress = {};
 
-  // Localized metadata.
+  // Bumped whenever artwork is replaced so background/detail images rebuild.
+  int _artworkVersion = 0;
+
   String? _localizedDescription;
 
   // Resource providers.
@@ -264,123 +265,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
     }
 
     _updateSecondaryDisplay(_selectedGame!);
-  }
-
-  void _onScrapeCurrentGame() async {
-    final game = _selectedGame;
-    if (game == null) return;
-    final romname = game.romname;
-    final romPath = game.romPath;
-    if (romPath == null) return;
-    if (_scrapingGameRomnames.contains(romname)) return;
-
-    // Audible feedback when a scrape is initiated. The on-screen scrape
-    // button plays this via its own onTap, but the Select shortcut routes
-    // here directly, so play it here to keep both paths consistent.
-    SfxService().playNavSound();
-
-    // Claim the lock synchronously, before any await, so rapid repeated
-    // presses (the scrape button or the Select shortcut) can't slip past the
-    // guard above and queue duplicate scrapes for the same game.
-    _scrapingGameRomnames.add(romname);
-    _scrapeProgress[romname] = 0.0;
-    setState(() {});
-
-    // Resolve the actual system (not favorites virtual system).
-    SystemModel targetSystem = widget.system;
-    if ((widget.system.folderName == SystemFolderNames.all ||
-            widget.system.folderName == SystemFolderNames.favorites) &&
-        game.systemFolderName != null) {
-      final original = await SystemRepository.getSystemByFolderName(
-        game.systemFolderName!,
-      );
-      if (original != null) {
-        targetSystem = original;
-      }
-    }
-
-    final systemId = targetSystem.id;
-    if (systemId == null) {
-      _scrapingGameRomnames.remove(romname);
-      _scrapeProgress.remove(romname);
-      if (mounted) setState(() {});
-      return;
-    }
-
-    ScreenScraperService.scrapeSingleGame(
-          appSystemId: systemId,
-          romName: game.romname,
-          systemFolder: targetSystem.primaryFolderName,
-          romPath: romPath,
-          gameName: game.name,
-          forceOverwrite: true,
-          onProgress: (status, progress) {
-            _scrapeProgress[romname] = progress;
-            setState(() {});
-          },
-        )
-        .then((result) async {
-          final systemFolder = targetSystem.primaryFolderName;
-          final imagesToEvict = [
-            game.getScreenshotPath(systemFolder),
-            game.getImagePath(systemFolder, 'wheels', widget.fileProvider),
-            game.getImagePath(systemFolder, 'fanarts', widget.fileProvider),
-            game.getImagePath(systemFolder, 'box2d', widget.fileProvider),
-          ];
-          for (final imagePath in imagesToEvict) {
-            final imageFile = File(imagePath);
-            if (await imageFile.exists()) {
-              await FileImage(imageFile).evict();
-            }
-          }
-
-          final updatedGame = await GameService.getGameDetails(
-            targetSystem,
-            romname,
-          );
-          if (mounted && updatedGame != null) {
-            final gameIndex = _games.indexWhere((g) => g.romname == romname);
-            if (gameIndex >= 0) {
-              setState(() {
-                _games[gameIndex] = updatedGame;
-                if (_selectedGame?.romname == romname) {
-                  _selectedGame = updatedGame;
-                }
-              });
-              // Refresh the cached localized description so the scrape button
-              // label flips from 'Scrape' to 'Rescrape' immediately (it keys
-              // off whether a description is present).
-              if (_selectedGame?.romname == romname) {
-                _loadLocalizedDescription();
-                // Push the freshly-scraped media to the secondary screen and
-                // the main background right away. The main list rebuilds from
-                // _selectedGame via setState, but the secondary window is a
-                // separate engine fed only through _updateSecondaryDisplay —
-                // without this it stays stale until the selection changes.
-                _updateBackground(updatedGame);
-                _updateSecondaryDisplay(updatedGame, forceMediaRefresh: true);
-                _updateSecondaryDisplayVideo(updatedGame);
-              }
-            }
-          }
-
-          if (mounted) {
-            AppNotification.showNotification(
-              context,
-              result['success'] == true
-                  ? 'Scraping completed'
-                  : 'Scraping failed: ${result['message']}',
-              type: result['success'] == true
-                  ? NotificationType.success
-                  : NotificationType.error,
-            );
-          }
-        })
-        .whenComplete(() {
-          _scrapingGameRomnames.remove(romname);
-          _scrapeProgress.remove(romname);
-          if (mounted) setState(() {});
-        });
   }
 
   /// Responds to SQLite database updates by reloading the game list.
@@ -1165,8 +1049,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
       onPlay: _selectCurrentGame,
       onFavorite: _toggleFavorite,
       onRandom: _showRandomGameDialog,
-      onSettings: _handleStartButton,
-      onScrape: _onScrapeCurrentGame,
+      onSettings: _openGameSettingsDialog,
       scrapingGameRomnames: _scrapingGameRomnames,
       scrapeProgress: _scrapeProgress,
     );
@@ -1190,8 +1073,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
       onPlay: _selectCurrentGame,
       onFavorite: _toggleFavorite,
       onRandom: _showRandomGameDialog,
-      onSettings: _handleStartButton,
-      onScrape: _onScrapeCurrentGame,
+      onSettings: _openGameSettingsDialog,
       scrapingGameRomnames: _scrapingGameRomnames,
       scrapeProgress: _scrapeProgress,
     );
@@ -1218,7 +1100,10 @@ class _SystemGamesListState extends State<SystemGamesList> {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildGameFanartBackground(_selectedGame!),
+                  _buildGameFanartBackground(
+                    _selectedGame!,
+                    artworkVersion: _artworkVersion,
+                  ),
                   Container(
                     color: Theme.of(
                       context,
@@ -1308,7 +1193,10 @@ class _SystemGamesListState extends State<SystemGamesList> {
   }
 
   /// Renders the selected game's fanart as a full-screen background.
-  Widget _buildGameFanartBackground(GameModel game) {
+  Widget _buildGameFanartBackground(
+    GameModel game, {
+    required int artworkVersion,
+  }) {
     final imageSystemFolder =
         game.systemFolderName ?? widget.system.primaryFolderName;
 
@@ -1341,7 +1229,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
         );
       },
       child: Builder(
-        key: ValueKey('list_fanart_${game.romPath ?? game.romname}'),
+        key: ValueKey(
+          'list_fanart_${game.romPath ?? game.romname}_v$artworkVersion',
+        ),
         builder: (context) {
           final file = File(fanartPath);
           if (file.existsSync()) {
@@ -1527,9 +1417,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
         onRegisterIsPlayingGameBlocked: (isBlocked) {
           _isPlayingGameBlocked = isBlocked;
         },
-        onRegisterStartAction: (callback) {
-          _startActionCallback = callback;
-        },
         onPlayGame: _selectCurrentGame,
         onShowRandomGame: _showRandomGameDialog,
         onBack: _goBack,
@@ -1611,6 +1498,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
       if (updatedGame != null) {
         setState(() {
           _selectedGame = updatedGame;
+          _artworkVersion++;
 
           final index = _games.indexWhere(
             (g) => g.romname == updatedGame.romname,

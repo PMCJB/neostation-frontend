@@ -17,7 +17,6 @@ import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/screens/game_screen/game_details_card/dialogs/game_achievements_dialog.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/screens/app_screen.dart';
-import 'package:neostation/widgets/game_view_mode_dropdown.dart';
 import 'package:neostation/widgets/native_carousel.dart';
 import 'package:neostation/widgets/game_view_footer.dart';
 import 'package:neostation/widgets/game_action_buttons.dart';
@@ -34,7 +33,6 @@ class GamesCarousel extends StatefulWidget {
   final VoidCallback? onFavorite;
   final VoidCallback? onRandom;
   final VoidCallback? onSettings;
-  final VoidCallback? onScrape;
   final Set<String> scrapingGameRomnames;
   final Map<String, double> scrapeProgress;
 
@@ -50,13 +48,20 @@ class GamesCarousel extends StatefulWidget {
     this.onFavorite,
     this.onRandom,
     this.onSettings,
-    this.onScrape,
     this.scrapingGameRomnames = const {},
     this.scrapeProgress = const {},
   });
 
   @override
   State<GamesCarousel> createState() => _GamesCarouselState();
+
+  /// Evicts memoized file-existence entries for [paths]. Call after replacing a
+  /// game's image files on disk so the carousel re-checks the fresh artwork.
+  static void evictArtworkCaches(Iterable<String> paths) {
+    for (final path in paths) {
+      _GamesCarouselState._fileExistsCache.remove(path);
+    }
+  }
 }
 
 class _GamesCarouselState extends State<GamesCarousel> {
@@ -66,7 +71,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
   int _currentIndex = 0;
   late GamepadNavigation _gamepadNav;
   final Map<String, double> _letterWidthCache = {};
-  final Map<String, bool> _fileExistsCache = {};
+  static final Map<String, bool> _fileExistsCache = {};
   int _lastBgIndex = -1;
 
   GameInfoAndUserProgress? _currentGameInfo;
@@ -256,13 +261,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
       },
       onBack: widget.onBack,
       onFavorite: widget.onFavorite,
-      onXButton: () {
-        try {
-          GameViewModeDropdown.globalKey.currentState?.showDropdown();
-        } catch (_) {}
-      },
-      onLeftStickClick: widget.onRandom,
-      onSelectButton: widget.onScrape,
+      onXButton: widget.onRandom,
       onSettings: widget.onSettings,
       onPreviousTab: AppNavigation.previousTab,
       onNextTab: AppNavigation.nextTab,
