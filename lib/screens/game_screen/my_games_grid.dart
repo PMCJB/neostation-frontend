@@ -65,6 +65,13 @@ class GamesGrid extends StatefulWidget {
 
   @override
   State<GamesGrid> createState() => _GamesGridState();
+
+  /// Evicts memoized artwork entries (file-existence and image dimensions)
+  /// for [paths]. Call after replacing a game's image files on disk, e.g.
+  /// from the game settings dialog's artwork editor or a scrape.
+  static void evictArtworkCaches(Iterable<String> paths) {
+    _GamesGridState._evictArtworkCaches(paths);
+  }
 }
 
 class _GamesGridState extends State<GamesGrid> {
@@ -103,6 +110,14 @@ class _GamesGridState extends State<GamesGrid> {
     final exists = File(path).existsSync();
     _fileExistsCache[path] = exists;
     return exists;
+  }
+
+  /// Backing implementation for [GamesGrid.evictArtworkCaches].
+  static void _evictArtworkCaches(Iterable<String> paths) {
+    for (final path in paths) {
+      _fileExistsCache.remove(path);
+      _imageSizeCache.remove(path);
+    }
   }
 
   // Visible index tracking for lazy dimension loading
@@ -809,22 +824,7 @@ class _GamesGridState extends State<GamesGrid> {
             onBack: widget.onBack,
             onFavorite: widget.onFavorite,
             onRandom: widget.onRandom,
-            onViewMode: () {
-              SfxService().playNavSound();
-              GameViewModeDropdown.globalKey.currentState?.showDropdown();
-            },
-            onScrape: widget.onScrape,
-            hasScreenScraper:
-                widget.system.screenscraperId != null &&
-                widget.system.screenscraperId != 0,
-            isScraping: widget.scrapingGameRomnames.contains(
-              widget.games.isNotEmpty
-                  ? widget
-                        .games[_selectedIndex.clamp(0, widget.games.length - 1)]
-                        .romname
-                  : '',
-            ),
-            isDescriptionMissing: true,
+            onSettings: widget.onSettings ?? () {},
           ),
         ),
       ],

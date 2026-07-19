@@ -29,7 +29,6 @@ import 'widgets/game_details_tabs_header.dart';
 import 'tabs/game_details_general_tab.dart';
 import 'tabs/game_details_game_info_tab.dart';
 import 'tabs/game_details_achievements_tab.dart';
-import 'tabs/game_details_settings_tab.dart';
 
 /// A comprehensive details view for a selected game, providing access to metadata,
 /// achievements, system settings, and cloud synchronization status.
@@ -58,7 +57,6 @@ class GameDetailsCardList extends StatefulWidget {
   final void Function(VoidCallback)? onShowAchievements;
   final void Function(VoidCallback)? onRegisterRefreshAchievements;
   final Function(Function())? onToggleVideoMute;
-  final Function(Function())? onToggleSettings;
   final Function(Function())? onToggleInfo;
 
   /// Callback to register overlay state getters for external navigation management.
@@ -123,7 +121,6 @@ class GameDetailsCardList extends StatefulWidget {
     this.onShowAchievements,
     this.onRegisterRefreshAchievements,
     this.onToggleVideoMute,
-    this.onToggleSettings,
     this.onToggleInfo,
     this.onRegisterOverlayState,
     this.onRegisterNavigation,
@@ -166,14 +163,12 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
 
   // Cloud Synchronization state.
   late bool _cloudSyncEnabled;
-  final ScrollController _settingsScrollController = ScrollController();
 
   // ScreenScraper / Metadata acquisition state.
   bool _isScrapingGame = false;
   late final FocusNode _scrapeButtonFocusNode;
 
   // Navigation management: Explicit focus nodes for UI control points.
-  late final FocusNode _settingsButtonFocusNode;
   late final FocusNode _muteButtonFocusNode;
   late final FocusNode _achievementsButtonFocusNode;
   late final FocusNode _favoriteButtonFocusNode;
@@ -196,8 +191,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
 
   final GlobalKey<GameDetailsAchievementsTabState> _achievementsTabKey =
       GlobalKey<GameDetailsAchievementsTabState>();
-  final GlobalKey<GameDetailsSettingsTabState> _settingsTabKey =
-      GlobalKey<GameDetailsSettingsTabState>();
 
   /// Determines if the detailed game info tab should be suppressed in favor of secondary display output.
   bool get _isGameInfoHidden {
@@ -245,7 +238,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     _game = widget.game;
     _cloudSyncEnabled = widget.game.cloudSyncEnabled ?? true;
 
-    _settingsButtonFocusNode = FocusNode();
     _muteButtonFocusNode = FocusNode();
     _achievementsButtonFocusNode = FocusNode();
     _favoriteButtonFocusNode = FocusNode();
@@ -296,13 +288,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     widget.onRegisterRefreshAchievements?.call(refreshAchievements);
 
     widget.onToggleVideoMute?.call(_toggleVideoMute);
-    widget.onToggleSettings?.call(() {
-      _setTab(
-        _currentTab == DetailTab.settings
-            ? DetailTab.general
-            : DetailTab.settings,
-      );
-    });
 
     // Info toggle: Triggers metadata scraping if information is missing.
     widget.onToggleInfo?.call(() {
@@ -327,30 +312,21 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
 
     widget.onRegisterOverlayState?.call(
       () => _currentTab != DetailTab.general,
-      () =>
-          _currentTab == DetailTab.achievements ||
-          _currentTab == DetailTab.settings,
+      () => _currentTab == DetailTab.achievements,
     );
     widget.onRegisterCloseOverlays?.call(() {
       _setTab(DetailTab.general);
     });
-    widget.onRegisterIsPlayingGameBlocked?.call(
-      () => _currentTab == DetailTab.settings,
-    );
     widget.onRegisterTabNavigation?.call(_handleTabNavigation);
     widget.onRegisterStartAction?.call(_handleStartAction);
     widget.onRegisterNavigation?.call(
       moveUp: () {
-        if (_currentTab == DetailTab.settings) {
-          _settingsTabKey.currentState?.moveUp();
-        } else if (_currentTab == DetailTab.achievements) {
+        if (_currentTab == DetailTab.achievements) {
           _achievementsTabKey.currentState?.moveUp();
         }
       },
       moveDown: () {
-        if (_currentTab == DetailTab.settings) {
-          _settingsTabKey.currentState?.moveDown();
-        } else if (_currentTab == DetailTab.achievements) {
+        if (_currentTab == DetailTab.achievements) {
           _achievementsTabKey.currentState?.moveDown();
         }
       },
@@ -451,13 +427,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
       _currentTab = DetailTab.general;
     }
 
-    widget.onToggleSettings?.call(() {
-      _setTab(
-        _currentTab == DetailTab.settings
-            ? DetailTab.general
-            : DetailTab.settings,
-      );
-    });
     widget.onToggleInfo?.call(() {
       _setTab(
         _currentTab == DetailTab.gameInfo
@@ -482,12 +451,10 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     _animationController.dispose();
     _syncIconController.dispose();
     _videoDelayTimer?.cancel();
-    _settingsButtonFocusNode.dispose();
     _muteButtonFocusNode.dispose();
     _achievementsButtonFocusNode.dispose();
     _favoriteButtonFocusNode.dispose();
     _scrapeButtonFocusNode.dispose();
-    _settingsScrollController.dispose();
     _achievementsScrollController.dispose();
     super.dispose();
   }
@@ -642,7 +609,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
             child: GameDetailsTabsHeader(
               isGameInfoHidden: _isGameInfoHidden,
               hasRetroAchievements: _hasRetroAchievements,
-              showSettings: _effectiveSystem.folderName != 'android',
               currentTab: _currentTab,
               onTabChanged: (tab) => _setTab(tab),
             ),
@@ -694,16 +660,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
               onToggleVideoMute: _toggleVideoMute,
               onScrapeGame: _onScrapeGameCompact,
             ),
-          if (_currentTab == DetailTab.settings)
-            GameDetailsSettingsTab(
-              key: _settingsTabKey,
-              game: _game,
-              system: _effectiveSystem,
-              syncProvider: widget.syncProvider,
-              isAllMode: widget.isAllMode,
-              onGameUpdated: widget.onGameUpdated,
-              onGameDeleted: widget.onGameDeleted,
-            ),
           if (_currentTab == DetailTab.achievements)
             GameDetailsAchievementsTab(
               key: _achievementsTabKey,
@@ -742,16 +698,9 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
   void _handleTriggerAction() {
     // Achievements Tab: Triggers a data refresh.
     if (_currentTab == DetailTab.achievements) {
-      if (_scrapeButtonFocusNode.hasFocus ||
-          _currentTab != DetailTab.settings) {
+      if (_scrapeButtonFocusNode.hasFocus) {
         refreshAchievements();
       }
-      return;
-    }
-
-    // Settings Tab: Delegates interaction to the specialized tab controller.
-    if (_currentTab == DetailTab.settings) {
-      _settingsTabKey.currentState?.trigger();
       return;
     }
 
@@ -785,10 +734,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     final availableTabs = DetailTab.values.where((tab) {
       if (tab == DetailTab.gameInfo && _isGameInfoHidden) return false;
       if (tab == DetailTab.achievements && !_hasRetroAchievements) return false;
-      if (tab == DetailTab.settings &&
-          _effectiveSystem.folderName == 'android') {
-        return false;
-      }
       return true;
     }).toList();
 

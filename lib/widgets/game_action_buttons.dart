@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:neostation/services/sfx_service.dart';
 
 import '../models/game_model.dart';
 import '../models/system_model.dart';
-import 'game_view_mode_dropdown.dart';
 import '../sync/i_sync_provider.dart';
 import '../themes/corner_radii.dart';
 import 'game_action_button.dart';
@@ -13,9 +11,9 @@ import 'neo_sync_status_icon.dart';
 
 /// Vertical action button column shared by the game list, grid, and carousel.
 ///
-/// Renders back, favorite, random, view-mode, scrape (when available), and a
-/// compact NeoSync status icon. Each button uses the tall badge-on-top layout
-/// from [GameActionButton].
+/// Renders back, favorite, random, an optional NeoSync status icon, and the
+/// game-settings shortcut as the last entry. Scraping and view-mode actions
+/// live inside the game settings dialog.
 class GameActionButtons extends StatelessWidget {
   final SystemModel system;
   final GameModel? selectedGame;
@@ -23,11 +21,7 @@ class GameActionButtons extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onFavorite;
   final VoidCallback onRandom;
-  final VoidCallback onViewMode;
-  final VoidCallback? onScrape;
-  final bool hasScreenScraper;
-  final bool isScraping;
-  final bool isDescriptionMissing;
+  final VoidCallback onSettings;
 
   const GameActionButtons({
     super.key,
@@ -37,11 +31,7 @@ class GameActionButtons extends StatelessWidget {
     required this.onBack,
     required this.onFavorite,
     required this.onRandom,
-    required this.onViewMode,
-    this.onScrape,
-    this.hasScreenScraper = false,
-    this.isScraping = false,
-    this.isDescriptionMissing = true,
+    required this.onSettings,
   });
 
   @override
@@ -81,39 +71,22 @@ class GameActionButtons extends StatelessWidget {
           ),
           SizedBox(height: 6.r),
           GameActionButton(
-            iconPath: 'assets/images/gamepad/Left Stick Click.png',
+            iconPath: 'assets/images/gamepad/Xbox_X_button.png',
             symbol: Symbols.casino_rounded,
             color: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
             onTap: onRandom,
           ),
           SizedBox(height: 6.r),
+          // Game settings — second-to-last option.
           GameActionButton(
-            iconPath: 'assets/images/gamepad/Xbox_X_button.png',
-            symbol: Symbols.grid_view_rounded,
+            iconPath: 'assets/images/gamepad/Xbox_Menu_button.png',
+            symbol: Symbols.settings_rounded,
             color: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
-            onTap: () {
-              SfxService().playNavSound();
-              GameViewModeDropdown.globalKey.currentState?.showDropdown();
-            },
+            onTap: selectedGame != null ? onSettings : null,
           ),
-          if (hasScreenScraper && selectedGame != null && onScrape != null) ...[
-            SizedBox(height: 6.r),
-            GameActionButton(
-              iconPath: 'assets/images/gamepad/Xbox_View_button.png',
-              symbol:
-                  isDescriptionMissing
-                      ? Symbols.search_rounded
-                      : Symbols.refresh_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              onTap: onScrape,
-              isLoading: isScraping,
-            ),
-          ],
-          // Compact NeoSync status indicator, separated from the main
-          // action buttons and showing only a descriptive icon.
+          // Compact NeoSync status indicator — always the last option.
           if (syncProvider != null && selectedGame != null) ...[
             SizedBox(height: 12.r),
             NeoSyncStatusIcon(
@@ -122,7 +95,9 @@ class GameActionButtons extends StatelessWidget {
               syncProvider: syncProvider,
               size: 24.0,
             ),
-          ],
+            SizedBox(height: 6.r),
+          ] else
+            SizedBox(height: 6.r),
         ],
       ),
     );

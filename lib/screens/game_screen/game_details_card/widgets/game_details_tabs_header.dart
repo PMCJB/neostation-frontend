@@ -6,7 +6,7 @@ import 'package:neostation/services/sfx_service.dart';
 import '../../../../themes/corner_radii.dart';
 
 /// Defines the navigable sections within the game details card.
-enum DetailTab { general, gameInfo, achievements, settings }
+enum DetailTab { general, gameInfo, achievements }
 
 /// A navigation header component that manages tab switching and global card actions.
 ///
@@ -16,7 +16,6 @@ enum DetailTab { general, gameInfo, achievements, settings }
 class GameDetailsTabsHeader extends StatelessWidget {
   final bool isGameInfoHidden;
   final bool hasRetroAchievements;
-  final bool showSettings;
   final DetailTab currentTab;
   final ValueChanged<DetailTab> onTabChanged;
 
@@ -24,7 +23,6 @@ class GameDetailsTabsHeader extends StatelessWidget {
     super.key,
     required this.isGameInfoHidden,
     required this.hasRetroAchievements,
-    required this.showSettings,
     required this.currentTab,
     required this.onTabChanged,
   });
@@ -35,7 +33,6 @@ class GameDetailsTabsHeader extends StatelessWidget {
     int numTabs = 1; // General is always present.
     if (!isGameInfoHidden) numTabs++;
     if (hasRetroAchievements) numTabs++;
-    if (showSettings) numTabs++;
 
     final double tabWidth = 36.r;
     final double totalTabsWidth = numTabs * tabWidth;
@@ -46,8 +43,6 @@ class GameDetailsTabsHeader extends StatelessWidget {
       visualIndex = 1;
     } else if (currentTab == DetailTab.achievements) {
       visualIndex = isGameInfoHidden ? 1 : 2;
-    } else if (currentTab == DetailTab.settings) {
-      visualIndex = numTabs - 1;
     }
 
     final theme = Theme.of(context);
@@ -144,14 +139,6 @@ class GameDetailsTabsHeader extends StatelessWidget {
                                   width: tabWidth,
                                   isSelected:
                                       currentTab == DetailTab.achievements,
-                                  onTap: onTabChanged,
-                                ),
-                              if (showSettings)
-                                _TabItem(
-                                  icon: Symbols.settings_rounded,
-                                  tab: DetailTab.settings,
-                                  width: tabWidth,
-                                  isSelected: currentTab == DetailTab.settings,
                                   onTap: onTabChanged,
                                 ),
                             ],

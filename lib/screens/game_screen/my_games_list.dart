@@ -30,6 +30,7 @@ import '../../models/system_model.dart';
 import '../../models/game_model.dart';
 import 'game_details_card/game_details_card_list.dart';
 import 'game_details_card/random_game_dialog.dart';
+import 'game_settings_dialog/game_settings_dialog.dart';
 import 'my_games_grid.dart';
 import 'my_games_carousel.dart';
 import 'game_list_view.dart';
@@ -387,6 +388,30 @@ class _SystemGamesListState extends State<SystemGamesList> {
     if (mounted && !_isLoadingGames) {
       _loadGames();
     }
+  }
+
+  /// Opens the game settings dialog for the currently selected game.
+  ///
+  /// Reachable from the side action bar (all views) and from gamepad START
+  /// in grid/carousel mode (in list mode START belongs to the details card).
+  void _openGameSettingsDialog() {
+    final game = _selectedGame;
+    if (game == null) return;
+    SfxService().playNavSound();
+    showDialog(
+      context: context,
+      builder: (_) => GameSettingsDialog(
+        game: game,
+        system: widget.system,
+        fileProvider: _fileProvider,
+        syncProvider: context.read<SyncManager>().active,
+        isAllMode:
+            widget.system.folderName == SystemFolderNames.all ||
+            widget.system.folderName == SystemFolderNames.favorites,
+        onGameUpdated: _handleGameUpdated,
+        onGameDeleted: _handleGameDeleted,
+      ),
+    );
   }
 
   /// Terminates all active multimedia and background processing tasks.
@@ -1266,36 +1291,14 @@ class _SystemGamesListState extends State<SystemGamesList> {
             left: 12.r,
             child: Consumer<SyncManager>(
               builder: (context, syncManager, child) {
-                final selectedGame = _selectedGame;
-                final description =
-                    _localizedDescription ??
-                    (selectedGame?.getDescriptionForLanguage('en').isEmpty ==
-                            true
-                        ? AppLocale.noDescription.getString(context)
-                        : selectedGame?.getDescriptionForLanguage('en') ?? '');
-                final isDescriptionMissing =
-                    description.isEmpty ||
-                    description == AppLocale.noDescription.getString(context) ||
-                    description.trim().isEmpty;
                 return GameActionButtons(
                   system: widget.system,
-                  selectedGame: selectedGame,
+                  selectedGame: _selectedGame,
                   syncProvider: syncManager.active,
                   onBack: _goBack,
                   onFavorite: _toggleFavorite,
                   onRandom: _showRandomGameDialog,
-                  onViewMode: () {
-                    SfxService().playNavSound();
-                    GameViewModeDropdown.globalKey.currentState?.showDropdown();
-                  },
-                  onScrape: _onScrapeCurrentGame,
-                  hasScreenScraper:
-                      widget.system.screenscraperId != null &&
-                      widget.system.screenscraperId != 0,
-                  isScraping:
-                      selectedGame != null &&
-                      _scrapingGameRomnames.contains(selectedGame.romname),
-                  isDescriptionMissing: isDescriptionMissing,
+                  onSettings: _openGameSettingsDialog,
                 );
               },
             ),

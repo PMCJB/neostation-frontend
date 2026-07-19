@@ -107,6 +107,13 @@ extension _GamepadNav on _SystemGamesListState {
   }
 
   void _handleStartButton() {
+    // In grid/carousel mode there is no details card, so START opens the
+    // game settings dialog directly; in list mode it belongs to the card.
+    final viewMode = context.read<SqliteConfigProvider>().config.gameViewMode;
+    if (viewMode == 'grid' || viewMode == 'carousel') {
+      _openGameSettingsDialog();
+      return;
+    }
     if (_startActionCallback != null) {
       _startActionCallback!();
     }

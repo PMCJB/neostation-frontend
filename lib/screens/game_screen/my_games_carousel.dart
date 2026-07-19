@@ -351,8 +351,9 @@ class _GamesCarouselState extends State<GamesCarousel> {
     final systemFolderName = game.systemFolderName;
     if (systemFolderName == null || !_isAllMode) return widget.system;
     try {
-      final detectedSystems =
-          context.read<SqliteConfigProvider>().detectedSystems;
+      final detectedSystems = context
+          .read<SqliteConfigProvider>()
+          .detectedSystems;
       return detectedSystems.firstWhere(
         (s) => s.folderName == systemFolderName,
         orElse: () => widget.system,
@@ -419,13 +420,11 @@ class _GamesCarouselState extends State<GamesCarousel> {
     SfxService().playNavSound();
     showDialog(
       context: context,
-      builder:
-          (_) => GameAchievementsDialog(
-            game: game,
-            system: _effectiveSystemFor(game),
-            retroAchievementsProvider:
-                context.read<RetroAchievementsProvider>(),
-          ),
+      builder: (_) => GameAchievementsDialog(
+        game: game,
+        system: _effectiveSystemFor(game),
+        retroAchievementsProvider: context.read<RetroAchievementsProvider>(),
+      ),
     );
   }
 
@@ -943,17 +942,7 @@ class _GamesCarouselState extends State<GamesCarousel> {
             onBack: widget.onBack,
             onFavorite: widget.onFavorite ?? () {},
             onRandom: widget.onRandom ?? () {},
-            onViewMode: () {
-              SfxService().playNavSound();
-              GameViewModeDropdown.globalKey.currentState?.showDropdown();
-            },
-            onScrape: widget.onScrape,
-            hasScreenScraper:
-                widget.system.screenscraperId != null &&
-                widget.system.screenscraperId != 0,
-            isScraping:
-                widget.scrapingGameRomnames.contains(currentGame.romname),
-            isDescriptionMissing: true,
+            onSettings: widget.onSettings ?? () {},
           ),
         ),
       ],
