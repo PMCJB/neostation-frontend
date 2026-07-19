@@ -91,6 +91,20 @@ class _GamesGridState extends State<GamesGrid> {
   // Image dimension cache
   static final Map<String, Size?> _imageSizeCache = {};
 
+  // File existence cache — calling existsSync on the UI thread while cards
+  // rebuild during scroll is a known jank source in image grids, so results
+  // are memoized. Entries are evicted when a scrape replaces artwork on disk
+  // (see didUpdateWidget).
+  static final Map<String, bool> _fileExistsCache = {};
+
+  static bool _fileExists(String path) {
+    final cached = _fileExistsCache[path];
+    if (cached != null) return cached;
+    final exists = File(path).existsSync();
+    _fileExistsCache[path] = exists;
+    return exists;
+  }
+
   // Visible index tracking for lazy dimension loading
   final Set<int> _loadedDims = {};
   bool _needsDimReload = false;
@@ -433,12 +447,41 @@ class _GamesGridState extends State<GamesGrid> {
   void didUpdateWidget(GamesGrid oldWidget) {
     super.didUpdateWidget(oldWidget);
     _updateCrossAxisCount();
-    if (widget.selectedIndex != oldWidget.selectedIndex) {
+    // Artwork replaced by a finished scrape must be re-checked on disk.
+    final finishedScrapes = oldWidget.scrapingGameRomnames.difference(
+      widget.scrapingGameRomnames,
+    );
+    if (finishedScrapes.isNotEmpty) {
+      _evictArtworkCachesFor(finishedScrapes);
+    }
+    // Skip the resync when the parent is only echoing back a selection this
+    // grid already reported — otherwise achievements load twice per move.
+    if (widget.selectedIndex != oldWidget.selectedIndex &&
+        widget.selectedIndex != _selectedIndex) {
       _selectedIndex = widget.selectedIndex.clamp(
         0,
         (widget.games.length - 1).clamp(0, 999999),
       );
       _loadAchievementsForSelectedGame();
+    }
+  }
+
+  /// Drops memoized existence/dimension entries for games whose artwork may
+  /// have changed on disk (e.g. after a scrape completed).
+  void _evictArtworkCachesFor(Set<String> romnames) {
+    for (final game in widget.games) {
+      if (!romnames.contains(game.romname)) continue;
+      final folder = _folderForGame(game);
+      final paths = [
+        game.getImagePath(folder, 'fanarts', widget.fileProvider),
+        game.getImagePath(folder, 'wheels', widget.fileProvider),
+        game.getImagePath(folder, 'box2d', widget.fileProvider),
+        game.getScreenshotPath(folder, widget.fileProvider),
+      ];
+      for (final path in paths) {
+        _fileExistsCache.remove(path);
+        _imageSizeCache.remove(path);
+      }
     }
   }
 
@@ -881,6 +924,7 @@ class _GamesGridState extends State<GamesGrid> {
                             key: ValueKey('box2d_${game.romname}'),
                             fit: BoxFit.cover,
                             cacheWidth: targetWidth,
+                            gaplessPlayback: true,
                             errorBuilder: (ctx, e, s) =>
                                 _buildFallbackCard(game, theme),
                           ),
@@ -968,9 +1012,9 @@ class _GamesGridState extends State<GamesGrid> {
     final fanartPath = _fanartPath(index);
     final screenshotPath = _screenshotPath(index);
     final wheelsPath = _wheelsPath(index);
-    final hasFanart = File(fanartPath).existsSync();
-    final hasScreenshot = !hasFanart && File(screenshotPath).existsSync();
-    final hasWheel = File(wheelsPath).existsSync();
+    final hasFanart = _fileExists(fanartPath);
+    final hasScreenshot = !hasFanart && _fileExists(screenshotPath);
+    final hasWheel = _fileExists(wheelsPath);
     final bgPath = hasFanart
         ? fanartPath
         : (hasScreenshot ? screenshotPath : '');
@@ -1037,6 +1081,7 @@ class _GamesGridState extends State<GamesGrid> {
                                   key: ValueKey('fanart_bg_${game.romname}'),
                                   fit: BoxFit.cover,
                                   cacheWidth: 512,
+                                  gaplessPlayback: true,
                                   errorBuilder: (ctx, e, s) =>
                                       _buildFallbackCard(game, theme),
                                 )
@@ -1086,6 +1131,7 @@ class _GamesGridState extends State<GamesGrid> {
                                   height: 24.r,
                                   fit: BoxFit.contain,
                                   cacheWidth: 256,
+                                  gaplessPlayback: true,
                                   errorBuilder: (ctx, e, s) =>
                                       _buildGameLabel(game),
                                 )

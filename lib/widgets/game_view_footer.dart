@@ -94,7 +94,7 @@ class GameViewFooter extends StatelessWidget {
               children: [
                 if (game.rating > 0) ...[
                   _SteamStyleRating(game: game),
-                  SizedBox(width: 8.r),
+                  SizedBox(width: 6.r),
                 ],
                 if (hasRetroAchievements) ...[
                   _CompactAchievementsIndicator(
@@ -102,7 +102,7 @@ class GameViewFooter extends StatelessWidget {
                     gameInfo: currentGameInfo,
                     onTap: onShowAchievements,
                   ),
-                  SizedBox(width: 8.r),
+                  SizedBox(width: 6.r),
                 ],
                 _buildPlayButton(context),
               ],
@@ -122,8 +122,7 @@ class GameViewFooter extends StatelessWidget {
         final isFocused = Focus.of(context).hasFocus;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 120.r,
-          height: 45.r,
+          height: 32.r,
           decoration: BoxDecoration(
             color: isFocused
                 ? const Color(0xFF36F184)
@@ -154,17 +153,18 @@ class GameViewFooter extends StatelessWidget {
                 onPlay();
               },
               child: Padding(
-                padding: EdgeInsets.only(left: 0.r, right: 10.r),
+                padding: EdgeInsets.only(left: 8.r, right: 10.r),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
                       'assets/images/gamepad/Xbox_A_button.png',
-                      width: 32.r,
-                      height: 32.r,
+                      width: 20.r,
+                      height: 20.r,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
-                    SizedBox(width: 8.r),
+                    SizedBox(width: 5.r),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +174,7 @@ class GameViewFooter extends StatelessWidget {
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w900,
-                            fontSize: 14.r,
+                            fontSize: 11.r,
                             letterSpacing: 1.5,
                             height: 1.0,
                           ),
@@ -186,7 +186,7 @@ class GameViewFooter extends StatelessWidget {
                               color: Theme.of(
                                 context,
                               ).colorScheme.onPrimary.withValues(alpha: 0.8),
-                              fontSize: 8.r,
+                              fontSize: 7.r,
                               fontWeight: FontWeight.bold,
                               height: 1.2,
                             ),
@@ -214,8 +214,7 @@ class _SteamStyleRating extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     final ratingValue = (game.rating / 2).clamp(0.0, 10.0);
     final colorRatio = (ratingValue - 1) / 9;
     final customColors = AppThemes.getCustomColors(context);
@@ -226,8 +225,8 @@ class _SteamStyleRating extends StatelessWidget {
     )!;
 
     return Container(
-      height: 45.r,
-      padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 6.r),
+      height: 32.r,
+      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
         borderRadius: radii.radiusExternal,
@@ -247,13 +246,13 @@ class _SteamStyleRating extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Symbols.star_rounded, color: ratingColor, size: 24.r),
-          SizedBox(width: 6.r),
+          Icon(Symbols.star_rounded, color: ratingColor, size: 15.r),
+          SizedBox(width: 4.r),
           Text(
             ratingValue.toStringAsFixed(1),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 22.r,
+              fontSize: 13.r,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -277,8 +276,7 @@ class _CompactAchievementsIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
 
     final noAchievements =
         !isLoading && (gameInfo == null || gameInfo!.numAchievements == 0);
@@ -294,7 +292,9 @@ class _CompactAchievementsIndicator extends StatelessWidget {
               : '$awarded/$total');
 
     final theme = Theme.of(context);
-    final statusColor = noAchievements ? theme.colorScheme.onSurface : Colors.orange;
+    final statusColor = noAchievements
+        ? theme.colorScheme.onSurface
+        : Colors.orange;
 
     final gameIconUrl = gameInfo?.imageIcon.isNotEmpty == true
         ? 'https://media.retroachievements.org${gameInfo!.imageIcon}'
@@ -315,15 +315,12 @@ class _CompactAchievementsIndicator extends StatelessWidget {
         splashColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
         borderRadius: radii.radiusInternal,
         child: Container(
-          width: 120.r,
-          height: 45.r,
+          width: 88.r,
+          height: 32.r,
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withValues(alpha: 0.9),
             borderRadius: radii.radiusExternal,
-            border: Border.all(
-              color: theme.colorScheme.outline,
-              width: 1.r,
-            ),
+            border: Border.all(color: theme.colorScheme.outline, width: 1.r),
             boxShadow: [
               BoxShadow(
                 color: theme.colorScheme.shadow.withValues(alpha: 0.1),
@@ -333,14 +330,14 @@ class _CompactAchievementsIndicator extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.r, vertical: 4.r),
+            padding: EdgeInsets.symmetric(horizontal: 3.r, vertical: 3.r),
             child: Row(
               children: [
                 ClipRRect(
                   borderRadius: radii.radiusInternal,
                   child: Container(
-                    width: 32.r,
-                    height: 32.r,
+                    width: 22.r,
+                    height: 22.r,
                     color: theme.colorScheme.surface,
                     child: gameIconUrl != null
                         ? Image.network(
@@ -349,28 +346,28 @@ class _CompactAchievementsIndicator extends StatelessWidget {
                             errorBuilder: (_, _, _) => Icon(
                               Symbols.emoji_events_rounded,
                               color: statusColor,
-                              size: 16.r,
+                              size: 12.r,
                             ),
                           )
                         : Icon(
                             Symbols.emoji_events_rounded,
                             color: statusColor,
-                            size: 16.r,
+                            size: 12.r,
                           ),
                   ),
                 ),
-                SizedBox(width: 4.r),
+                SizedBox(width: 3.r),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 70.r,
+                      width: 56.r,
                       child: Text(
                         progressText.toUpperCase(),
                         style: TextStyle(
                           color: theme.colorScheme.onSurface,
-                          fontSize: 10.r,
+                          fontSize: 8.r,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
                         ),
@@ -378,14 +375,14 @@ class _CompactAchievementsIndicator extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    SizedBox(height: 4.r),
+                    SizedBox(height: 2.r),
                     SizedBox(
-                      width: 70.r,
+                      width: 56.r,
                       child: ClipRRect(
                         borderRadius: radii.radiusInternal,
                         child: LinearProgressIndicator(
                           value: isLoading ? null : progress,
-                          minHeight: 5.r,
+                          minHeight: 3.5.r,
                           backgroundColor: theme.colorScheme.onSurface
                               .withValues(alpha: 0.1),
                           valueColor: AlwaysStoppedAnimation<Color>(
