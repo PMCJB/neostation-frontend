@@ -204,15 +204,6 @@ class _GamesGridState extends State<GamesGrid> {
     );
   }
 
-  String _wheelsPath(int index) {
-    final game = widget.games[index];
-    return game.getImagePath(
-      _folderForGame(game),
-      'wheels',
-      widget.fileProvider,
-    );
-  }
-
   String _screenshotPath(int index) {
     final game = widget.games[index];
     return game.getScreenshotPath(_folderForGame(game), widget.fileProvider);
@@ -923,7 +914,7 @@ class _GamesGridState extends State<GamesGrid> {
                             File(box2dPath),
                             key: ValueKey('box2d_${game.romname}'),
                             fit: BoxFit.cover,
-                            cacheWidth: targetWidth,
+                            cacheWidth: 256,
                             gaplessPlayback: true,
                             errorBuilder: (ctx, e, s) =>
                                 _buildFallbackCard(game, theme),
@@ -1011,10 +1002,8 @@ class _GamesGridState extends State<GamesGrid> {
   Widget _buildFanartGridCard(int index, GameModel game, ThemeData theme) {
     final fanartPath = _fanartPath(index);
     final screenshotPath = _screenshotPath(index);
-    final wheelsPath = _wheelsPath(index);
     final hasFanart = _fileExists(fanartPath);
     final hasScreenshot = !hasFanart && _fileExists(screenshotPath);
-    final hasWheel = _fileExists(wheelsPath);
     final bgPath = hasFanart
         ? fanartPath
         : (hasScreenshot ? screenshotPath : '');
@@ -1080,7 +1069,7 @@ class _GamesGridState extends State<GamesGrid> {
                                   File(bgPath),
                                   key: ValueKey('fanart_bg_${game.romname}'),
                                   fit: BoxFit.cover,
-                                  cacheWidth: 512,
+                                  cacheWidth: 256,
                                   gaplessPlayback: true,
                                   errorBuilder: (ctx, e, s) =>
                                       _buildFallbackCard(game, theme),
@@ -1123,20 +1112,7 @@ class _GamesGridState extends State<GamesGrid> {
                       Container(
                         height: 24.r,
                         margin: EdgeInsetsGeometry.only(top: 8.r),
-                        child: Center(
-                          child: hasWheel
-                              ? Image.file(
-                                  File(wheelsPath),
-                                  key: ValueKey('wheel_${game.romname}'),
-                                  height: 24.r,
-                                  fit: BoxFit.contain,
-                                  cacheWidth: 256,
-                                  gaplessPlayback: true,
-                                  errorBuilder: (ctx, e, s) =>
-                                      _buildGameLabel(game),
-                                )
-                              : _buildGameLabel(game),
-                        ),
+                        child: Center(child: _buildGameLabel(game)),
                       ),
                     ],
                   ),
