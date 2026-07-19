@@ -877,15 +877,6 @@ class _GamesGridState extends State<GamesGrid> {
                 color: Theme.of(context).colorScheme.outline,
                 width: 1.r,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 4.r,
-                  offset: Offset(2.0.r, 2.0.r),
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius:
@@ -914,7 +905,7 @@ class _GamesGridState extends State<GamesGrid> {
                             File(box2dPath),
                             key: ValueKey('box2d_${game.romname}'),
                             fit: BoxFit.cover,
-                            cacheWidth: 256,
+                            cacheWidth: 384,
                             gaplessPlayback: true,
                             errorBuilder: (ctx, e, s) =>
                                 _buildFallbackCard(game, theme),
@@ -1029,15 +1020,6 @@ class _GamesGridState extends State<GamesGrid> {
                 color: Theme.of(context).colorScheme.outline,
                 width: 1.r,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 4.r,
-                  offset: Offset(2.0.r, 2.0.r),
-                ),
-              ],
             ),
             child: ClipRRect(
               borderRadius:
@@ -1069,7 +1051,7 @@ class _GamesGridState extends State<GamesGrid> {
                                   File(bgPath),
                                   key: ValueKey('fanart_bg_${game.romname}'),
                                   fit: BoxFit.cover,
-                                  cacheWidth: 256,
+                                  cacheWidth: 384,
                                   gaplessPlayback: true,
                                   errorBuilder: (ctx, e, s) =>
                                       _buildFallbackCard(game, theme),

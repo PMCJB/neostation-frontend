@@ -801,6 +801,7 @@ class _MySystemsCarouselState extends State<MySystemsCarousel> {
                               info: system,
                               isSelected: isSelected,
                               footerLogoHeight: 56.r,
+                              backgroundCacheWidth: 1024,
                               onTap: () {
                                 if (!isSelected) {
                                   _carouselKey.currentState?.animateToPage(

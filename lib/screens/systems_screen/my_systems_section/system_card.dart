@@ -28,6 +28,7 @@ class SystemCard extends StatefulWidget {
     this.onTap,
     this.isSelected = false,
     this.footerLogoHeight,
+    this.backgroundCacheWidth = 512,
   });
 
   /// The system or game metadata resolved for this card.
@@ -43,6 +44,10 @@ class SystemCard extends StatefulWidget {
   /// default (30.r) is used. Larger values are useful for big cards such as
   /// the system carousel.
   final double? footerLogoHeight;
+
+  /// Decode width for the card's background image. Defaults to 512 (grid
+  /// cards); the carousel passes 1024 since its cards are much larger.
+  final int backgroundCacheWidth;
 
   @override
   State<SystemCard> createState() => _SystemCardState();
@@ -374,7 +379,7 @@ class _SystemCardState extends State<SystemCard> {
                 File(activeBgPath),
                 key: ValueKey('${activeBgPath}_${widget.info.imageVersion}'),
                 fit: BoxFit.cover,
-                cacheWidth: widget.info.isGame ? 1024 : 256,
+                cacheWidth: widget.backgroundCacheWidth,
                 errorBuilder: (context, error, stackTrace) => Stack(
                   children: [
                     Container(color: Theme.of(context).colorScheme.surface),
