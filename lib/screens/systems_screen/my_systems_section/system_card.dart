@@ -479,8 +479,8 @@ class _SystemCardState extends State<SystemCard> {
       children: [
         // RECENT badge.
         Positioned(
-          top: 4.r,
-          right: 4.r,
+          top: 6.r,
+          right: 6.r,
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
             decoration: BoxDecoration(
@@ -493,7 +493,7 @@ class _SystemCardState extends State<SystemCard> {
               AppLocale.recentBadge.getString(context),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSecondary,
-                fontSize: 6.r,
+                fontSize: 8.r,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.2,
               ),
@@ -505,14 +505,18 @@ class _SystemCardState extends State<SystemCard> {
         Center(
           child: !_cachedHasWheelFile
               ? const SizedBox.shrink()
-              : Image.file(
+              : Container(
+                padding: EdgeInsetsGeometry.all(48.r),
+                child: Image.file(
                   _cachedWheelFile!,
-                  height: 48.r,
+                  height: 256.r,
                   fit: BoxFit.contain,
                   cacheWidth: 512,
                   errorBuilder: (context, error, stackTrace) =>
                       const SizedBox.shrink(),
                 ),
+              )
+              
         ),
       ],
     );

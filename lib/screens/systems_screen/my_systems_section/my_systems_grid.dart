@@ -941,19 +941,27 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             if (cardIdx == -1 || placedIndices.contains(cardIdx)) continue;
 
             final card = systemCards[cardIdx];
-            final spanW = (card.isGame && cols >= 3) ? 2 : 1;
+            final spanW = (card.isGame && cols >= 3) ? 3 : 1;
+            final spanH = (card.isGame && cols >= 3) ? 2 : 1;
 
             final left = c * (colWidth + spX);
             final width = spanW * colWidth + (spanW - 1) * spX;
 
-            // Each card keeps its own aspect ratio. System cards with hidden
-            // logos are always 1:1, even if a neighbor in the same row shows its
-            // logo and needs more height.
-            final cardHeight = colWidth / cardAspectRatio(cardIdx);
-
-            // Center the card vertically inside the row band.
-            final rowItemHeight = rowItemHeights[r];
-            final top = rowTop(r) + (rowItemHeight - cardHeight) / 2;
+            double cardHeight;
+            double top;
+            if (card.isGame) {
+              cardHeight = 0;
+              for (int i = 0; i < spanH && r + i < rowItemHeights.length; i++) {
+                cardHeight += rowItemHeights[r + i];
+              }
+              cardHeight += (spanH - 1) * spY;
+              top = rowTop(r);
+            } else {
+              cardHeight = colWidth / cardAspectRatio(cardIdx);
+              // Center the card vertically inside the row band.
+              final rowItemHeight = rowItemHeights[r];
+              top = rowTop(r) + (rowItemHeight - cardHeight) / 2;
+            }
 
             if (cardIdx == widget.selectedIndex) {
               selLeft = left;

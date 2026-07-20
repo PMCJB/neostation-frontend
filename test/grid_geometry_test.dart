@@ -35,10 +35,11 @@ void main() {
       ]);
     });
 
-    test('game card expands to a 2x1 block when cols >= 3', () {
+    test('game card expands to a 3x2 block when cols >= 3', () {
       final grid = buildVirtualGrid([game()], 3);
       expect(grid, [
-        [0, 0, -1],
+        [0, 0, 0],
+        [0, 0, 0],
       ]);
     });
 
@@ -49,12 +50,13 @@ void main() {
       ]);
     });
 
-    test('first-fit places single cells beside a leading game block', () {
-      // Game occupies cols 0-1 on row 0; the systems fit beside it on row 0.
+    test('first-fit places single cells after a leading game block', () {
+      // Game occupies cols 0-2 on rows 0-1; systems start on row 2.
       final grid = buildVirtualGrid([game(), system(), system()], 3);
       expect(grid, [
-        [0, 0, 1],
-        [2, -1, -1],
+        [0, 0, 0],
+        [0, 0, 0],
+        [1, 2, -1],
       ]);
     });
   });
