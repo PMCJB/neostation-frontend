@@ -273,9 +273,7 @@ class _SystemCardState extends State<SystemCard> {
                             aspectRatio: 1,
                             child: Stack(
                               key: _contentStackKey,
-                              children: [
-                                _buildSystemBackground(),
-                              ],
+                              children: [_buildSystemBackground()],
                             ),
                           ),
                           _buildSystemFooter(context),
@@ -487,8 +485,9 @@ class _SystemCardState extends State<SystemCard> {
             padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.secondary,
-              borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-            BorderRadius.circular(9.r),
+              borderRadius:
+                  Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+                  BorderRadius.circular(9.r),
             ),
             child: Text(
               AppLocale.recentBadge.getString(context),
@@ -529,7 +528,6 @@ class _SystemCardState extends State<SystemCard> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          
           Text(
             AppLocale.timePlayedLabel
                 .getString(context)
