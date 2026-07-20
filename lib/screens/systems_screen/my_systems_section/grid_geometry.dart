@@ -12,15 +12,15 @@ import 'package:neostation/models/my_systems.dart';
 ///
 /// Returns a row-major matrix where each cell holds the index of the card
 /// occupying it, or `-1` for an empty slot. 'Recent Games' cards (`isGame`)
-/// expand to a 3x2 block on wide displays (`cols >= 3`); every other card
+/// expand to a 2x1 block on wide displays (`cols >= 3`); every other card
 /// occupies a single cell. Cards are placed by a first-fit scan for the first
 /// spatial slot large enough to hold their span.
 List<List<int>> buildVirtualGrid(List<SystemInfo> cards, int cols) {
   final List<List<int>> grid = [];
 
-  // 'Recent Games' cards expand to 3x2 on high-resolution displays.
-  int getSpanW(SystemInfo card) => (card.isGame && cols >= 3) ? 3 : 1;
-  int getSpanH(SystemInfo card) => (card.isGame && cols >= 3) ? 2 : 1;
+  // 'Recent Games' cards expand to 2x1 on high-resolution displays.
+  int getSpanW(SystemInfo card) => (card.isGame && cols >= 3) ? 2 : 1;
+  int getSpanH(SystemInfo card) => (card.isGame && cols >= 3) ? 1 : 1;
 
   for (int i = 0; i < cards.length; i++) {
     final card = cards[i];

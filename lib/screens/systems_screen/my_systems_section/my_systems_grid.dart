@@ -909,10 +909,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             final cardIdx = grid[r][c];
             if (cardIdx == -1 || seen.contains(cardIdx)) continue;
             seen.add(cardIdx);
-            final card = systemCards[cardIdx];
-            final height = card.isGame
-                ? colWidth // game cards are square per occupied cell
-                : colWidth / cardAspectRatio(cardIdx);
+            final height = colWidth / cardAspectRatio(cardIdx);
             if (height > maxHeight) maxHeight = height;
           }
           rowItemHeights[r] = maxHeight;
@@ -944,8 +941,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             if (cardIdx == -1 || placedIndices.contains(cardIdx)) continue;
 
             final card = systemCards[cardIdx];
-            final spanW = (card.isGame && cols >= 3) ? 3 : 1;
-            final spanH = (card.isGame && cols >= 3) ? 2 : 1;
+            final spanW = (card.isGame && cols >= 3) ? 2 : 1;
 
             final left = c * (colWidth + spX);
             final width = spanW * colWidth + (spanW - 1) * spX;
@@ -953,17 +949,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             // Each card keeps its own aspect ratio. System cards with hidden
             // logos are always 1:1, even if a neighbor in the same row shows its
             // logo and needs more height.
-            double cardHeight;
-            if (card.isGame) {
-              // Game cards span multiple rows; sum the corresponding row heights.
-              cardHeight = 0;
-              for (int i = 0; i < spanH && r + i < rowItemHeights.length; i++) {
-                cardHeight += rowItemHeights[r + i];
-              }
-              cardHeight += (spanH - 1) * spY;
-            } else {
-              cardHeight = colWidth / cardAspectRatio(cardIdx);
-            }
+            final cardHeight = colWidth / cardAspectRatio(cardIdx);
 
             // Center the card vertically inside the row band.
             final rowItemHeight = rowItemHeights[r];
