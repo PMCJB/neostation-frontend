@@ -20,7 +20,7 @@ import 'package:neostation/widgets/custom_notification.dart';
 import 'package:neostation/widgets/custom_toggle_switch.dart';
 import 'package:neostation/widgets/delete_game_dialog.dart';
 
-import 'view_mode_picker_overlay.dart';
+import 'option_picker_overlay.dart';
 
 /// Manage tab for [GameSettingsDialog]: cloud sync, view mode selection,
 /// play-time reset, and permanent game deletion.
@@ -63,13 +63,17 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
   GlobalKey _itemKey(int navIndex) =>
       _itemKeys.putIfAbsent(navIndex, () => GlobalKey());
 
-  // Navigation layout: cloud sync (optional), view mode, play time, delete.
-  bool get _showCloudSync => widget.syncProvider?.isAuthenticated == true;
+  // Navigation layout. Indices are fixed so focus doesn't jump around when
+  // cloud sync visibility or the grid options change.
   int get _cloudSyncIdx => 0;
-  int get _viewModeIdx => _showCloudSync ? 1 : 0;
-  int get _playTimeIdx => _viewModeIdx + 1;
-  int get _deleteIdx => _playTimeIdx + 1;
-  int get _totalItems => _deleteIdx + 1;
+  int get _viewModeIdx => 1;
+  int get _gridSizeIdx => 2;
+  int get _gridStyleIdx => 3;
+  int get _playTimeIdx => 4;
+  int get _deleteIdx => 5;
+  int get _totalItems => 6;
+
+  bool get _showCloudSync => widget.syncProvider?.isAuthenticated == true;
 
   String get _targetSystemFolder =>
       widget.isAllMode && widget.game.systemFolderName != null
@@ -80,6 +84,7 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
   void initState() {
     super.initState();
     _cloudSyncEnabled = widget.game.cloudSyncEnabled ?? true;
+    _selectedIndex = _showCloudSync ? _cloudSyncIdx : _viewModeIdx;
   }
 
   @override
@@ -88,17 +93,47 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
     super.dispose();
   }
 
+  /// Returns whether [idx] can receive focus in the current state.
+  bool _isEnabledIndex(int idx, String viewMode) {
+    final isGrid = viewMode == 'grid';
+    if (idx == _cloudSyncIdx && !_showCloudSync) return false;
+    if ((idx == _gridSizeIdx || idx == _gridStyleIdx) && !isGrid) return false;
+    return idx >= 0 && idx < _totalItems;
+  }
+
+  int _previousEnabledIndex(String viewMode) {
+    int idx = _selectedIndex;
+    do {
+      idx = (idx - 1).clamp(0, _totalItems - 1);
+      if (_isEnabledIndex(idx, viewMode)) return idx;
+    } while (idx != _selectedIndex);
+    return _selectedIndex;
+  }
+
+  int _nextEnabledIndex(String viewMode) {
+    int idx = _selectedIndex;
+    do {
+      idx = (idx + 1).clamp(0, _totalItems - 1);
+      if (_isEnabledIndex(idx, viewMode)) return idx;
+    } while (idx != _selectedIndex);
+    return _selectedIndex;
+  }
+
+  void _ensureSelectedIndexEnabled(String viewMode) {
+    if (!_isEnabledIndex(_selectedIndex, viewMode)) {
+      _selectedIndex = _nextEnabledIndex(viewMode);
+    }
+  }
+
   void moveUp() {
-    setState(
-      () => _selectedIndex = (_selectedIndex - 1).clamp(0, _totalItems - 1),
-    );
+    final viewMode = context.read<SqliteConfigProvider>().config.gameViewMode;
+    setState(() => _selectedIndex = _previousEnabledIndex(viewMode));
     _scrollToSelectedItem();
   }
 
   void moveDown() {
-    setState(
-      () => _selectedIndex = (_selectedIndex + 1).clamp(0, _totalItems - 1),
-    );
+    final viewMode = context.read<SqliteConfigProvider>().config.gameViewMode;
+    setState(() => _selectedIndex = _nextEnabledIndex(viewMode));
     _scrollToSelectedItem();
   }
 
@@ -108,6 +143,10 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
       if (!_isUpdatingCloudSync) _toggleCloudSync(!_cloudSyncEnabled);
     } else if (idx == _viewModeIdx) {
       _showViewModePicker();
+    } else if (idx == _gridSizeIdx) {
+      _showGridSizePicker();
+    } else if (idx == _gridStyleIdx) {
+      _showGridStylePicker();
     } else if (idx == _playTimeIdx) {
       if ((widget.game.playTime ?? 0) > 0 && !_isResettingPlayTime) {
         _confirmResetPlayTime();
@@ -131,37 +170,67 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
     });
   }
 
-  // ── View mode ───────────────────────────────────────────────────────────
+  // ── Option pickers ──────────────────────────────────────────────────────
 
-  /// Displays an autonomous overlay for selecting the game view mode,
-  /// mirroring the language picker in general settings.
-  Future<void> _showViewModePicker() async {
+  Future<String?> _showOptionPicker({
+    required int anchorIdx,
+    required String currentValue,
+    required List<OptionPickerItem> options,
+  }) async {
     final box =
-        _itemKey(_viewModeIdx).currentContext?.findRenderObject() as RenderBox?;
+        _itemKey(anchorIdx).currentContext?.findRenderObject() as RenderBox?;
     final offset = box?.localToGlobal(Offset.zero) ?? Offset.zero;
     final size = box?.size ?? Size.zero;
 
-    final result = await showGeneralDialog<String>(
+    return showGeneralDialog<String>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'View Mode Picker',
+      barrierLabel: 'Option Picker',
       barrierColor: Colors.transparent,
       pageBuilder: (context, animation, _) {
         return FadeTransition(
           opacity: animation,
-          child: ViewModePickerOverlay(
+          child: OptionPickerOverlay(
             anchorOffset: offset + Offset(size.width, size.height / 2),
-            currentMode: context
-                .read<SqliteConfigProvider>()
-                .config
-                .gameViewMode,
+            currentValue: currentValue,
+            options: options,
           ),
         );
       },
     );
+  }
+
+  /// Displays the view-mode picker and closes the settings dialog afterwards.
+  ///
+  /// Closing the dialog avoids the focus fight between the dialog and the
+  /// rebuilt parent game list/grid.
+  Future<void> _showViewModePicker() async {
+    final currentMode = context.read<SqliteConfigProvider>().config.gameViewMode;
+    final result = await _showOptionPicker(
+      anchorIdx: _viewModeIdx,
+      currentValue: currentMode,
+      options: [
+        OptionPickerItem(
+          value: 'list',
+          label: AppLocale.listView.getString(context),
+        ),
+        OptionPickerItem(
+          value: 'grid',
+          label: AppLocale.gridView.getString(context),
+        ),
+        OptionPickerItem(
+          value: 'carousel',
+          label: AppLocale.carouselView.getString(context),
+        ),
+      ],
+    );
 
     if (result != null && mounted) {
       await context.read<SqliteConfigProvider>().updateGameViewMode(result);
+      if (mounted) {
+        SfxService().playBackSound();
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -175,6 +244,51 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
         return AppLocale.carouselView.getString(context);
       default:
         return mode;
+    }
+  }
+
+  /// Displays the grid-size picker.
+  Future<void> _showGridSizePicker() async {
+    final currentSize = context.read<SqliteConfigProvider>().config.gameGridColumns;
+    final result = await _showOptionPicker(
+      anchorIdx: _gridSizeIdx,
+      currentValue: currentSize,
+      options: const [
+        OptionPickerItem(value: 'S', label: 'S'),
+        OptionPickerItem(value: 'M', label: 'M'),
+        OptionPickerItem(value: 'L', label: 'L'),
+        OptionPickerItem(value: 'XL', label: 'XL'),
+      ],
+    );
+
+    if (result != null && mounted) {
+      await context.read<SqliteConfigProvider>().updateGameGridColumns(result);
+    }
+  }
+
+  /// Displays the grid card-style picker.
+  Future<void> _showGridStylePicker() async {
+    final currentStyle =
+        context.read<SqliteConfigProvider>().config.gameCarouselCardStyle;
+    final result = await _showOptionPicker(
+      anchorIdx: _gridStyleIdx,
+      currentValue: currentStyle,
+      options: [
+        OptionPickerItem(
+          value: 'fanart',
+          label: AppLocale.fanartCard.getString(context),
+        ),
+        OptionPickerItem(
+          value: 'box',
+          label: AppLocale.boxCard.getString(context),
+        ),
+      ],
+    );
+
+    if (result != null && mounted) {
+      await context
+          .read<SqliteConfigProvider>()
+          .updateGameCarouselCardStyle(result);
     }
   }
 
@@ -302,15 +416,73 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
     }
   }
 
+  // ── Build helpers ───────────────────────────────────────────────────────
+
+  Widget _buildSelectTrigger({
+    required String label,
+    required VoidCallback? onTap,
+    required bool enabled,
+  }) {
+    final theme = Theme.of(context);
+    final foreground = enabled ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.3);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10.r, vertical: 6.r),
+        decoration: BoxDecoration(
+          color: enabled
+              ? theme.colorScheme.primary.withValues(alpha: 0.15)
+              : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(6.r),
+          border: Border.all(
+            color: enabled
+                ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                : theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            width: 0.5.r,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 9.r,
+                fontWeight: FontWeight.w400,
+                color: foreground,
+              ),
+            ),
+            SizedBox(width: 2.r),
+            Icon(
+              Symbols.arrow_drop_down_rounded,
+              size: 14.r,
+              color: foreground,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── Build ───────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currentViewMode = context.select<SqliteConfigProvider, String>(
-      (p) => p.config.gameViewMode,
+    final config = context.select<SqliteConfigProvider, ConfigSnapshot>(
+      (p) => ConfigSnapshot(
+        gameViewMode: p.config.gameViewMode,
+        gameGridColumns: p.config.gameGridColumns,
+        gameGridCardStyle: p.config.gameCarouselCardStyle,
+      ),
     );
+    final isGrid = config.gameViewMode == 'grid';
     final canReset = (widget.game.playTime ?? 0) > 0 && !_isResettingPlayTime;
+
+    // If the current selection became disabled (e.g. switched out of grid),
+    // move to the nearest enabled row without triggering a scroll animation.
+    _ensureSelectedIndexEnabled(config.gameViewMode);
 
     return SingleChildScrollView(
       controller: _scrollController,
@@ -320,7 +492,7 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cloud Synchronization Option.
-          if (_showCloudSync) ...[
+          if (_showCloudSync)
             GestureDetector(
               onTap: () {
                 SfxService().playNavSound();
@@ -355,11 +527,12 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
                         ),
                       ),
               ),
-            ),
-            SizedBox(height: 12.r),
-          ],
+            )
+          else
+            SizedBox.shrink(key: _itemKey(_cloudSyncIdx)),
+          SizedBox(height: _showCloudSync ? 12.r : 0.r),
 
-          // View Mode select — opens the anchored picker overlay.
+          // View Mode select.
           GestureDetector(
             onTap: () {
               SfxService().playNavSound();
@@ -370,42 +543,61 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
               key: _itemKey(_viewModeIdx),
               focused: _selectedIndex == _viewModeIdx,
               title: AppLocale.viewMode.getString(context),
-              subtitle: _viewModeLabel(context, currentViewMode),
-              trailing: GestureDetector(
+              subtitle: _viewModeLabel(context, config.gameViewMode),
+              trailing: _buildSelectTrigger(
+                label: _viewModeLabel(context, config.gameViewMode),
                 onTap: _showViewModePicker,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.r,
-                    vertical: 6.r,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6.r),
-                    border: Border.all(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                      width: 0.5.r,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _viewModeLabel(context, currentViewMode),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 9.r,
-                          fontWeight: FontWeight.w400,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      SizedBox(width: 2.r),
-                      Icon(
-                        Symbols.arrow_drop_down_rounded,
-                        size: 14.r,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
-                ),
+                enabled: true,
+              ),
+            ),
+          ),
+
+          SizedBox(height: 12.r),
+
+          // Grid Size select.
+          GestureDetector(
+            onTap: isGrid
+                ? () {
+                    SfxService().playNavSound();
+                    setState(() => _selectedIndex = _gridSizeIdx);
+                    _showGridSizePicker();
+                  }
+                : null,
+            child: SettingRow(
+              key: _itemKey(_gridSizeIdx),
+              focused: isGrid && _selectedIndex == _gridSizeIdx,
+              title: AppLocale.cardSizeGroup.getString(context),
+              subtitle: isGrid ? config.gameGridColumns : '-',
+              trailing: _buildSelectTrigger(
+                label: config.gameGridColumns,
+                onTap: isGrid ? _showGridSizePicker : null,
+                enabled: isGrid,
+              ),
+            ),
+          ),
+
+          SizedBox(height: 12.r),
+
+          // Grid Style select.
+          GestureDetector(
+            onTap: isGrid
+                ? () {
+                    SfxService().playNavSound();
+                    setState(() => _selectedIndex = _gridStyleIdx);
+                    _showGridStylePicker();
+                  }
+                : null,
+            child: SettingRow(
+              key: _itemKey(_gridStyleIdx),
+              focused: isGrid && _selectedIndex == _gridStyleIdx,
+              title: AppLocale.cardStyleGroup.getString(context),
+              subtitle: isGrid
+                  ? _gridStyleLabel(context, config.gameGridCardStyle)
+                  : '-',
+              trailing: _buildSelectTrigger(
+                label: _gridStyleLabel(context, config.gameGridCardStyle),
+                onTap: isGrid ? _showGridStylePicker : null,
+                enabled: isGrid,
               ),
             ),
           ),
@@ -519,4 +711,29 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
       ),
     );
   }
+
+  String _gridStyleLabel(BuildContext context, String style) {
+    switch (style) {
+      case 'box':
+        return AppLocale.boxCard.getString(context);
+      case 'fanart':
+      default:
+        return AppLocale.fanartCard.getString(context);
+    }
+  }
+}
+
+/// Lightweight snapshot of config fields used by the Manage tab.
+///
+/// Keeps rebuilds scoped to the exact values the tab consumes.
+class ConfigSnapshot {
+  final String gameViewMode;
+  final String gameGridColumns;
+  final String gameGridCardStyle;
+
+  const ConfigSnapshot({
+    required this.gameViewMode,
+    required this.gameGridColumns,
+    required this.gameGridCardStyle,
+  });
 }

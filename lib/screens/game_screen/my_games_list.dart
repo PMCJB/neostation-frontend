@@ -97,6 +97,7 @@ class _SystemGamesListState extends State<SystemGamesList> {
   VoidCallback? _moveAchievementRight;
   VoidCallback? _triggerOverlayAction;
   VoidCallback? _secondaryOverlayAction; // Maps to RB (Scrape/Refresh).
+  VoidCallback? _selectButtonAction; // Maps to Select (View) for mute/refresh.
   bool Function(bool isRight)?
   _tabNavigationAction; // Facilitates tab switching via bumpers.
   bool Function()? _isPlayingGameBlocked; // Validation for launch readiness.
@@ -1413,6 +1414,9 @@ class _SystemGamesListState extends State<SystemGamesList> {
         },
         onRegisterTabNavigation: (tabNav) {
           _tabNavigationAction = tabNav;
+        },
+        onRegisterSelectButton: (action) {
+          _selectButtonAction = action;
         },
         onRegisterIsPlayingGameBlocked: (isBlocked) {
           _isPlayingGameBlocked = isBlocked;

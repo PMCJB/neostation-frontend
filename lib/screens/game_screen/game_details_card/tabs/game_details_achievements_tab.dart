@@ -302,7 +302,7 @@ class GameDetailsAchievementsTabState
                           SizedBox(width: 6.r),
                           HeaderActionButton(
                             icon: Image.asset(
-                              'assets/images/gamepad/Xbox_Menu_button.png',
+                              'assets/images/gamepad/Xbox_View_button.png',
                               width: 12.r,
                               height: 12.r,
                             ),

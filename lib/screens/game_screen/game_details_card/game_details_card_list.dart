@@ -96,8 +96,8 @@ class GameDetailsCardList extends StatefulWidget {
   /// Callback to register tab-based navigation handling (Gamepad L/R bumpers).
   final Function(bool Function(bool))? onRegisterTabNavigation;
 
-  /// Callback to register the Start button action.
-  final Function(VoidCallback)? onRegisterStartAction;
+  /// Callback to register the Select button action.
+  final Function(VoidCallback)? onRegisterSelectButton;
 
   final bool isSecondaryScreenActive;
   final bool isNavigatingFast;
@@ -134,7 +134,7 @@ class GameDetailsCardList extends StatefulWidget {
     this.onRegisterSecondaryAction,
     this.onRegisterIsPlayingGameBlocked,
     this.onRegisterTabNavigation,
-    this.onRegisterStartAction,
+    this.onRegisterSelectButton,
     this.isSecondaryScreenActive = false,
     this.isNavigatingFast = false,
     this.onBack,
@@ -318,7 +318,7 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
       _setTab(DetailTab.general);
     });
     widget.onRegisterTabNavigation?.call(_handleTabNavigation);
-    widget.onRegisterStartAction?.call(_handleStartAction);
+    widget.onRegisterSelectButton?.call(_handleSelectAction);
     widget.onRegisterNavigation?.call(
       moveUp: () {
         if (_currentTab == DetailTab.achievements) {
@@ -436,7 +436,7 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     });
   }
 
-  void _handleStartAction() {
+  void _handleSelectAction() {
     if (_currentTab == DetailTab.achievements) {
       refreshAchievements();
     } else if (_currentTab == DetailTab.gameInfo) {

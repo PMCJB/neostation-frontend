@@ -1,72 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_localization/flutter_localization.dart';
-import 'package:neostation/l10n/app_locale.dart';
+import 'package:material_symbols_icons/symbols.dart';
+import 'package:neostation/services/gamepad/gamepad_navigation_manager.dart';
 import 'package:neostation/services/sfx_service.dart';
-import 'package:neostation/services/game_service.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 
-/// An autonomous gamepad-navigable overlay for game view-mode selection,
-/// mirroring the language picker in general settings. Pops with the chosen
-/// mode ('list' | 'grid' | 'carousel'), or null when dismissed.
-class ViewModePickerOverlay extends StatefulWidget {
-  final Offset anchorOffset;
-  final String currentMode;
+/// A generic gamepad-navigable option picker overlay.
+///
+/// Mirrors the language picker in general settings. Pops with the chosen
+/// [OptionPickerItem.value], or null when dismissed.
+class OptionPickerItem {
+  final String value;
+  final String label;
 
-  const ViewModePickerOverlay({
+  const OptionPickerItem({required this.value, required this.label});
+}
+
+class OptionPickerOverlay extends StatefulWidget {
+  final Offset anchorOffset;
+  final String currentValue;
+  final List<OptionPickerItem> options;
+
+  const OptionPickerOverlay({
     super.key,
     required this.anchorOffset,
-    required this.currentMode,
+    required this.currentValue,
+    required this.options,
   });
 
   @override
-  State<ViewModePickerOverlay> createState() => ViewModePickerOverlayState();
+  State<OptionPickerOverlay> createState() => OptionPickerOverlayState();
 }
 
-class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
+class OptionPickerOverlayState extends State<OptionPickerOverlay> {
   late GamepadNavigation _gamepadNav;
   int _selectedIndex = 0;
 
-  static const _modes = ['list', 'grid', 'carousel'];
-
-  final List<GlobalKey> _itemKeys = List.generate(
-    _modes.length,
-    (_) => GlobalKey(),
-  );
+  final List<GlobalKey> _itemKeys = [];
   final GlobalKey _colKey = GlobalKey();
   double _indicatorTop = -1;
-
-  String _labelFor(BuildContext context, String mode) {
-    switch (mode) {
-      case 'list':
-        return AppLocale.listView.getString(context);
-      case 'grid':
-        return AppLocale.gridView.getString(context);
-      case 'carousel':
-        return AppLocale.carouselView.getString(context);
-      default:
-        return mode;
-    }
-  }
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = _modes.indexOf(widget.currentMode);
+    _itemKeys.addAll(
+      List.generate(widget.options.length, (_) => GlobalKey()),
+    );
+
+    _selectedIndex = widget.options.indexWhere(
+      (o) => o.value == widget.currentValue,
+    );
     if (_selectedIndex < 0) _selectedIndex = 0;
 
     _gamepadNav = GamepadNavigation(
       onNavigateUp: () {
         setState(() {
-          _selectedIndex = (_selectedIndex - 1 + _modes.length) % _modes.length;
+          _selectedIndex =
+              (_selectedIndex - 1 + widget.options.length) %
+              widget.options.length;
         });
         _updateIndicator();
         SfxService().playNavSound();
       },
       onNavigateDown: () {
         setState(() {
-          _selectedIndex = (_selectedIndex + 1) % _modes.length;
+          _selectedIndex = (_selectedIndex + 1) % widget.options.length;
         });
         _updateIndicator();
         SfxService().playNavSound();
@@ -78,7 +76,7 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _gamepadNav.initialize();
       GamepadNavigationManager.pushLayer(
-        'view_mode_picker_overlay',
+        'option_picker_overlay',
         onActivate: () => _gamepadNav.activate(),
         onDeactivate: () => _gamepadNav.deactivate(),
       );
@@ -88,7 +86,7 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
 
   @override
   void dispose() {
-    GamepadNavigationManager.popLayer('view_mode_picker_overlay');
+    GamepadNavigationManager.popLayer('option_picker_overlay');
     _gamepadNav.dispose();
     super.dispose();
   }
@@ -112,7 +110,7 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
 
   void _handleSelection() {
     SfxService().playEnterSound();
-    Navigator.pop(context, _modes[_selectedIndex]);
+    Navigator.pop(context, widget.options[_selectedIndex].value);
   }
 
   @override
@@ -121,7 +119,7 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
     final screenSize = MediaQuery.of(context).size;
     final overlayWidth = 180.r;
     final itemHeight = 24;
-    final overlayHeight = itemHeight * _modes.length + 16;
+    final overlayHeight = itemHeight * widget.options.length + 16;
 
     // Anchor: right-aligned relative to the trigger row, clamped to viewport.
     double left = widget.anchorOffset.dx - overlayWidth;
@@ -183,10 +181,10 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: _modes.asMap().entries.map((entry) {
+                    children: widget.options.asMap().entries.map((entry) {
                       final i = entry.key;
-                      final mode = entry.value;
-                      final isSelected = mode == widget.currentMode;
+                      final option = entry.value;
+                      final isSelected = option.value == widget.currentValue;
                       return SizedBox(
                         key: _itemKeys[i],
                         height: itemHeight.r,
@@ -212,7 +210,7 @@ class ViewModePickerOverlayState extends State<ViewModePickerOverlay> {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    _labelFor(context, mode),
+                                    option.label,
                                     style: TextStyle(
                                       fontSize: 10.r,
                                       color: isSelected

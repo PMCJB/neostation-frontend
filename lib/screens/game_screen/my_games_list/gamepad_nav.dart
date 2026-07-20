@@ -22,6 +22,13 @@ extension _GamepadNav on _SystemGamesListState {
     }
   }
 
+  /// Handles Select button (View/Share) for mute refresh depending on the
+  /// active details tab.
+  void _handleSelectButton() {
+    SfxService().playNavSound();
+    _selectButtonAction?.call();
+  }
+
   /// Registers gamepad and keyboard input mappings for the screen.
   void _initializeGamepad() {
     _gamepadNav = GamepadNavigation(
@@ -48,6 +55,7 @@ extension _GamepadNav on _SystemGamesListState {
         }
       }, // Button X - Random.
       onSettings: _openGameSettingsDialog, // Button Start.
+      onSelectButton: _handleSelectButton, // Button Select (View).
       onRightStickClick: null,
       onLeftBumper: _handleLeftBumper,
       onRightBumper: _handleRightBumper,
