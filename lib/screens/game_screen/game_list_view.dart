@@ -377,28 +377,6 @@ class GameListViewState extends State<GameListView>
 
   /// Renders the system brand logo with fallback support, tinted to match the theme.
   Widget _buildSystemLogoHeader(SystemModel displaySystem) {
-    if (displaySystem.hideLogo) {
-      final shortName =
-          (displaySystem.shortName != null &&
-              displaySystem.shortName!.isNotEmpty)
-          ? displaySystem.shortName!
-          : displaySystem.realName;
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 3.r, vertical: 3.r),
-        decoration: BoxDecoration(color: Colors.transparent),
-        child: Text(
-          shortName,
-          style: TextStyle(
-            fontSize: 11.r,
-            fontWeight: FontWeight.w700,
-            color: Theme.of(context).colorScheme.onSurface,
-            letterSpacing: 0.5.r,
-          ),
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
-    }
-
     final resolvedLogoFolder = displaySystem.primaryFolderName.isNotEmpty
         ? displaySystem.primaryFolderName
         : (displaySystem.folderName.isNotEmpty

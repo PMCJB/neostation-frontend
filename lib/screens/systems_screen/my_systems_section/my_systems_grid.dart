@@ -181,9 +181,6 @@ class MySystems extends StatelessWidget {
                 configProvider.config.systemGridColumns,
               ),
               childAspectRatio: 0.80,
-              aspectRatios: allSystems
-                  .map((s) => s.hideLogo ? 1.0 : 0.80)
-                  .toList(),
               selectedIndex: selectedIndex,
               onCardTapped: onCardTapped,
               systems: allSystems,

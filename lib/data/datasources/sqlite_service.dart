@@ -2561,10 +2561,6 @@ class SqliteService {
     await _updateSystemSetting(systemId, 'hide_brackets', enabled ? 1 : 0);
   }
 
-  static Future<void> setSystemHideLogo(String systemId, bool enabled) async {
-    await _updateSystemSetting(systemId, 'hide_logo', enabled ? 1 : 0);
-  }
-
   static Future<void> setSystemPreferFileName(
     String systemId,
     bool enabled,
