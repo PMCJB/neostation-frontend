@@ -2616,6 +2616,10 @@ class SqliteService {
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
     });
+
+    // Invalidate the systems cache so subsequent reads reflect the updated
+    // setting (e.g. hide_logo) instead of returning a stale cached model.
+    _cachedSystems = null;
   }
 
   /// Sets custom images for a system.

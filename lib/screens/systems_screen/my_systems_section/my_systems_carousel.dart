@@ -790,7 +790,8 @@ class _MySystemsCarouselState extends State<MySystemsCarousel> {
                           key: _carouselKey,
                           itemCount: allSystems.length,
                           initialIndex: _currentIndex,
-                          footerHeight: 60.r,
+                          footerHeight:
+                              allSystems[_currentIndex].hideLogo ? 0 : 60.r,
                           itemBuilder: (context, index) {
                             final system = allSystems[index];
                             final isSelected = index == _currentIndex;

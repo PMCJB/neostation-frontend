@@ -29,6 +29,7 @@ class SystemCard extends StatefulWidget {
     this.isSelected = false,
     this.footerLogoHeight,
     this.backgroundCacheWidth = 512,
+    this.overlayFooter = false,
   });
 
   /// The system or game metadata resolved for this card.
@@ -48,6 +49,11 @@ class SystemCard extends StatefulWidget {
   /// Decode width for the card's background image. Defaults to 512 (grid
   /// cards); the carousel passes 1024 since its cards are much larger.
   final int backgroundCacheWidth;
+
+  /// When true, the system logo footer is rendered as an overlay at the bottom
+  /// of the card instead of a separate row below the artwork. This is used by
+  /// the carousel, where every page must share the same aspect ratio.
+  final bool overlayFooter;
 
   @override
   State<SystemCard> createState() => _SystemCardState();
@@ -263,21 +269,48 @@ class _SystemCardState extends State<SystemCard> {
                           _buildRecentFooter(context),
                         ],
                       )
-                    : Column(
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 1,
-                            child: Stack(
-                              key: _contentStackKey,
-                              children: [
-                                _buildSystemBackground(),
-                                _buildMainBodyContent(context, true),
-                              ],
-                            ),
-                          ),
-                          _buildSystemFooter(context),
-                        ],
-                      ),
+                    : widget.overlayFooter
+                        ? Stack(
+                            key: _contentStackKey,
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 1,
+                                child: Stack(
+                                  children: [
+                                    _buildSystemBackground(),
+                                    _buildMainBodyContent(context, true),
+                                  ],
+                                ),
+                              ),
+                              _buildSystemFooterOverlay(context),
+                            ],
+                          )
+                        : widget.info.hideLogo
+                            ? AspectRatio(
+                                aspectRatio: 1,
+                                child: Stack(
+                                  key: _contentStackKey,
+                                  children: [
+                                    _buildSystemBackground(),
+                                    _buildMainBodyContent(context, true),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  AspectRatio(
+                                    aspectRatio: 1,
+                                    child: Stack(
+                                      key: _contentStackKey,
+                                      children: [
+                                        _buildSystemBackground(),
+                                        _buildMainBodyContent(context, true),
+                                      ],
+                                    ),
+                                  ),
+                                  _buildSystemFooter(context),
+                                ],
+                              ),
               ),
             ),
           ),
@@ -630,14 +663,7 @@ class _SystemCardState extends State<SystemCard> {
   Widget _buildSystemFooter(BuildContext context) {
     if (widget.info.hideLogo) return const SizedBox.shrink();
 
-    final resolvedLogoFolder = widget.info.primaryFolderName?.isNotEmpty == true
-        ? widget.info.primaryFolderName!
-        : (widget.info.folderName?.isNotEmpty == true
-              ? widget.info.folderName!
-              : 'all');
-    final assetLogoPath = 'assets/images/logos/$resolvedLogoFolder.webp';
-
-    final logoHeight = widget.footerLogoHeight ?? 30.r;
+    final (assetLogoPath, logoHeight) = _resolveSystemLogo();
     final footerHeight = widget.footerLogoHeight != null
         ? logoHeight + 4.r
         : 32.r;
@@ -653,6 +679,53 @@ class _SystemCardState extends State<SystemCard> {
         ),
       ),
     );
+  }
+
+  /// Renders the system logo as a bottom overlay for contexts where the card
+  /// must stay square (e.g. the system carousel).
+  Widget _buildSystemFooterOverlay(BuildContext context) {
+    if (widget.info.hideLogo) return const SizedBox.shrink();
+
+    final (assetLogoPath, logoHeight) = _resolveSystemLogo();
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: Container(
+        height: logoHeight + 12.r,
+        padding: EdgeInsets.symmetric(vertical: 4.r),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.black.withValues(alpha: 0.5),
+            ],
+          ),
+        ),
+        child: Center(
+          child: _buildSystemLogo(
+            assetLogoPath,
+            height: logoHeight,
+            color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Resolves the logo asset path and target height for this system.
+  (String, double) _resolveSystemLogo() {
+    final resolvedLogoFolder = widget.info.primaryFolderName?.isNotEmpty == true
+        ? widget.info.primaryFolderName!
+        : (widget.info.folderName?.isNotEmpty == true
+              ? widget.info.folderName!
+              : 'all');
+    final assetLogoPath = 'assets/images/logos/$resolvedLogoFolder.webp';
+    final logoHeight = widget.footerLogoHeight ?? 30.r;
+    return (assetLogoPath, logoHeight);
   }
 }
 
