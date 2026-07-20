@@ -102,8 +102,10 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
 
   int get _itemKeyIndex => _currentSubTab.index * 100 + _selectedIndex;
 
-  GlobalKey _itemKey(int navIndex) =>
-      _itemKeys.putIfAbsent(_currentSubTab.index * 100 + navIndex, () => GlobalKey());
+  GlobalKey _itemKey(int navIndex) => _itemKeys.putIfAbsent(
+    _currentSubTab.index * 100 + navIndex,
+    () => GlobalKey(),
+  );
 
   FocusNode _focusNodeFor(int navIndex) => _fieldFocusNodes.putIfAbsent(
     navIndex,
@@ -746,7 +748,9 @@ class _SubTabItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? theme.colorScheme.secondary.withValues(alpha: 0.15)
-              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
           borderRadius: BorderRadius.circular(6.r),
           border: Border.all(
             color: isSelected
@@ -994,8 +998,9 @@ class _MetadataFieldRow extends StatelessWidget {
                         focusNode: focusNode,
                         maxLines: maxLines,
                         minLines: 1,
-                        textInputAction:
-                            maxLines == 1 ? TextInputAction.next : null,
+                        textInputAction: maxLines == 1
+                            ? TextInputAction.next
+                            : null,
                         onSubmitted: maxLines == 1
                             ? (_) => onSubmitted?.call()
                             : null,

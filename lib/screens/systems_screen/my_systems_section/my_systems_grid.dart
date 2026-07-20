@@ -957,9 +957,7 @@ class _SystemCardGridViewState extends State<SystemCardGridView> {
             if (card.isGame) {
               // Game cards span multiple rows; sum the corresponding row heights.
               cardHeight = 0;
-              for (int i = 0;
-                  i < spanH && r + i < rowItemHeights.length;
-                  i++) {
+              for (int i = 0; i < spanH && r + i < rowItemHeights.length; i++) {
                 cardHeight += rowItemHeights[r + i];
               }
               cardHeight += (spanH - 1) * spY;

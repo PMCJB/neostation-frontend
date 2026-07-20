@@ -133,8 +133,7 @@ class GameDetailsAchievementsTabState
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
 
     // Scenario 1: Metadata is being fetched.
     if (widget.gameInfo == null) {
@@ -146,12 +145,14 @@ class GameDetailsAchievementsTabState
           bottom: widget.bottomOffset.r,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
+              color: Theme.of(
+                context,
+              ).colorScheme.surface.withValues(alpha: 0.9),
               borderRadius: radii.radiusExternal,
               border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 1.r,
-            ),
+                color: Theme.of(context).colorScheme.outline,
+                width: 1.r,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.25),
@@ -243,7 +244,9 @@ class GameDetailsAchievementsTabState
           borderRadius: radii.radiusExternal,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.25),
+              color: Theme.of(
+                context,
+              ).colorScheme.shadow.withValues(alpha: 0.25),
               blurRadius: 2.r,
               offset: Offset(2.0.r, 2.0.r),
             ),
@@ -396,8 +399,7 @@ class HeaderActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     return Material(
       color: backgroundColor,
       borderRadius: radii.radiusInternal,
@@ -439,8 +441,7 @@ class _SelectedAchievementInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     if (achievements.isEmpty) return const SizedBox.shrink();
     final safeIndex = selectedIndex.clamp(0, achievements.length - 1);
     final achievement = achievements[safeIndex];
@@ -478,7 +479,7 @@ class _SelectedAchievementInfo extends StatelessWidget {
           ),
         ),
         SizedBox(height: 4.r),
-          Center(
+        Center(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 2.r),
             decoration: BoxDecoration(
@@ -527,8 +528,7 @@ class _AchievementsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
     return GridView.builder(
       controller: scrollController,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

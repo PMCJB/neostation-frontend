@@ -22,7 +22,6 @@ import 'package:neostation/l10n/app_locale.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:neostation/widgets/game_view_footer.dart';
 import 'package:neostation/widgets/game_action_buttons.dart';
-import 'package:neostation/widgets/marquee_text.dart';
 import 'package:neostation/constants/system_folder_names.dart';
 import 'package:neostation/widgets/selection_grid/grid_navigation.dart';
 import 'package:neostation/widgets/selection_grid/selection_grid.dart';
@@ -250,8 +249,8 @@ class _GamesGridState extends State<GamesGrid> {
 
   // ---- Card height strategies (one per card style) ----
 
-  /// Fanart cards are uniform: square artwork + paddings + compact footer.
-  double _fanartCardHeight(int index, double cardWidth) => cardWidth + 36.r;
+  /// Fanart cards show only the artwork, with just enough room for padding.
+  double _fanartCardHeight(int index, double cardWidth) => cardWidth;
 
   /// Box2d cards derive their height from the artwork's aspect ratio.
   ///
@@ -1082,11 +1081,6 @@ class _GamesGridState extends State<GamesGrid> {
                           ),
                         ),
                       ),
-                      Container(
-                        height: 24.r,
-                        margin: EdgeInsetsGeometry.only(top: 8.r),
-                        child: Center(child: _buildGameLabel(game)),
-                      ),
                     ],
                   ),
                 ),
@@ -1094,20 +1088,6 @@ class _GamesGridState extends State<GamesGrid> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildGameLabel(GameModel game) {
-    final displayName = game.name.isNotEmpty ? game.name : game.romname;
-    return MarqueeText(
-      text: GameUtils.formatGameName(displayName).toUpperCase(),
-      isActive: false,
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.onSurface,
-        fontSize: 8.r,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
       ),
     );
   }

@@ -43,9 +43,7 @@ class OptionPickerOverlayState extends State<OptionPickerOverlay> {
   @override
   void initState() {
     super.initState();
-    _itemKeys.addAll(
-      List.generate(widget.options.length, (_) => GlobalKey()),
-    );
+    _itemKeys.addAll(List.generate(widget.options.length, (_) => GlobalKey()));
 
     _selectedIndex = widget.options.indexWhere(
       (o) => o.value == widget.currentValue,

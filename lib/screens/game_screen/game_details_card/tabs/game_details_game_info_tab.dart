@@ -143,15 +143,18 @@ class _GameDetailsGameInfoTabState extends State<GameDetailsGameInfoTab> {
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
+              BorderRadius.circular(14.r),
           border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 1.r,
-            ),
+            color: Theme.of(context).colorScheme.outline,
+            width: 1.r,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.25),
+              color: Theme.of(
+                context,
+              ).colorScheme.shadow.withValues(alpha: 0.25),
               blurRadius: 2.r,
               offset: Offset(2.0.r, 2.0.r),
             ),
@@ -428,15 +431,18 @@ class _GameDetailsGameInfoTabState extends State<GameDetailsGameInfoTab> {
     return Center(
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+              BorderRadius.circular(14.r),
           border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-              width: 1.r,
-            ),
+            color: Theme.of(context).colorScheme.outline,
+            width: 1.r,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.25),
+              color: Theme.of(
+                context,
+              ).colorScheme.shadow.withValues(alpha: 0.25),
               blurRadius: 2.r,
               offset: Offset(2.0.r, 2.0.r),
             ),
@@ -444,8 +450,9 @@ class _GameDetailsGameInfoTabState extends State<GameDetailsGameInfoTab> {
           color: Colors.transparent,
         ),
         child: ClipRRect(
-          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+          borderRadius:
+              Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
+              BorderRadius.circular(14.r),
           clipBehavior: Clip.antiAlias,
           child: AspectRatio(
             aspectRatio: mediaAspectRatio,
@@ -492,8 +499,11 @@ class _GameDetailsGameInfoTabState extends State<GameDetailsGameInfoTab> {
                     child: ExcludeFocus(
                       child: Material(
                         color: Colors.black54,
-                        borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                BorderRadius.circular(14.r),
+                        borderRadius:
+                            Theme.of(
+                              context,
+                            ).extension<CornerRadii>()?.radiusExternal ??
+                            BorderRadius.circular(14.r),
                         child: InkWell(
                           onTap: () {
                             SfxService().playNavSound();
@@ -504,8 +514,11 @@ class _GameDetailsGameInfoTabState extends State<GameDetailsGameInfoTab> {
                           hoverColor: Colors.transparent,
                           highlightColor: Colors.transparent,
                           splashColor: Colors.transparent,
-                          borderRadius: Theme.of(context).extension<CornerRadii>()?.radiusInternal ??
-                BorderRadius.circular(14.r),
+                          borderRadius:
+                              Theme.of(
+                                context,
+                              ).extension<CornerRadii>()?.radiusInternal ??
+                              BorderRadius.circular(14.r),
                           child: Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 8.r,

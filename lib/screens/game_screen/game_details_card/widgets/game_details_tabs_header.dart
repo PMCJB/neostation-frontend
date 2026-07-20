@@ -115,7 +115,7 @@ class GameDetailsTabsHeader extends StatelessWidget {
                               ),
                             ),
                           ),
-                            Row(
+                          Row(
                             children: [
                               _TabItem(
                                 icon: Symbols.gamepad_rounded,

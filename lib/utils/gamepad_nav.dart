@@ -672,8 +672,7 @@ class GamepadNavigation {
 
   /// Orchestrates the processing of a raw [KeyEvent] from the keyboard.
   bool _handleKeyEvent(KeyEvent event) {
-    if (!_isActive ||
-        (event is! KeyDownEvent && event is! KeyUpEvent)) {
+    if (!_isActive || (event is! KeyDownEvent && event is! KeyUpEvent)) {
       return false;
     }
 
@@ -825,16 +824,20 @@ class GamepadNavigation {
     }
 
     // Mutually exclusive directions: stop the opposite direction if active.
-    final bool isUp = key == GamepadInputType.dpadUp ||
+    final bool isUp =
+        key == GamepadInputType.dpadUp ||
         key == LogicalKeyboardKey.arrowUp ||
         key == LogicalKeyboardKey.keyW;
-    final bool isDown = key == GamepadInputType.dpadDown ||
+    final bool isDown =
+        key == GamepadInputType.dpadDown ||
         key == LogicalKeyboardKey.arrowDown ||
         key == LogicalKeyboardKey.keyS;
-    final bool isLeft = key == GamepadInputType.dpadLeft ||
+    final bool isLeft =
+        key == GamepadInputType.dpadLeft ||
         key == LogicalKeyboardKey.arrowLeft ||
         key == LogicalKeyboardKey.keyA;
-    final bool isRight = key == GamepadInputType.dpadRight ||
+    final bool isRight =
+        key == GamepadInputType.dpadRight ||
         key == LogicalKeyboardKey.arrowRight ||
         key == LogicalKeyboardKey.keyD;
 

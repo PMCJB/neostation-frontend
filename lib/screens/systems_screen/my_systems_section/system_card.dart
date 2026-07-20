@@ -247,7 +247,12 @@ class _SystemCardState extends State<SystemCard> {
               highlightColor: Colors.transparent,
               splashColor: Colors.transparent,
               child: Padding(
-                padding: EdgeInsets.only(top: 4.r, bottom: 0.r, left: 4.r, right: 4.r),
+                padding: EdgeInsets.only(
+                  top: 4.r,
+                  bottom: 0.r,
+                  left: 4.r,
+                  right: 4.r,
+                ),
                 child: widget.info.isGame
                     ? Stack(
                         key: _contentStackKey,

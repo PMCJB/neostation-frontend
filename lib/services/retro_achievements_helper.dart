@@ -126,8 +126,7 @@ class RetroAchievementsHelper {
           .replaceAll(RegExp(r'\[[^\]]*\]'), '')
           .trim();
 
-      final systemFolderName =
-          isAllMode && game.systemFolderName != null
+      final systemFolderName = isAllMode && game.systemFolderName != null
           ? game.systemFolderName!
           : effectiveSystem.primaryFolderName;
 

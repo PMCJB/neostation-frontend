@@ -126,15 +126,15 @@ class GamepadNavigationManager {
   static void popLayersAbove(String id) {
     final index = _stack.indexWhere((layer) => layer.id == id);
     if (index == -1) {
-      _log.w('[GamepadNavigationManager] Layer $id not found for popLayersAbove');
+      _log.w(
+        '[GamepadNavigationManager] Layer $id not found for popLayersAbove',
+      );
       return;
     }
 
     while (_stack.length > index + 1) {
       final layer = _stack.removeLast();
-      _log.i(
-        '[GamepadNavigationManager] popLayersAbove: removing ${layer.id}',
-      );
+      _log.i('[GamepadNavigationManager] popLayersAbove: removing ${layer.id}');
       try {
         layer.onDeactivate();
       } catch (e) {

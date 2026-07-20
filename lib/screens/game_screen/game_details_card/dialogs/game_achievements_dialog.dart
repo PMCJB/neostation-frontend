@@ -103,8 +103,7 @@ class _GameAchievementsDialogState extends State<GameAchievementsDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
-    final radii =
-        Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = Theme.of(context).extension<CornerRadii>() ?? CornerRadii.m();
 
     return Dialog(
       backgroundColor: Colors.transparent,

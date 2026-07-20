@@ -96,8 +96,10 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
   /// Returns whether [idx] can receive focus in the current state.
   bool _isEnabledIndex(int idx, String viewMode) {
     final isGrid = viewMode == 'grid';
+    final showCardStyle = isGrid || viewMode == 'carousel';
     if (idx == _cloudSyncIdx && !_showCloudSync) return false;
-    if ((idx == _gridSizeIdx || idx == _gridStyleIdx) && !isGrid) return false;
+    if (idx == _gridSizeIdx && !isGrid) return false;
+    if (idx == _gridStyleIdx && !showCardStyle) return false;
     return idx >= 0 && idx < _totalItems;
   }
 
@@ -205,7 +207,10 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
   /// Closing the dialog avoids the focus fight between the dialog and the
   /// rebuilt parent game list/grid.
   Future<void> _showViewModePicker() async {
-    final currentMode = context.read<SqliteConfigProvider>().config.gameViewMode;
+    final currentMode = context
+        .read<SqliteConfigProvider>()
+        .config
+        .gameViewMode;
     final result = await _showOptionPicker(
       anchorIdx: _viewModeIdx,
       currentValue: currentMode,
@@ -249,7 +254,10 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
 
   /// Displays the grid-size picker.
   Future<void> _showGridSizePicker() async {
-    final currentSize = context.read<SqliteConfigProvider>().config.gameGridColumns;
+    final currentSize = context
+        .read<SqliteConfigProvider>()
+        .config
+        .gameGridColumns;
     final result = await _showOptionPicker(
       anchorIdx: _gridSizeIdx,
       currentValue: currentSize,
@@ -268,8 +276,10 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
 
   /// Displays the grid card-style picker.
   Future<void> _showGridStylePicker() async {
-    final currentStyle =
-        context.read<SqliteConfigProvider>().config.gameCarouselCardStyle;
+    final currentStyle = context
+        .read<SqliteConfigProvider>()
+        .config
+        .gameCarouselCardStyle;
     final result = await _showOptionPicker(
       anchorIdx: _gridStyleIdx,
       currentValue: currentStyle,
@@ -286,9 +296,9 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
     );
 
     if (result != null && mounted) {
-      await context
-          .read<SqliteConfigProvider>()
-          .updateGameCarouselCardStyle(result);
+      await context.read<SqliteConfigProvider>().updateGameCarouselCardStyle(
+        result,
+      );
     }
   }
 
@@ -424,7 +434,9 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
     required bool enabled,
   }) {
     final theme = Theme.of(context);
-    final foreground = enabled ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.3);
+    final foreground = enabled
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurface.withValues(alpha: 0.3);
 
     return GestureDetector(
       onTap: onTap,
@@ -478,6 +490,7 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
       ),
     );
     final isGrid = config.gameViewMode == 'grid';
+    final showCardStyle = isGrid || config.gameViewMode == 'carousel';
     final canReset = (widget.game.playTime ?? 0) > 0 && !_isResettingPlayTime;
 
     // If the current selection became disabled (e.g. switched out of grid),
@@ -580,7 +593,7 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
 
           // Grid Style select.
           GestureDetector(
-            onTap: isGrid
+            onTap: showCardStyle
                 ? () {
                     SfxService().playNavSound();
                     setState(() => _selectedIndex = _gridStyleIdx);
@@ -589,15 +602,15 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
                 : null,
             child: SettingRow(
               key: _itemKey(_gridStyleIdx),
-              focused: isGrid && _selectedIndex == _gridStyleIdx,
+              focused: showCardStyle && _selectedIndex == _gridStyleIdx,
               title: AppLocale.cardStyleGroup.getString(context),
-              subtitle: isGrid
+              subtitle: showCardStyle
                   ? _gridStyleLabel(context, config.gameGridCardStyle)
                   : '-',
               trailing: _buildSelectTrigger(
                 label: _gridStyleLabel(context, config.gameGridCardStyle),
-                onTap: isGrid ? _showGridStylePicker : null,
-                enabled: isGrid,
+                onTap: showCardStyle ? _showGridStylePicker : null,
+                enabled: showCardStyle,
               ),
             ),
           ),
@@ -633,7 +646,9 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
                       decoration: BoxDecoration(
                         color: canReset
                             ? theme.colorScheme.error.withValues(alpha: 0.15)
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.05,
+                              ),
                         borderRadius: BorderRadius.circular(4.r),
                         border: Border.all(
                           color: canReset
