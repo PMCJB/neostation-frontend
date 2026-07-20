@@ -516,6 +516,8 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.gameInfo: 'Info del Juego',
   AppLocale.manage: 'Administrar',
   AppLocale.forceRescrape: 'Forzar Rescrape',
+  AppLocale.scrapingData: 'Datos de Scraping',
+  AppLocale.scrapingMedia: 'Media de Scraping',
   AppLocale.gameTitle: 'Título',
   AppLocale.publisher: 'Editor',
   AppLocale.genre: 'Género',

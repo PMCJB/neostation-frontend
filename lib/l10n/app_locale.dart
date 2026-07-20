@@ -380,6 +380,8 @@ mixin AppLocale {
   // ---------------------------------------------------------------------------
   static const String account = 'account';
   static const String scraping = 'scraping';
+  static const String scrapingData = 'scraping_data';
+  static const String scrapingMedia = 'scraping_media';
   static const String scrapeMode = 'scrape_mode';
   static const String scrapeModeSub = 'scrape_mode_sub';
   static const String media = 'media';

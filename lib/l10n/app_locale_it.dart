@@ -513,6 +513,8 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.gameInfo: 'Info Gioco',
   AppLocale.manage: 'Gestisci',
   AppLocale.forceRescrape: 'Forza Rescrape',
+  AppLocale.scrapingData: 'Dati Scraping',
+  AppLocale.scrapingMedia: 'Media Scraping',
   AppLocale.gameTitle: 'Titolo',
   AppLocale.publisher: 'Editore',
   AppLocale.genre: 'Genere',

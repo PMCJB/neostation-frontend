@@ -247,7 +247,7 @@ class _SystemCardState extends State<SystemCard> {
               highlightColor: Colors.transparent,
               splashColor: Colors.transparent,
               child: Padding(
-                padding: EdgeInsets.all(4.r),
+                padding: EdgeInsets.only(top: 4.r, bottom: 0.r, left: 4.r, right: 4.r),
                 child: widget.info.isGame
                     ? Stack(
                         key: _contentStackKey,
@@ -432,7 +432,7 @@ class _SystemCardState extends State<SystemCard> {
         Image.file(
           File(customLogoPath),
           key: ValueKey('${customLogoPath}_${widget.info.imageVersion}'),
-          height: height,
+          height: height ?? 32.r,
           cacheWidth: 256,
           fit: BoxFit.contain,
           errorBuilder: (context, error, stackTrace) => Image.asset(
@@ -443,7 +443,7 @@ class _SystemCardState extends State<SystemCard> {
             errorBuilder: (context, error, stackTrace) => SystemLogoFallback(
               title: widget.info.title,
               shortName: widget.info.shortName,
-              height: height ?? 24.r,
+              height: height ?? 32.r,
             ),
           ),
         ),
@@ -453,13 +453,13 @@ class _SystemCardState extends State<SystemCard> {
     return buildLogo(
       Image.asset(
         assetLogoPath,
-        height: height,
+        height: height ?? 32.r,
         cacheWidth: 256,
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => SystemLogoFallback(
           title: widget.info.title,
           shortName: widget.info.shortName,
-          height: height ?? 24.r,
+          height: height ?? 32.r,
         ),
       ),
     );
@@ -629,11 +629,12 @@ class _SystemCardState extends State<SystemCard> {
     return Expanded(
       child: Container(
         alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(vertical: 2.r, horizontal: 4.r),
+        padding: EdgeInsets.only(top: 1.r, bottom: 1.r, left: 2.r, right: 2.r),
         child: FittedBox(
           fit: BoxFit.contain,
           child: _buildSystemLogo(
             assetLogoPath,
+            height: 128.r,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),

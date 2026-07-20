@@ -450,6 +450,8 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.gameInfo: '遊戲資訊',
   AppLocale.manage: '管理',
   AppLocale.forceRescrape: '強制重新刮削',
+  AppLocale.scrapingData: '抓取資料',
+  AppLocale.scrapingMedia: '抓取媒體',
   AppLocale.gameTitle: '標題',
   AppLocale.publisher: '發行商',
   AppLocale.genre: '類型',

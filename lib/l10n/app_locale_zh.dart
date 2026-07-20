@@ -450,6 +450,8 @@ const Map<String, dynamic> appLocaleZh = {
   AppLocale.gameInfo: '游戏信息',
   AppLocale.manage: '管理',
   AppLocale.forceRescrape: '强制重新刮削',
+  AppLocale.scrapingData: '抓取数据',
+  AppLocale.scrapingMedia: '抓取媒体',
   AppLocale.gameTitle: '标题',
   AppLocale.publisher: '发行商',
   AppLocale.genre: '类型',

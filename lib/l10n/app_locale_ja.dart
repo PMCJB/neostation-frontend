@@ -454,6 +454,8 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.gameInfo: 'ゲーム情報',
   AppLocale.manage: '管理',
   AppLocale.forceRescrape: '強制再スクレイプ',
+  AppLocale.scrapingData: 'スクラピング データ',
+  AppLocale.scrapingMedia: 'スクラピング メディア',
   AppLocale.gameTitle: 'タイトル',
   AppLocale.publisher: 'パブリッシャー',
   AppLocale.genre: 'ジャンル',

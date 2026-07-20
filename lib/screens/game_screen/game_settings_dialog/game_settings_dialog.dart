@@ -76,10 +76,13 @@ class _GameSettingsDialogState extends State<GameSettingsDialog> {
     _gamepadNav = GamepadNavigation(
       onNavigateUp: _moveUp,
       onNavigateDown: _moveDown,
+      onNavigateLeft: _moveLeft,
+      onNavigateRight: _moveRight,
       onSelectItem: _trigger,
       onBack: _handleBack,
       onPreviousTab: () => _switchTab(-1),
       onNextTab: () => _switchTab(1),
+      isTextFieldFocused: () => _activeTabIsEditingText,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -126,6 +129,20 @@ class _GameSettingsDialogState extends State<GameSettingsDialog> {
         _scrappingTabKey.currentState?.moveDown();
       case 2:
         _manageTabKey.currentState?.moveDown();
+    }
+  }
+
+  void _moveLeft() {
+    // Only the Scrapping tab has internal sub-tabs (Data / Media).
+    if (_currentTab == 1) {
+      _scrappingTabKey.currentState?.moveLeft();
+    }
+  }
+
+  void _moveRight() {
+    // Only the Scrapping tab has internal sub-tabs (Data / Media).
+    if (_currentTab == 1) {
+      _scrappingTabKey.currentState?.moveRight();
     }
   }
 

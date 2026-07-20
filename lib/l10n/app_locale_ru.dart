@@ -510,6 +510,8 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.gameInfo: 'Инфо об игре',
   AppLocale.manage: 'Управление',
   AppLocale.forceRescrape: 'Принудительный рескрейп',
+  AppLocale.scrapingData: 'Данные скрейпинга',
+  AppLocale.scrapingMedia: 'Медиа скрейпинга',
   AppLocale.gameTitle: 'Название',
   AppLocale.publisher: 'Издатель',
   AppLocale.genre: 'Жанр',

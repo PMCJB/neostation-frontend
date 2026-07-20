@@ -20,9 +20,16 @@ import 'package:neostation/services/screenscraper_service.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/widgets/custom_notification.dart';
 
+/// Sub-tabs inside the Scrapping tab of [GameSettingsDialog].
+enum _ScrappingSubTab { data, media }
+
 /// Scrapping tab for [GameSettingsDialog]: force rescrape plus manual
 /// metadata (title, descriptions, developer, publisher, genre) and artwork
 /// (screenshot, wheel, fanart, boxart) editing.
+///
+/// The tab is split into two sub-tabs:
+///  * [Scraping Data] — metadata fields plus the save action.
+///  * [Scraping Media] — artwork rows; each row saves immediately on change.
 class GameSettingsScrappingTab extends StatefulWidget {
   final GameModel game;
   final SystemModel system;
@@ -47,16 +54,23 @@ class GameSettingsScrappingTab extends StatefulWidget {
 class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
   static final _log = LoggerService.instance;
 
-  // ── Navigation entries ──────────────────────────────────────────────────
+  // ── Sub-tabs ────────────────────────────────────────────────────────────
+  _ScrappingSubTab _currentSubTab = _ScrappingSubTab.data;
+
+  // ── Navigation entries (per sub-tab) ────────────────────────────────────
+  // Data tab: rescrape, title, developer, publisher, genre, 6 descriptions, save.
   static const int _idxRescrape = 0;
   static const int _idxTitle = 1;
   static const int _idxDeveloper = 2;
   static const int _idxPublisher = 3;
   static const int _idxGenre = 4;
-  static const int _idxDescStart = 5; // en, es, fr, de, it, pt (6 entries)
-  static const int _idxImageStart = 11; // screenshot, wheel, fanart, boxart
-  static const int _idxSave = 15;
-  static const int _totalItems = 16;
+  static const int _idxDescStart = 5;
+  static const int _idxSave = 11;
+  static const int _totalDataItems = 12;
+
+  // Media tab: screenshot, wheel, fanart, boxart.
+  static const int _idxImageStart = 0;
+  static const int _totalMediaItems = 4;
 
   static const _descLanguages = ['en', 'es', 'fr', 'de', 'it', 'pt'];
   static const _imageTypes = ['screenshots', 'wheels', 'fanarts', 'box2d'];
@@ -82,8 +96,14 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
   bool _isSaving = false;
   int _thumbsVersion = 0;
 
+  int get _totalItems => _currentSubTab == _ScrappingSubTab.data
+      ? _totalDataItems
+      : _totalMediaItems;
+
+  int get _itemKeyIndex => _currentSubTab.index * 100 + _selectedIndex;
+
   GlobalKey _itemKey(int navIndex) =>
-      _itemKeys.putIfAbsent(navIndex, () => GlobalKey());
+      _itemKeys.putIfAbsent(_currentSubTab.index * 100 + navIndex, () => GlobalKey());
 
   FocusNode _focusNodeFor(int navIndex) => _fieldFocusNodes.putIfAbsent(
     navIndex,
@@ -188,6 +208,36 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
       type: ok ? NotificationType.success : NotificationType.error,
     );
     if (ok) widget.onGameUpdated?.call();
+  }
+
+  // ── Sub-tab switching ───────────────────────────────────────────────────
+
+  void _focusFieldAt(int index) {
+    setState(() => _selectedIndex = index);
+    _focusNodeFor(index).requestFocus();
+  }
+
+  /// Moves focus to the next input field when the user presses A/Enter while
+  /// a single-line metadata field is focused. Matches the ScreenScraper login
+  /// form behavior.
+  void _focusNextInput(int currentIndex) {
+    if (currentIndex >= _idxTitle && currentIndex < _idxGenre) {
+      _focusFieldAt(currentIndex + 1);
+    } else if (currentIndex == _idxGenre) {
+      setState(() => _selectedIndex = _idxSave);
+    } else if (currentIndex == _idxSave) {
+      _saveMetadata();
+    }
+  }
+
+  void _switchSubTab(_ScrappingSubTab tab) {
+    if (_currentSubTab == tab) return;
+    _unfocusActiveField();
+    SfxService().playNavSound();
+    setState(() {
+      _currentSubTab = tab;
+      _selectedIndex = 0;
+    });
   }
 
   // ── Force rescrape ──────────────────────────────────────────────────────
@@ -334,40 +384,76 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
 
   // ── Gamepad delegates ───────────────────────────────────────────────────
 
-  void moveUp() {
-    _unfocusActiveField();
-    // Schedule the selection change after the field blur settles to avoid
-    // nested setState from the FocusNode listener.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _selectedIndex = (_selectedIndex - 1).clamp(0, _totalItems - 1);
-      });
-      _scrollToSelectedItem();
-    });
+  bool moveUp() {
+    // While a text field is focused, let the field handle its own cursor/selection
+    // navigation. The user can press Escape to exit the field and resume list nav.
+    if (isEditingText) return false;
+    final newIndex = (_selectedIndex - 1).clamp(0, _totalItems - 1);
+    final moved = newIndex != _selectedIndex;
+    if (moved) {
+      setState(() => _selectedIndex = newIndex);
+    }
+    _scrollToSelectedItem();
+    return moved;
   }
 
-  void moveDown() {
+  bool moveDown() {
+    // While a text field is focused, let the field handle its own cursor/selection
+    // navigation. The user can press Escape to exit the field and resume list nav.
+    if (isEditingText) return false;
+    final newIndex = (_selectedIndex + 1).clamp(0, _totalItems - 1);
+    final moved = newIndex != _selectedIndex;
+    if (moved) {
+      setState(() => _selectedIndex = newIndex);
+    }
+    _scrollToSelectedItem();
+    return moved;
+  }
+
+  /// Switches to the left sub-tab (Data) when on the Media tab.
+  bool moveLeft() {
     _unfocusActiveField();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _selectedIndex = (_selectedIndex + 1).clamp(0, _totalItems - 1);
-      });
+    if (_currentSubTab == _ScrappingSubTab.media) {
+      _switchSubTab(_ScrappingSubTab.data);
       _scrollToSelectedItem();
-    });
+      return true;
+    }
+    return false;
+  }
+
+  /// Switches to the right sub-tab (Media) when on the Data tab.
+  bool moveRight() {
+    _unfocusActiveField();
+    if (_currentSubTab == _ScrappingSubTab.data) {
+      _switchSubTab(_ScrappingSubTab.media);
+      _scrollToSelectedItem();
+      return true;
+    }
+    return false;
   }
 
   void trigger() {
+    // If a text field is focused, A/Enter advances to the next field (mirrors
+    // the ScreenScraper login form behavior).
+    final editingIndex = _editingFieldIndex;
+    if (editingIndex != null) {
+      _focusNextInput(editingIndex);
+      return;
+    }
+
     final idx = _selectedIndex;
-    if (idx == _idxRescrape) {
-      _forceRescrape();
-    } else if (idx >= _idxTitle && idx < _idxImageStart) {
-      _focusNodeFor(idx).requestFocus();
-    } else if (idx >= _idxImageStart && idx < _idxSave) {
-      _replaceImage(_imageTypes[idx - _idxImageStart]);
-    } else if (idx == _idxSave) {
-      _saveMetadata();
+    if (_currentSubTab == _ScrappingSubTab.data) {
+      if (idx == _idxRescrape) {
+        _forceRescrape();
+      } else if (idx >= _idxTitle && idx < _idxSave) {
+        _focusNodeFor(idx).requestFocus();
+      } else if (idx == _idxSave) {
+        _saveMetadata();
+      }
+    } else {
+      if (idx >= _idxImageStart && idx < _totalMediaItems) {
+        _replaceImage(_imageTypes[idx]);
+      }
     }
   }
 
@@ -390,7 +476,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
 
   void _scrollToSelectedItem() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final key = _itemKeys[_selectedIndex];
+      final key = _itemKeys[_itemKeyIndex];
       if (key?.currentContext != null) {
         Scrollable.ensureVisible(
           key!.currentContext!,
@@ -406,141 +492,207 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return GestureDetector(
       // Tapping outside a text field leaves edit mode.
       onTap: _unfocusActiveField,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        padding: EdgeInsets.all(12.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Force Rescrape.
-            _NavRow(
-              key: _itemKey(_idxRescrape),
-              isSelected: _selectedIndex == _idxRescrape,
-              icon: Symbols.refresh_rounded,
-              label: AppLocale.forceRescrape.getString(context),
-              subtitle: _isScraping
-                  ? '${AppLocale.scraping.getString(context)} '
-                        '${(_scrapeProgress * 100).toInt()}%'
-                  : AppLocale.rescrape.getString(context),
-              trailing: _isScraping
-                  ? SizedBox(
-                      width: 60.r,
-                      child: LinearProgressIndicator(
-                        value: _scrapeProgress > 0 ? _scrapeProgress : null,
-                        minHeight: 4.r,
-                        backgroundColor: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.1,
-                        ),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.secondary,
-                        ),
-                      ),
-                    )
-                  : null,
-              onTap: () {
-                SfxService().playNavSound();
-                setState(() => _selectedIndex = _idxRescrape);
-                _forceRescrape();
-              },
-            ),
+      child: Column(
+        children: [
+          _buildSubTabBar(context),
+          Expanded(
+            child: _currentSubTab == _ScrappingSubTab.data
+                ? _buildDataTab(context)
+                : _buildMediaTab(context),
+          ),
+        ],
+      ),
+    );
+  }
 
-            _SectionHeader(
-              icon: Symbols.edit_rounded,
-              label: AppLocale.description.getString(context),
-            ),
-            _MetadataFieldRow(
-              key: _itemKey(_idxTitle),
-              isSelected: _selectedIndex == _idxTitle,
-              label: AppLocale.gameTitle.getString(context),
-              controller: _titleController,
-              focusNode: _focusNodeFor(_idxTitle),
-              onTap: () => setState(() => _selectedIndex = _idxTitle),
-            ),
-            _MetadataFieldRow(
-              key: _itemKey(_idxDeveloper),
-              isSelected: _selectedIndex == _idxDeveloper,
-              label: AppLocale.developer.getString(context),
-              controller: _developerController,
-              focusNode: _focusNodeFor(_idxDeveloper),
-              onTap: () => setState(() => _selectedIndex = _idxDeveloper),
-            ),
-            _MetadataFieldRow(
-              key: _itemKey(_idxPublisher),
-              isSelected: _selectedIndex == _idxPublisher,
-              label: AppLocale.publisher.getString(context),
-              controller: _publisherController,
-              focusNode: _focusNodeFor(_idxPublisher),
-              onTap: () => setState(() => _selectedIndex = _idxPublisher),
-            ),
-            _MetadataFieldRow(
-              key: _itemKey(_idxGenre),
-              isSelected: _selectedIndex == _idxGenre,
-              label: AppLocale.genre.getString(context),
-              controller: _genreController,
-              focusNode: _focusNodeFor(_idxGenre),
-              onTap: () => setState(() => _selectedIndex = _idxGenre),
-            ),
-            for (int i = 0; i < _descLanguages.length; i++)
-              _MetadataFieldRow(
-                key: _itemKey(_idxDescStart + i),
-                isSelected: _selectedIndex == _idxDescStart + i,
-                label:
-                    '${AppLocale.description.getString(context)} '
-                    '(${_descLanguages[i].toUpperCase()})',
-                controller: _descControllers[_descLanguages[i]]!,
-                focusNode: _focusNodeFor(_idxDescStart + i),
-                maxLines: 3,
-                onTap: () => setState(() => _selectedIndex = _idxDescStart + i),
-              ),
-
-            _SectionHeader(
-              icon: Symbols.image_rounded,
-              label: AppLocale.systemArt.getString(context),
-            ),
-            for (int i = 0; i < _imageTypes.length; i++)
-              _ArtworkRow(
-                key: _itemKey(_idxImageStart + i),
-                isSelected: _selectedIndex == _idxImageStart + i,
-                label: _imageTypeLabel(context, _imageTypes[i]),
-                imagePath: _pathForImageType(_imageTypes[i]),
-                thumbsVersion: _thumbsVersion,
-                onTap: () {
-                  SfxService().playNavSound();
-                  setState(() => _selectedIndex = _idxImageStart + i);
-                  _replaceImage(_imageTypes[i]);
-                },
-              ),
-
-            SizedBox(height: 8.r),
-            _NavRow(
-              key: _itemKey(_idxSave),
-              isSelected: _selectedIndex == _idxSave,
-              icon: Symbols.save_rounded,
-              label: AppLocale.save.getString(context),
-              subtitle: '',
-              trailing: _isSaving
-                  ? SizedBox(
-                      width: 16.r,
-                      height: 16.r,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.secondary,
-                      ),
-                    )
-                  : null,
-              onTap: () {
-                SfxService().playNavSound();
-                setState(() => _selectedIndex = _idxSave);
-                _saveMetadata();
-              },
-            ),
-          ],
+  Widget _buildSubTabBar(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 8.r),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
         ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SubTabItem(
+              label: AppLocale.scrapingData.getString(context),
+              isSelected: _currentSubTab == _ScrappingSubTab.data,
+              onTap: () => _switchSubTab(_ScrappingSubTab.data),
+            ),
+          ),
+          SizedBox(width: 8.r),
+          Expanded(
+            child: _SubTabItem(
+              label: AppLocale.scrapingMedia.getString(context),
+              isSelected: _currentSubTab == _ScrappingSubTab.media,
+              onTap: () => _switchSubTab(_ScrappingSubTab.media),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataTab(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SingleChildScrollView(
+      controller: _scrollController,
+      padding: EdgeInsets.all(12.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Force Rescrape.
+          _NavRow(
+            key: _itemKey(_idxRescrape),
+            isSelected: _selectedIndex == _idxRescrape,
+            icon: Symbols.refresh_rounded,
+            label: AppLocale.forceRescrape.getString(context),
+            subtitle: _isScraping
+                ? '${AppLocale.scraping.getString(context)} '
+                      '${(_scrapeProgress * 100).toInt()}%'
+                : AppLocale.rescrape.getString(context),
+            trailing: _isScraping
+                ? SizedBox(
+                    width: 60.r,
+                    child: LinearProgressIndicator(
+                      value: _scrapeProgress > 0 ? _scrapeProgress : null,
+                      minHeight: 4.r,
+                      backgroundColor: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.1,
+                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.secondary,
+                      ),
+                    ),
+                  )
+                : null,
+            onTap: () {
+              SfxService().playNavSound();
+              setState(() => _selectedIndex = _idxRescrape);
+              _forceRescrape();
+            },
+          ),
+
+          _SectionHeader(
+            icon: Symbols.edit_rounded,
+            label: AppLocale.description.getString(context),
+          ),
+          _MetadataFieldRow(
+            key: _itemKey(_idxTitle),
+            isSelected: _selectedIndex == _idxTitle,
+            label: AppLocale.gameTitle.getString(context),
+            controller: _titleController,
+            focusNode: _focusNodeFor(_idxTitle),
+            readOnly: _editingFieldIndex != _idxTitle,
+            onTap: () => setState(() => _selectedIndex = _idxTitle),
+            onSubmitted: () => _focusNextInput(_idxTitle),
+          ),
+          _MetadataFieldRow(
+            key: _itemKey(_idxDeveloper),
+            isSelected: _selectedIndex == _idxDeveloper,
+            label: AppLocale.developer.getString(context),
+            controller: _developerController,
+            focusNode: _focusNodeFor(_idxDeveloper),
+            readOnly: _editingFieldIndex != _idxDeveloper,
+            onTap: () => setState(() => _selectedIndex = _idxDeveloper),
+            onSubmitted: () => _focusNextInput(_idxDeveloper),
+          ),
+          _MetadataFieldRow(
+            key: _itemKey(_idxPublisher),
+            isSelected: _selectedIndex == _idxPublisher,
+            label: AppLocale.publisher.getString(context),
+            controller: _publisherController,
+            focusNode: _focusNodeFor(_idxPublisher),
+            readOnly: _editingFieldIndex != _idxPublisher,
+            onTap: () => setState(() => _selectedIndex = _idxPublisher),
+            onSubmitted: () => _focusNextInput(_idxPublisher),
+          ),
+          _MetadataFieldRow(
+            key: _itemKey(_idxGenre),
+            isSelected: _selectedIndex == _idxGenre,
+            label: AppLocale.genre.getString(context),
+            controller: _genreController,
+            focusNode: _focusNodeFor(_idxGenre),
+            readOnly: _editingFieldIndex != _idxGenre,
+            onTap: () => setState(() => _selectedIndex = _idxGenre),
+            onSubmitted: () => _focusNextInput(_idxGenre),
+          ),
+          for (int i = 0; i < _descLanguages.length; i++)
+            _MetadataFieldRow(
+              key: _itemKey(_idxDescStart + i),
+              isSelected: _selectedIndex == _idxDescStart + i,
+              label:
+                  '${AppLocale.description.getString(context)} '
+                  '(${_descLanguages[i].toUpperCase()})',
+              controller: _descControllers[_descLanguages[i]]!,
+              focusNode: _focusNodeFor(_idxDescStart + i),
+              maxLines: 3,
+              readOnly: _editingFieldIndex != _idxDescStart + i,
+              onTap: () => setState(() => _selectedIndex = _idxDescStart + i),
+            ),
+
+          SizedBox(height: 8.r),
+          _NavRow(
+            key: _itemKey(_idxSave),
+            isSelected: _selectedIndex == _idxSave,
+            icon: Symbols.save_rounded,
+            label: AppLocale.save.getString(context),
+            subtitle: '',
+            trailing: _isSaving
+                ? SizedBox(
+                    width: 16.r,
+                    height: 16.r,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.secondary,
+                    ),
+                  )
+                : null,
+            onTap: () {
+              SfxService().playNavSound();
+              setState(() => _selectedIndex = _idxSave);
+              _saveMetadata();
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediaTab(BuildContext context) {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      padding: EdgeInsets.all(12.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            icon: Symbols.image_rounded,
+            label: AppLocale.systemArt.getString(context),
+          ),
+          for (int i = 0; i < _imageTypes.length; i++)
+            _ArtworkRow(
+              key: _itemKey(_idxImageStart + i),
+              isSelected: _selectedIndex == _idxImageStart + i,
+              label: _imageTypeLabel(context, _imageTypes[i]),
+              imagePath: _pathForImageType(_imageTypes[i]),
+              thumbsVersion: _thumbsVersion,
+              onTap: () {
+                SfxService().playNavSound();
+                setState(() => _selectedIndex = _idxImageStart + i);
+                _replaceImage(_imageTypes[i]);
+              },
+            ),
+        ],
       ),
     );
   }
@@ -558,6 +710,62 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
       default:
         return type;
     }
+  }
+}
+
+/// Selectable sub-tab item used inside the scrapping tab.
+class _SubTabItem extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SubTabItem({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      canRequestFocus: false,
+      focusColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      onTap: () {
+        SfxService().playNavSound();
+        onTap();
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 6.r),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.secondary.withValues(alpha: 0.15)
+              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(6.r),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.secondary.withValues(alpha: 0.5)
+                : theme.colorScheme.outline.withValues(alpha: 0.1),
+            width: 1.r,
+          ),
+        ),
+        child: Text(
+          label.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10.r,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+            color: isSelected
+                ? theme.colorScheme.secondary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            letterSpacing: 0.5.r,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -692,7 +900,9 @@ class _MetadataFieldRow extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final int maxLines;
+  final bool readOnly;
   final VoidCallback onTap;
+  final VoidCallback? onSubmitted;
 
   const _MetadataFieldRow({
     super.key,
@@ -702,6 +912,8 @@ class _MetadataFieldRow extends StatelessWidget {
     required this.focusNode,
     required this.onTap,
     this.maxLines = 1,
+    this.readOnly = false,
+    this.onSubmitted,
   });
 
   @override
@@ -752,34 +964,49 @@ class _MetadataFieldRow extends StatelessWidget {
               // Field-level key handling: while the field is focused the
               // global gamepad/keyboard layer stays out of the way, so Escape
               // (and Enter on single-line fields) is the way back out.
-              child: Focus(
-                onKeyEvent: (node, event) {
-                  if (event is KeyDownEvent &&
-                      event.logicalKey == LogicalKeyboardKey.escape) {
-                    focusNode.unfocus();
-                    return KeyEventResult.handled;
-                  }
-                  return KeyEventResult.ignored;
-                },
-                child: TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  maxLines: maxLines,
-                  minLines: 1,
-                  onSubmitted: maxLines == 1
-                      ? (_) => focusNode.unfocus()
-                      : null,
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 11.r,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(vertical: 4.r),
-                  ),
-                ),
-              ),
+              child: readOnly
+                  ? Padding(
+                      padding: EdgeInsets.only(top: 4.r, bottom: 4.r),
+                      child: Text(
+                        controller.text.isEmpty ? '—' : controller.text,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 11.r,
+                        ),
+                        maxLines: maxLines,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )
+                  : Focus(
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent &&
+                            event.logicalKey == LogicalKeyboardKey.escape) {
+                          focusNode.unfocus();
+                          return KeyEventResult.handled;
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        maxLines: maxLines,
+                        minLines: 1,
+                        textInputAction:
+                            maxLines == 1 ? TextInputAction.next : null,
+                        onSubmitted: maxLines == 1
+                            ? (_) => onSubmitted?.call()
+                            : null,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 11.r,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 4.r),
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
