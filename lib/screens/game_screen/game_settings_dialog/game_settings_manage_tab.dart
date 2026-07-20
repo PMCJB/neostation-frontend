@@ -10,14 +10,15 @@ import 'package:neostation/providers/file_provider.dart';
 import 'package:neostation/providers/neo_sync_provider.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/repositories/game_repository.dart';
+import 'package:neostation/screens/settings_screen/new_settings_options/widgets/setting_row.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/sync/i_sync_provider.dart';
 import 'package:neostation/utils/game_utils.dart';
 import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'package:neostation/widgets/custom_notification.dart';
+import 'package:neostation/widgets/custom_toggle_switch.dart';
 import 'package:neostation/widgets/delete_game_dialog.dart';
-import 'package:neostation/widgets/settings_rows.dart';
 
 import 'view_mode_picker_overlay.dart';
 
@@ -313,21 +314,117 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
 
     return SingleChildScrollView(
       controller: _scrollController,
-      padding: EdgeInsets.all(12.r),
+      physics: const ClampingScrollPhysics(),
+      padding: EdgeInsets.only(bottom: 24.r),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cloud Synchronization Option.
-          if (_showCloudSync)
-            SettingsRow(
-              key: _itemKey(_cloudSyncIdx),
-              isSelected: _selectedIndex == _cloudSyncIdx,
-              icon: Symbols.cloud_rounded,
-              label: AppLocale.cloudSync.getString(context),
-              subtitle: _cloudSyncEnabled
-                  ? AppLocale.cloudSyncOn.getString(context)
-                  : AppLocale.cloudSyncOff.getString(context),
-              trailing: _isUpdatingCloudSync
+          if (_showCloudSync) ...[
+            GestureDetector(
+              onTap: () {
+                SfxService().playNavSound();
+                setState(() => _selectedIndex = _cloudSyncIdx);
+                if (!_isUpdatingCloudSync) {
+                  _toggleCloudSync(!_cloudSyncEnabled);
+                }
+              },
+              child: SettingRow(
+                key: _itemKey(_cloudSyncIdx),
+                focused: _selectedIndex == _cloudSyncIdx,
+                title: AppLocale.cloudSync.getString(context),
+                subtitle: _cloudSyncEnabled
+                    ? AppLocale.cloudSyncOn.getString(context)
+                    : AppLocale.cloudSyncOff.getString(context),
+                trailing: _isUpdatingCloudSync
+                    ? SizedBox(
+                        width: 20.r,
+                        height: 20.r,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      )
+                    : ExcludeFocus(
+                        child: CustomToggleSwitch(
+                          value: _cloudSyncEnabled,
+                          onChanged: !_isUpdatingCloudSync
+                              ? (v) => _toggleCloudSync(v)
+                              : null,
+                          activeColor: theme.colorScheme.primary,
+                        ),
+                      ),
+              ),
+            ),
+            SizedBox(height: 12.r),
+          ],
+
+          // View Mode select — opens the anchored picker overlay.
+          GestureDetector(
+            onTap: () {
+              SfxService().playNavSound();
+              setState(() => _selectedIndex = _viewModeIdx);
+              _showViewModePicker();
+            },
+            child: SettingRow(
+              key: _itemKey(_viewModeIdx),
+              focused: _selectedIndex == _viewModeIdx,
+              title: AppLocale.viewMode.getString(context),
+              subtitle: _viewModeLabel(context, currentViewMode),
+              trailing: GestureDetector(
+                onTap: _showViewModePicker,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.r,
+                    vertical: 6.r,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6.r),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                      width: 0.5.r,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _viewModeLabel(context, currentViewMode),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 9.r,
+                          fontWeight: FontWeight.w400,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      SizedBox(width: 2.r),
+                      Icon(
+                        Symbols.arrow_drop_down_rounded,
+                        size: 14.r,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 12.r),
+
+          // Play-time reset.
+          GestureDetector(
+            onTap: () {
+              SfxService().playNavSound();
+              setState(() => _selectedIndex = _playTimeIdx);
+              if (canReset) _confirmResetPlayTime();
+            },
+            child: SettingRow(
+              key: _itemKey(_playTimeIdx),
+              focused: _selectedIndex == _playTimeIdx,
+              title: AppLocale.playTime.getString(context),
+              subtitle: GameUtils.formatPlayTime(widget.game.playTime ?? 0),
+              trailing: _isResettingPlayTime
                   ? SizedBox(
                       width: 20.r,
                       height: 20.r,
@@ -336,143 +433,87 @@ class GameSettingsManageTabState extends State<GameSettingsManageTab> {
                         color: theme.colorScheme.onSurface,
                       ),
                     )
-                  : ExcludeFocus(
-                      child: Switch(
-                        value: _cloudSyncEnabled,
-                        onChanged: !_isUpdatingCloudSync
-                            ? (v) => _toggleCloudSync(v)
-                            : null,
-                        activeThumbColor: Colors.lightGreen,
+                  : Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.r,
+                        vertical: 3.r,
+                      ),
+                      decoration: BoxDecoration(
+                        color: canReset
+                            ? theme.colorScheme.error.withValues(alpha: 0.15)
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(4.r),
+                        border: Border.all(
+                          color: canReset
+                              ? theme.colorScheme.error.withValues(alpha: 0.4)
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.1,
+                                ),
+                          width: 1.r,
+                        ),
+                      ),
+                      child: Text(
+                        AppLocale.reset.getString(context),
+                        style: TextStyle(
+                          fontSize: 11.r,
+                          fontWeight: FontWeight.w600,
+                          color: canReset
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.3,
+                                ),
+                        ),
                       ),
                     ),
-              onTap: () {
-                SfxService().playNavSound();
-                setState(() => _selectedIndex = _cloudSyncIdx);
-                if (!_isUpdatingCloudSync) {
-                  _toggleCloudSync(!_cloudSyncEnabled);
-                }
-              },
             ),
-
-          // View Mode select — opens the anchored picker overlay.
-          SettingsRow(
-            key: _itemKey(_viewModeIdx),
-            isSelected: _selectedIndex == _viewModeIdx,
-            icon: Symbols.grid_view_rounded,
-            label: AppLocale.viewMode.getString(context),
-            subtitle: _viewModeLabel(context, currentViewMode),
-            trailing: Icon(
-              Symbols.arrow_drop_down_rounded,
-              size: 16.r,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-            onTap: () {
-              SfxService().playNavSound();
-              setState(() => _selectedIndex = _viewModeIdx);
-              _showViewModePicker();
-            },
           ),
 
-          SizedBox(height: 8.r),
-
-          // Play-time reset.
-          SettingsRow(
-            key: _itemKey(_playTimeIdx),
-            isSelected: _selectedIndex == _playTimeIdx,
-            icon: Symbols.timer_off_rounded,
-            label: AppLocale.playTime.getString(context),
-            subtitle: GameUtils.formatPlayTime(widget.game.playTime ?? 0),
-            trailing: _isResettingPlayTime
-                ? SizedBox(
-                    width: 20.r,
-                    height: 20.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  )
-                : Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.r,
-                      vertical: 3.r,
-                    ),
-                    decoration: BoxDecoration(
-                      color: canReset
-                          ? theme.colorScheme.error.withValues(alpha: 0.15)
-                          : theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(4.r),
-                      border: Border.all(
-                        color: canReset
-                            ? theme.colorScheme.error.withValues(alpha: 0.4)
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.1,
-                              ),
-                        width: 1.r,
-                      ),
-                    ),
-                    child: Text(
-                      AppLocale.reset.getString(context),
-                      style: TextStyle(
-                        fontSize: 11.r,
-                        fontWeight: FontWeight.w600,
-                        color: canReset
-                            ? theme.colorScheme.error
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.3,
-                              ),
-                      ),
-                    ),
-                  ),
-            onTap: () {
-              SfxService().playNavSound();
-              setState(() => _selectedIndex = _playTimeIdx);
-              if (canReset) _confirmResetPlayTime();
-            },
-          ),
+          SizedBox(height: 12.r),
 
           // Delete game.
-          SettingsRow(
-            key: _itemKey(_deleteIdx),
-            isSelected: _selectedIndex == _deleteIdx,
-            icon: Symbols.delete_rounded,
-            label: AppLocale.deleteGame.getString(context),
-            subtitle: AppLocale.deleteGameSubtitle.getString(context),
-            trailing: _isDeleting
-                ? SizedBox(
-                    width: 20.r,
-                    height: 20.r,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.colorScheme.error,
-                    ),
-                  )
-                : Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.r,
-                      vertical: 3.r,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.error.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(4.r),
-                      border: Border.all(
-                        color: theme.colorScheme.error.withValues(alpha: 0.4),
-                        width: 1.r,
-                      ),
-                    ),
-                    child: Text(
-                      AppLocale.delete.getString(context),
-                      style: TextStyle(
-                        fontSize: 11.r,
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                  ),
+          GestureDetector(
             onTap: () {
               SfxService().playNavSound();
               setState(() => _selectedIndex = _deleteIdx);
               _confirmDeleteGame();
             },
+            child: SettingRow(
+              key: _itemKey(_deleteIdx),
+              focused: _selectedIndex == _deleteIdx,
+              title: AppLocale.deleteGame.getString(context),
+              subtitle: AppLocale.deleteGameSubtitle.getString(context),
+              trailing: _isDeleting
+                  ? SizedBox(
+                      width: 20.r,
+                      height: 20.r,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.error,
+                      ),
+                    )
+                  : Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.r,
+                        vertical: 3.r,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4.r),
+                        border: Border.all(
+                          color: theme.colorScheme.error.withValues(alpha: 0.4),
+                          width: 1.r,
+                        ),
+                      ),
+                      child: Text(
+                        AppLocale.delete.getString(context),
+                        style: TextStyle(
+                          fontSize: 11.r,
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
+            ),
           ),
         ],
       ),

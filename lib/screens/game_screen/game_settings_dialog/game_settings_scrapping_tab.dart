@@ -88,7 +88,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
     for (final lang in _descLanguages) lang: TextEditingController(),
   };
   final Map<int, FocusNode> _fieldFocusNodes = {};
-  int? _editingFieldIndex;
+  int? _activeFieldIndex;
 
   // Async state
   bool _isScraping = false;
@@ -112,7 +112,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
 
   /// True while a metadata text field holds focus — the host dialog turns B
   /// into 'leave the field' instead of 'close' in that state.
-  bool get isEditingText => _editingFieldIndex != null;
+  bool get isEditingText => _activeFieldIndex != null;
 
   String? get _systemId => widget.game.systemId ?? widget.system.id;
 
@@ -213,7 +213,10 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
   // ── Sub-tab switching ───────────────────────────────────────────────────
 
   void _focusFieldAt(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _selectedIndex = index;
+      _activeFieldIndex = index;
+    });
     _focusNodeFor(index).requestFocus();
   }
 
@@ -435,7 +438,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
   void trigger() {
     // If a text field is focused, A/Enter advances to the next field (mirrors
     // the ScreenScraper login form behavior).
-    final editingIndex = _editingFieldIndex;
+    final editingIndex = _activeFieldIndex;
     if (editingIndex != null) {
       _focusNextInput(editingIndex);
       return;
@@ -446,7 +449,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
       if (idx == _idxRescrape) {
         _forceRescrape();
       } else if (idx >= _idxTitle && idx < _idxSave) {
-        _focusNodeFor(idx).requestFocus();
+        _focusFieldAt(idx);
       } else if (idx == _idxSave) {
         _saveMetadata();
       }
@@ -461,7 +464,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
   void cancelEdit() => _unfocusActiveField();
 
   void _unfocusActiveField() {
-    final idx = _editingFieldIndex;
+    final idx = _activeFieldIndex;
     if (idx == null) return;
     _fieldFocusNodes[idx]?.unfocus();
   }
@@ -470,7 +473,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
     final node = _fieldFocusNodes[navIndex];
     if (node == null) return;
     setState(() {
-      _editingFieldIndex = node.hasFocus ? navIndex : null;
+      _activeFieldIndex = node.hasFocus ? navIndex : null;
     });
   }
 
@@ -592,7 +595,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
             label: AppLocale.gameTitle.getString(context),
             controller: _titleController,
             focusNode: _focusNodeFor(_idxTitle),
-            readOnly: _editingFieldIndex != _idxTitle,
+            readOnly: _activeFieldIndex != _idxTitle,
             onTap: () => setState(() => _selectedIndex = _idxTitle),
             onSubmitted: () => _focusNextInput(_idxTitle),
           ),
@@ -602,7 +605,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
             label: AppLocale.developer.getString(context),
             controller: _developerController,
             focusNode: _focusNodeFor(_idxDeveloper),
-            readOnly: _editingFieldIndex != _idxDeveloper,
+            readOnly: _activeFieldIndex != _idxDeveloper,
             onTap: () => setState(() => _selectedIndex = _idxDeveloper),
             onSubmitted: () => _focusNextInput(_idxDeveloper),
           ),
@@ -612,7 +615,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
             label: AppLocale.publisher.getString(context),
             controller: _publisherController,
             focusNode: _focusNodeFor(_idxPublisher),
-            readOnly: _editingFieldIndex != _idxPublisher,
+            readOnly: _activeFieldIndex != _idxPublisher,
             onTap: () => setState(() => _selectedIndex = _idxPublisher),
             onSubmitted: () => _focusNextInput(_idxPublisher),
           ),
@@ -622,7 +625,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
             label: AppLocale.genre.getString(context),
             controller: _genreController,
             focusNode: _focusNodeFor(_idxGenre),
-            readOnly: _editingFieldIndex != _idxGenre,
+            readOnly: _activeFieldIndex != _idxGenre,
             onTap: () => setState(() => _selectedIndex = _idxGenre),
             onSubmitted: () => _focusNextInput(_idxGenre),
           ),
@@ -636,7 +639,7 @@ class GameSettingsScrappingTabState extends State<GameSettingsScrappingTab> {
               controller: _descControllers[_descLanguages[i]]!,
               focusNode: _focusNodeFor(_idxDescStart + i),
               maxLines: 3,
-              readOnly: _editingFieldIndex != _idxDescStart + i,
+              readOnly: _activeFieldIndex != _idxDescStart + i,
               onTap: () => setState(() => _selectedIndex = _idxDescStart + i),
             ),
 

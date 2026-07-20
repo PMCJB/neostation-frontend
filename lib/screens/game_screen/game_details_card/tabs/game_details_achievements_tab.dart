@@ -27,7 +27,7 @@ class GameDetailsAchievementsTab extends StatefulWidget {
     required this.isLoading,
     required this.onRefresh,
     this.topOffset = 55.0,
-    this.bottomOffset = 98.0,
+    this.bottomOffset = 110.0,
     this.leftOffset = 12.0,
     this.rightOffset = 12.0,
     this.headerAction,
@@ -146,8 +146,12 @@ class GameDetailsAchievementsTabState
           bottom: widget.bottomOffset.r,
           child: Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
               borderRadius: radii.radiusExternal,
+              border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+              width: 1.r,
+            ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.25),
@@ -235,11 +239,11 @@ class GameDetailsAchievementsTabState
       bottom: widget.bottomOffset.r,
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.9),
           borderRadius: radii.radiusExternal,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.25),
               blurRadius: 2.r,
               offset: Offset(2.0.r, 2.0.r),
             ),
