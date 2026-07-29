@@ -487,6 +487,17 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
     });
   }
 
+  void _cancelVideoDelay() {
+    _videoDelayTimer?.cancel();
+    _videoDelayTimer = null;
+    setState(() {
+      _isVideoDelayActive = false;
+    });
+    if (widget.videoController?.value.isPlaying == true) {
+      widget.videoController?.pause();
+    }
+  }
+
   /// Loads RetroAchievements data for the current game, including MD5 hash generation.
   Future<void> _loadAchievementsForGame({bool forceRefresh = false}) async {
     final gameTarget = widget.game;
@@ -639,14 +650,20 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
               game: _game,
               fileProvider: widget.fileProvider,
             ),
-          if (_currentTab == DetailTab.screenshotVideo)
-            GameDetailsScreenshotVideoTab(
+          Visibility(
+            visible: _currentTab == DetailTab.screenshotVideo,
+            maintainState: true,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainInteractivity: true,
+            child: GameDetailsScreenshotVideoTab(
               screenshotPath: screenshotPath,
               isVideoDelayActive: _isVideoDelayActive,
               videoController: widget.videoController,
               imageVersion: _imageVersion,
               onToggleVideoMute: _toggleVideoMute,
             ),
+          ),
           if (_currentTab == DetailTab.gameInfo)
             GameDetailsGameInfoTab(
               system: _effectiveSystem,
@@ -751,15 +768,6 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
 
     final wasScreenshotVideo = _currentTab == DetailTab.screenshotVideo;
 
-    if (wasScreenshotVideo && tab != DetailTab.screenshotVideo) {
-      _videoDelayTimer?.cancel();
-      _videoDelayTimer = null;
-      _isVideoDelayActive = false;
-      if (widget.videoController?.value.isPlaying == true) {
-        widget.videoController?.pause();
-      }
-    }
-
     setState(() {
       _currentTab = tab;
 
@@ -771,6 +779,9 @@ class _GameDetailsCardListState extends State<GameDetailsCardList>
       } else {
         if (config.config.showGameInfo) {
           config.updateShowGameInfo(false);
+        }
+        if (wasScreenshotVideo) {
+          _cancelVideoDelay();
         }
         if (tab == DetailTab.wheel &&
             widget.videoController != null &&

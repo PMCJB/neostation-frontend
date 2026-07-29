@@ -115,11 +115,8 @@ class _GameDetailsScreenshotVideoTabState
       mediaAspectRatio = 16 / 9;
     }
 
-    return Positioned(
-      left: 12.r,
-      right: 12.r,
-      top: 55.r,
-      bottom: 110.r,
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12.r, 55.r, 12.r, 110.r),
       child: Center(
         child: Container(
           decoration: BoxDecoration(
