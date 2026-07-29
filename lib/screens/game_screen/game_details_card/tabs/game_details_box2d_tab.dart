@@ -6,7 +6,7 @@ import '../../../../models/game_model.dart';
 import '../../../../providers/file_provider.dart';
 import '../../../../themes/corner_radii.dart';
 
-class GameDetailsBox2dTab extends StatelessWidget {
+class GameDetailsBox2dTab extends StatefulWidget {
   final SystemModel system;
   final GameModel game;
   final FileProvider fileProvider;
@@ -19,14 +19,81 @@ class GameDetailsBox2dTab extends StatelessWidget {
   });
 
   @override
+  State<GameDetailsBox2dTab> createState() => _GameDetailsBox2dTabState();
+}
+
+class _GameDetailsBox2dTabState extends State<GameDetailsBox2dTab> {
+  double _imageAspectRatio = 3 / 4;
+
+  ImageStream? _currentImageStream;
+  ImageStreamListener? _currentImageListener;
+
+  void _loadImageAspectRatio(String path) {
+    if (path.isEmpty) return;
+
+    final File file = File(path);
+    if (!file.existsSync()) return;
+
+    _removeImageListener();
+
+    final Image image = Image.file(file);
+    final ImageStream stream = image.image.resolve(const ImageConfiguration());
+
+    final listener = ImageStreamListener((
+      ImageInfo info,
+      bool synchronousCall,
+    ) {
+      if (!mounted) return;
+      final double aspectRatio = info.image.width / info.image.height;
+      if (aspectRatio <= 0) return;
+
+      void update() {
+        setState(() {
+          _imageAspectRatio = aspectRatio;
+        });
+      }
+
+      if (synchronousCall) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) update();
+        });
+      } else {
+        update();
+      }
+    });
+
+    stream.addListener(listener);
+    _currentImageStream = stream;
+    _currentImageListener = listener;
+  }
+
+  void _removeImageListener() {
+    if (_currentImageStream != null && _currentImageListener != null) {
+      _currentImageStream!.removeListener(_currentImageListener!);
+      _currentImageStream = null;
+      _currentImageListener = null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _removeImageListener();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final imageSystemFolder = system.primaryFolderName;
-    final box2dPath = game.getImagePath(
+    final imageSystemFolder = widget.system.primaryFolderName;
+    final box2dPath = widget.game.getImagePath(
       imageSystemFolder,
       'box2d',
-      fileProvider,
+      widget.fileProvider,
     );
     final box2dExists = File(box2dPath).existsSync();
+
+    if (box2dExists) {
+      _loadImageAspectRatio(box2dPath);
+    }
 
     return Positioned(
       left: 12.r,
@@ -57,12 +124,12 @@ class GameDetailsBox2dTab extends StatelessWidget {
                 BorderRadius.circular(14.r),
             clipBehavior: Clip.antiAlias,
             child: AspectRatio(
-              aspectRatio: 3 / 4,
+              aspectRatio: _imageAspectRatio,
               child: box2dExists
                   ? Image.file(
                       File(box2dPath),
                       key: ValueKey(
-                        'box2d_${game.romPath ?? game.romname}',
+                        'box2d_${widget.game.romPath ?? widget.game.romname}',
                       ),
                       fit: BoxFit.contain,
                       cacheWidth: 640,
