@@ -183,6 +183,7 @@ const Map<String, dynamic> appLocaleZh = {
   AppLocale.cleanOrphanedMetadataWarning:
       '这将永久删除库中不再存在的 ROM 的元数据行和媒体文件。从 ES-DE 导入的条目不会被删除。',
   AppLocale.cleanOrphanedMetadataScanning: '正在清理孤立元数据...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: '正在清理 {filename}...',
   AppLocale.cleanOrphanedMetadataNothingFound: '未发现孤立元数据。',
   AppLocale.cleanOrphanedMetadataDone:
       '已清理 {entries} 条元数据和 {files} 个媒体文件。',

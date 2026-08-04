@@ -185,6 +185,7 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.cleanOrphanedMetadataWarning:
       '라이브러리에 더 이상 없는 ROM 의 메타데이터 행과 미디어 파일을 영구적으로 삭제합니다. ES-DE 에서 가져온 항목은 삭제되지 않습니다.',
   AppLocale.cleanOrphanedMetadataScanning: '고아 메타데이터 정리 중...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: '{filename} 정리 중...',
   AppLocale.cleanOrphanedMetadataNothingFound: '고아 메타데이터를 찾을 수 없습니다.',
   AppLocale.cleanOrphanedMetadataDone:
       '{entries}개의 메타데이터 항목과 {files}개의 미디어 파일을 정리했습니다.',

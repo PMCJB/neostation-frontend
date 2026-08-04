@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:neostation/services/logger_service.dart';
 
 /// Available notification types
 enum NotificationType { info, success, error }
@@ -15,6 +16,10 @@ class NotificationData {
   NotificationType type;
   double? progress;
 
+  /// When false, the notification stays visible until explicitly dismissed.
+  /// Use this for long-running operations where the caller controls the lifecycle.
+  bool autoDismiss;
+
   NotificationData({
     required this.message,
     this.title,
@@ -22,6 +27,7 @@ class NotificationData {
     this.icon,
     required this.type,
     this.progress,
+    this.autoDismiss = true,
   });
 }
 
@@ -46,6 +52,7 @@ class _CustomNotificationState extends State<CustomNotification>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  bool _wasAutoDismiss = true;
 
   @override
   void initState() {
@@ -64,10 +71,28 @@ class _CustomNotificationState extends State<CustomNotification>
           CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
         );
 
+    _wasAutoDismiss = widget.dataNotifier.value.autoDismiss;
+
     // Start entrance animation
     _animationController.forward();
 
-    // Schedule exit animation and removal
+    // Schedule exit animation and removal only for auto-dismissible notifications.
+    if (_wasAutoDismiss) {
+      _scheduleDismiss();
+    }
+
+    widget.dataNotifier.addListener(_onDataChanged);
+  }
+
+  void _onDataChanged() {
+    final nowAutoDismiss = widget.dataNotifier.value.autoDismiss;
+    if (nowAutoDismiss && !_wasAutoDismiss) {
+      _scheduleDismiss();
+    }
+    _wasAutoDismiss = nowAutoDismiss;
+  }
+
+  void _scheduleDismiss() {
     Future.delayed(widget.duration - const Duration(milliseconds: 300), () {
       if (mounted) {
         _animationController.reverse().then((_) {
@@ -79,6 +104,7 @@ class _CustomNotificationState extends State<CustomNotification>
 
   @override
   void dispose() {
+    widget.dataNotifier.removeListener(_onDataChanged);
     _animationController.dispose();
     super.dispose();
   }
@@ -233,6 +259,12 @@ class AppNotification {
   static OverlayEntry? _currentNotification;
   static String? _currentNotificationId;
   static ValueNotifier<NotificationData>? _currentDataNotifier;
+  static final _log = LoggerService.instance;
+
+  /// Global navigator key used to access the overlay independently of the
+  /// calling widget's BuildContext. This keeps progress notifications alive
+  /// when the user navigates to another tab or menu while an operation runs.
+  static GlobalKey<NavigatorState>? navigatorKey;
 
   /// Shows a custom notification
   static void showNotification(
@@ -245,6 +277,7 @@ class AppNotification {
     Duration duration = const Duration(seconds: 4),
     String? notificationId,
     double? progress,
+    bool autoDismiss = true,
   }) {
     // If there is a notification with the same ID, update it instead of creating a new one
     if (notificationId != null &&
@@ -257,6 +290,7 @@ class AppNotification {
         imageBytes: imageBytes,
         icon: icon,
         progress: progress,
+        autoDismiss: autoDismiss,
       );
       return;
     }
@@ -273,11 +307,23 @@ class AppNotification {
         icon: icon,
         type: type,
         progress: progress,
+        autoDismiss: autoDismiss,
       ),
     );
 
-    // Try to get the Navigator overlay to appear above dialogs
-    final overlay = Navigator.of(context, rootNavigator: true).overlay;
+    // Prefer the globally registered navigator key so the notification survives
+    // navigation that would otherwise destroy the caller's BuildContext.
+    OverlayState? overlay;
+    if (navigatorKey?.currentState != null) {
+      overlay = navigatorKey!.currentState!.overlay;
+    } else {
+      try {
+        overlay = Navigator.of(context, rootNavigator: true).overlay;
+      } catch (e) {
+        _log.w('AppNotification: could not resolve overlay from context: $e');
+        return;
+      }
+    }
     if (overlay == null) return;
 
     _currentNotification = OverlayEntry(
@@ -305,6 +351,7 @@ class AppNotification {
     Uint8List? imageBytes,
     IconData? icon,
     double? progress,
+    bool autoDismiss = true,
   }) {
     if (_currentDataNotifier != null) {
       _currentDataNotifier!.value = NotificationData(
@@ -314,6 +361,7 @@ class AppNotification {
         icon: icon,
         type: type,
         progress: progress,
+        autoDismiss: autoDismiss,
       );
     }
   }
@@ -327,6 +375,7 @@ class AppNotification {
     Uint8List? imageBytes,
     IconData? icon,
     NotificationType type = NotificationType.info,
+    bool autoDismiss = true,
   }) {
     if (_currentNotificationId == notificationId) {
       _updateCurrentNotification(
@@ -335,6 +384,7 @@ class AppNotification {
         title: title,
         imageBytes: imageBytes,
         icon: icon,
+        autoDismiss: autoDismiss,
       );
     }
   }

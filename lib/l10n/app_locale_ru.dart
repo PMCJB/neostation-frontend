@@ -222,6 +222,7 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.cleanOrphanedMetadataWarning:
       'Это навсегда удалит строки метаданных и медиафайлы для ROM, которых больше нет в вашей библиотеке. Импортированные из ES-DE записи не будут удалены.',
   AppLocale.cleanOrphanedMetadataScanning: 'Очистка потерянных метаданных...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: 'Очистка {filename}...',
   AppLocale.cleanOrphanedMetadataNothingFound: 'Потерянные метаданные не найдены.',
   AppLocale.cleanOrphanedMetadataDone:
       'Очищено {entries} запис(ь/ей) метаданных и {files} медиафайл(а/ов).',

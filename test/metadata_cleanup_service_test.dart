@@ -127,6 +127,25 @@ void main() {
       expect(remaining, isEmpty);
     });
 
+    test('clean reports progress with the current item', () async {
+      await db.execute(
+        "INSERT INTO user_screenscraper_metadata (app_system_id, filename, is_fully_scraped) VALUES ('psx', 'orphan_a.chd', 1)",
+      );
+      await db.execute(
+        "INSERT INTO user_screenscraper_metadata (app_system_id, filename, is_fully_scraped) VALUES ('psx', 'orphan_b.chd', 1)",
+      );
+
+      final reportedItems = <String>[];
+      await MetadataCleanupService.clean(
+        mediaDirectoryPath: '${tempMediaDir.path}/',
+        onProgress: (progress, item) {
+          reportedItems.add(item.filename);
+        },
+      );
+
+      expect(reportedItems, ['orphan_a.chd', 'orphan_b.chd']);
+    });
+
     test('clean removes metadata for individual discs after multi-disc organization', () async {
       // After organizing multi-disc games, individual disc ROMs are gone and a
       // playlist remains. Metadata for the old disc filenames becomes orphaned.

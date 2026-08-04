@@ -91,7 +91,7 @@ class MetadataCleanupService {
   static Future<MetadataCleanupResult> clean({
     FileProvider? fileProvider,
     String? mediaDirectoryPath,
-    void Function(double progress)? onProgress,
+    void Function(double progress, OrphanedMetadataItem currentItem)? onProgress,
   }) async {
     final analysis = await analyze();
     final orphanedItems = analysis.orphanedItems;
@@ -148,7 +148,7 @@ class MetadataCleanupService {
         errors.add(message);
       } finally {
         if (onProgress != null && orphanedItems.isNotEmpty) {
-          onProgress((index + 1) / orphanedItems.length);
+          onProgress((index + 1) / orphanedItems.length, item);
         }
       }
     }

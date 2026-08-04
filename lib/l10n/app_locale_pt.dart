@@ -224,6 +224,7 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.cleanOrphanedMetadataWarning:
       'Isto elimina permanentemente as linhas de metadados e ficheiros de mídia de ROMs que já não estão na tua biblioteca. Entradas importadas do ES-DE não serão removidas.',
   AppLocale.cleanOrphanedMetadataScanning: 'A limpar metadados órfãos...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: 'A limpar {filename}...',
   AppLocale.cleanOrphanedMetadataNothingFound: 'Não foram encontrados metadados órfãos.',
   AppLocale.cleanOrphanedMetadataDone:
       'Limpos {entries} entrada(s) de metadados e {files} ficheiro(s) de mídia.',

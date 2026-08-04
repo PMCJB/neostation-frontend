@@ -221,6 +221,8 @@ mixin AppLocale {
       'clean_orphaned_metadata_warning';
   static const String cleanOrphanedMetadataScanning =
       'clean_orphaned_metadata_scanning';
+  static const String cleanOrphanedMetadataCleaningItem =
+      'clean_orphaned_metadata_cleaning_item';
   static const String cleanOrphanedMetadataNothingFound =
       'clean_orphaned_metadata_nothing_found';
   static const String cleanOrphanedMetadataDone = 'clean_orphaned_metadata_done';

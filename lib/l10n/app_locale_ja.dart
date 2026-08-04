@@ -186,6 +186,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.cleanOrphanedMetadataWarning:
       'ライブラリに存在しない ROM のメタデータ行とメディアファイルを完全に削除します。ES-DE からインポートしたエントリは削除されません。',
   AppLocale.cleanOrphanedMetadataScanning: '孤立したメタデータを削除中...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: '{filename} を削除中...',
   AppLocale.cleanOrphanedMetadataNothingFound: '孤立したメタデータは見つかりませんでした。',
   AppLocale.cleanOrphanedMetadataDone:
       '{entries} 件のメタデータエントリと {files} 個のメディアファイルを削除しました。',

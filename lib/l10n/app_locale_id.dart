@@ -217,6 +217,7 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.cleanOrphanedMetadataWarning:
       'Ini akan menghapus permanen baris metadata dan file media untuk ROM yang tidak lagi ada di perpustakaan Anda. Entri yang diimpor dari ES-DE tidak akan dihapus.',
   AppLocale.cleanOrphanedMetadataScanning: 'Membersihkan metadata yatim...',
+  AppLocale.cleanOrphanedMetadataCleaningItem: 'Membersihkan {filename}...',
   AppLocale.cleanOrphanedMetadataNothingFound: 'Tidak ditemukan metadata yatim.',
   AppLocale.cleanOrphanedMetadataDone:
       'Dibersihkan {entries} entri metadata dan {files} file media.',

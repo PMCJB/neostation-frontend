@@ -20,6 +20,7 @@ import 'package:neostation/services/steam_scraper_service.dart';
 import 'package:neostation/providers/system_background_provider.dart';
 import 'package:neostation/providers/neo_assets_provider.dart';
 import 'package:neostation/widgets/app_lifecycle_handler.dart';
+import 'package:neostation/widgets/custom_notification.dart';
 import 'package:neostation/widgets/permission_check_wrapper.dart';
 import 'package:neostation/utils/custom_scroll_behavior.dart';
 import 'package:flutter_localization/flutter_localization.dart';
@@ -175,6 +176,10 @@ Future<void> _configureImageCache() async {
     PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024;
   }
 }
+
+/// Global navigator key so overlay notifications can outlive the widget that
+/// created them. Used by [AppNotification] for progress notifications.
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -360,6 +365,8 @@ void main() async {
   SyncManager.instance.restoreActive(
     sqliteConfigProvider.config.activeSyncProvider,
   );
+
+  AppNotification.navigatorKey = rootNavigatorKey;
 
   runApp(
     MyApp(
@@ -775,6 +782,7 @@ class _MyAppState extends State<MyApp> {
                   child: Actions(
                     actions: {ToggleFullscreenIntent: ToggleFullscreenAction()},
                     child: MaterialApp(
+                      navigatorKey: rootNavigatorKey,
                       debugShowCheckedModeBanner: false,
                       title: 'NeoStation',
                       locale: _locale,

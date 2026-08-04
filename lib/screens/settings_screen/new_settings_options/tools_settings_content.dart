@@ -201,6 +201,7 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     final localeWarning = AppLocale.cleanOrphanedMetadataWarning.getString(context);
     final localeNothingFound = AppLocale.cleanOrphanedMetadataNothingFound.getString(context);
     final localeScanning = AppLocale.cleanOrphanedMetadataScanning.getString(context);
+    final localeCleaningItem = AppLocale.cleanOrphanedMetadataCleaningItem.getString(context);
     final localeDelete = AppLocale.delete.getString(context);
     final localeFailed = AppLocale.cleanOrphanedMetadataFailed.getString(context);
     final localeDone = AppLocale.cleanOrphanedMetadataDone.getString(context);
@@ -262,30 +263,29 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     if (confirmed != true || !mounted) return;
 
     setState(() => _isCleaningMetadata = true);
-    if (mounted) {
-      AppNotification.showNotification(
-        context,
-        localeScanning,
-        type: NotificationType.info,
-        duration: const Duration(minutes: 5),
-        notificationId: 'clean_orphaned_metadata',
-        progress: 0,
-      );
-    }
+    AppNotification.showNotification(
+      context,
+      localeScanning,
+      type: NotificationType.info,
+      duration: const Duration(minutes: 5),
+      notificationId: 'clean_orphaned_metadata',
+      progress: 0,
+      autoDismiss: false,
+    );
 
     String? completionMessage;
     NotificationType? completionType;
     try {
       final result = await MetadataCleanupService.clean(
         fileProvider: fileProvider,
-        onProgress: (progress) {
-          if (!mounted) return;
+        onProgress: (progress, currentItem) {
           AppNotification.showNotification(
             context,
-            localeScanning,
+            localeCleaningItem.replaceFirst('{filename}', currentItem.filename),
             type: NotificationType.info,
             notificationId: 'clean_orphaned_metadata',
             progress: progress,
+            autoDismiss: false,
           );
         },
       );
