@@ -43,17 +43,20 @@ class GlobalNotificationData {
 /// so notifications survive tab and menu changes. This avoids the stuck overlay
 /// entries that can happen when [AppNotification]'s overlay is tied to a
 /// transient context.
+///
+/// The service keeps an ordered list of active notifications. The overlay shows
+/// the most recent one, while a notification bell dropdown can display the full
+/// list with progress.
 class GlobalNotificationService {
   static final GlobalNotificationService _instance =
       GlobalNotificationService._internal();
   factory GlobalNotificationService() => _instance;
   GlobalNotificationService._internal();
 
-  final ValueNotifier<GlobalNotificationData?> notifier = ValueNotifier(null);
-  String? _currentId;
+  final ValueNotifier<List<GlobalNotificationData>> notifier = ValueNotifier([]);
 
   /// Displays a global notification. If a notification with the same [id] is
-  /// already visible, it is updated in place.
+  /// already active, it is updated in place and moved to the end (most recent).
   void show({
     required String id,
     required String message,
@@ -65,8 +68,9 @@ class GlobalNotificationService {
     bool autoDismiss = true,
     Duration duration = const Duration(seconds: 4),
   }) {
-    _currentId = id;
-    notifier.value = GlobalNotificationData(
+    final current = notifier.value;
+    final existingIndex = current.indexWhere((n) => n.id == id);
+    final updated = GlobalNotificationData(
       id: id,
       message: message,
       title: title,
@@ -77,9 +81,18 @@ class GlobalNotificationService {
       autoDismiss: autoDismiss,
       duration: duration,
     );
+
+    if (existingIndex == -1) {
+      notifier.value = [...current, updated];
+    } else {
+      final copy = List<GlobalNotificationData>.from(current);
+      copy.removeAt(existingIndex);
+      copy.add(updated);
+      notifier.value = copy;
+    }
   }
 
-  /// Updates the currently visible notification only if its [id] matches.
+  /// Updates an active notification only if its [id] exists.
   void update({
     required String id,
     required String message,
@@ -91,30 +104,36 @@ class GlobalNotificationService {
     bool? autoDismiss,
     Duration? duration,
   }) {
-    if (_currentId != id) return;
     final current = notifier.value;
-    if (current == null) return;
+    final index = current.indexWhere((n) => n.id == id);
+    if (index == -1) return;
 
-    notifier.value = GlobalNotificationData(
-      id: id,
-      message: message,
-      title: title ?? current.title,
-      imageBytes: imageBytes ?? current.imageBytes,
-      icon: icon ?? current.icon,
-      type: type ?? current.type,
-      progress: progress ?? current.progress,
-      autoDismiss: autoDismiss ?? current.autoDismiss,
-      duration: duration ?? current.duration,
-    );
+    final existing = current[index];
+    notifier.value = [
+      ...current.sublist(0, index),
+      GlobalNotificationData(
+        id: id,
+        message: message,
+        title: title ?? existing.title,
+        imageBytes: imageBytes ?? existing.imageBytes,
+        icon: icon ?? existing.icon,
+        type: type ?? existing.type,
+        progress: progress ?? existing.progress,
+        autoDismiss: autoDismiss ?? existing.autoDismiss,
+        duration: duration ?? existing.duration,
+      ),
+      ...current.sublist(index + 1),
+    ];
   }
 
-  /// Dismisses the current notification. If [id] is provided, the notification
-  /// is only dismissed when it matches the active one.
+  /// Removes the notification with the given [id], or clears all notifications
+  /// when no [id] is provided.
   void dismiss([String? id]) {
-    if (id == null || _currentId == id) {
-      notifier.value = null;
-      _currentId = null;
+    if (id == null) {
+      notifier.value = [];
+      return;
     }
+    notifier.value = notifier.value.where((n) => n.id != id).toList();
   }
 }
 
@@ -132,10 +151,11 @@ class GlobalNotificationOverlay extends StatelessWidget {
     return Stack(
       children: [
         child,
-        ValueListenableBuilder<GlobalNotificationData?>(
+        ValueListenableBuilder<List<GlobalNotificationData>>(
           valueListenable: GlobalNotificationService().notifier,
-          builder: (context, data, _) {
-            if (data == null) return const SizedBox.shrink();
+          builder: (context, notifications, _) {
+            if (notifications.isEmpty) return const SizedBox.shrink();
+            final data = notifications.last;
             return _GlobalNotificationWidget(key: ValueKey(data.id), data: data);
           },
         ),

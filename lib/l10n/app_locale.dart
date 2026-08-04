@@ -232,6 +232,13 @@ mixin AppLocale {
       'clean_orphaned_metadata_failed';
 
   // ---------------------------------------------------------------------------
+  // Notification center
+  // ---------------------------------------------------------------------------
+  static const String notifications = 'notifications';
+  static const String clearAll = 'clear_all';
+  static const String noActiveNotifications = 'no_active_notifications';
+
+  // ---------------------------------------------------------------------------
   // Exit
   // ---------------------------------------------------------------------------
   static const String exitApplication = 'exit_application';

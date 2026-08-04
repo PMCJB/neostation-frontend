@@ -234,6 +234,9 @@ const Map<String, dynamic> appLocaleEs = {
       ' {count} entrada(s) de ES-DE se dejaron intactas.',
   AppLocale.cleanOrphanedMetadataFailed:
       'No se pudo limpiar la metadata huérfana: {error}',
+  AppLocale.notifications: 'Notificaciones',
+  AppLocale.clearAll: 'Borrar todo',
+  AppLocale.noActiveNotifications: 'No hay notificaciones activas',
   AppLocale.romsFolderSubtitle: 'Añadir una carpeta que contenga tus ROMs',
   AppLocale.pressToRemoveFolder:
       'Presiona confirmar para eliminar esta carpeta',

@@ -193,6 +193,9 @@ const Map<String, dynamic> appLocaleKo = {
       '{count}개의 ES-DE 에서 가져온 항목은 그대로 유지되었습니다.',
   AppLocale.cleanOrphanedMetadataFailed:
       '고아 메타데이터 정리 실패: {error}',
+  AppLocale.notifications: '알림',
+  AppLocale.clearAll: '모두 지우기',
+  AppLocale.noActiveNotifications: '활성 알림 없음',
   AppLocale.romsFolderSubtitle: 'ROM 파일이 포함된 폴더를 추가하세요',
   AppLocale.pressToRemoveFolder: '이 폴더를 제거하려면 확인을 누르세요',
   AppLocale.maxRomFoldersReached: 'ROM 폴더는 최대 5개까지 추가할 수 있습니다',

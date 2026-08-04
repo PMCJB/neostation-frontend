@@ -233,6 +233,9 @@ const Map<String, dynamic> appLocaleDe = {
       '{count} aus ES-DE importierte Einträge wurden unverändert gelassen.',
   AppLocale.cleanOrphanedMetadataFailed:
       'Fehler beim Bereinigen verwaister Metadaten: {error}',
+  AppLocale.notifications: 'Benachrichtigungen',
+  AppLocale.clearAll: 'Alle löschen',
+  AppLocale.noActiveNotifications: 'Keine aktiven Benachrichtigungen',
   AppLocale.romsFolderSubtitle:
       'Füge die Ordner hinzu, die deine ROM-Dateien enthalten',
   AppLocale.pressToRemoveFolder:

@@ -194,6 +194,9 @@ const Map<String, dynamic> appLocaleJa = {
       '{count} 件の ES-DE からインポートしたエントリはそのまま残されています。',
   AppLocale.cleanOrphanedMetadataFailed:
       '孤立したメタデータの削除に失敗しました: {error}',
+  AppLocale.notifications: '通知',
+  AppLocale.clearAll: 'すべてクリア',
+  AppLocale.noActiveNotifications: 'アクティブな通知はありません',
   AppLocale.romsFolderSubtitle: 'ROMファイルを含むフォルダを追加',
   AppLocale.pressToRemoveFolder: '決定を押してこのフォルダを削除',
   AppLocale.maxRomFoldersReached: '最大5つのROMフォルダが許可されています',

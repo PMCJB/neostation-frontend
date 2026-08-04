@@ -225,6 +225,9 @@ const Map<String, dynamic> appLocaleId = {
       '{count} entri yang diimpor dari ES-DE dibiarkan tidak terubah.',
   AppLocale.cleanOrphanedMetadataFailed:
       'Gagal membersihkan metadata yatim: {error}',
+  AppLocale.notifications: 'Notifikasi',
+  AppLocale.clearAll: 'Hapus semua',
+  AppLocale.noActiveNotifications: 'Tidak ada notifikasi aktif',
   AppLocale.romsFolderSubtitle: 'Tambahkan folder yang berisi file ROM Anda',
   AppLocale.pressToRemoveFolder: 'Tekan Konfirmasi untuk menghapus folder ini',
   AppLocale.maxRomFoldersReached: 'Maksimal 5 folder ROM diizinkan',

@@ -225,6 +225,9 @@ const Map<String, dynamic> appLocaleEn = {
       ' {count} ES-DE entr(y/ies) were left untouched.',
   AppLocale.cleanOrphanedMetadataFailed:
       'Failed to clean orphaned metadata: {error}',
+  AppLocale.notifications: 'Notifications',
+  AppLocale.clearAll: 'Clear all',
+  AppLocale.noActiveNotifications: 'No active notifications',
   AppLocale.romsFolderSubtitle: 'Add a folder containing your ROM files',
   AppLocale.pressToRemoveFolder: 'Press confirm to remove this folder',
   AppLocale.maxRomFoldersReached: 'Maximum 5 ROM folders allowed',

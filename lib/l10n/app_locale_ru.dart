@@ -230,6 +230,9 @@ const Map<String, dynamic> appLocaleRu = {
       ' {count} запис(ь/ей), импортированных из ES-DE, оставлены нетронутыми.',
   AppLocale.cleanOrphanedMetadataFailed:
       'Не удалось очистить потерянные метаданные: {error}',
+  AppLocale.notifications: 'Уведомления',
+  AppLocale.clearAll: 'Очистить все',
+  AppLocale.noActiveNotifications: 'Нет активных уведомлений',
   AppLocale.romsFolderSubtitle: 'Добавьте папку, содержащую ваши файлы ROM',
   AppLocale.pressToRemoveFolder:
       'Нажмите «Подтвердить», чтобы удалить эту папку',

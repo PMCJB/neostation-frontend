@@ -230,6 +230,9 @@ const Map<String, dynamic> appLocaleIt = {
       '{count} voce/i importate da ES-DE sono state lasciate intatte.',
   AppLocale.cleanOrphanedMetadataFailed:
       'Impossibile pulire i metadati orfani: {error}',
+  AppLocale.notifications: 'Notifiche',
+  AppLocale.clearAll: 'Cancella tutto',
+  AppLocale.noActiveNotifications: 'Nessuna notifica attiva',
   AppLocale.romsFolderSubtitle:
       'Aggiungi le cartelle che contengono i tuoi file ROM',
   AppLocale.pressToRemoveFolder: 'Premi Conferma per rimuovere questa cartella',

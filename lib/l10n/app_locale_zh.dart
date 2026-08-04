@@ -191,6 +191,9 @@ const Map<String, dynamic> appLocaleZh = {
       '保留了 {count} 条从 ES-DE 导入的条目。',
   AppLocale.cleanOrphanedMetadataFailed:
       '清理孤立元数据失败：{error}',
+  AppLocale.notifications: '通知',
+  AppLocale.clearAll: '清除全部',
+  AppLocale.noActiveNotifications: '没有活动通知',
   AppLocale.romsFolderSubtitle: '添加包含 ROM 文件的文件夹',
   AppLocale.pressToRemoveFolder: '按确认键删除此文件夹',
   AppLocale.maxRomFoldersReached: '最多允许 5 个 ROM 文件夹',
