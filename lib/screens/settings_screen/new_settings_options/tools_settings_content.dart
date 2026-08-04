@@ -308,8 +308,8 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
           completionType = NotificationType.info;
         }
       }
-    } catch (e) {
-      _log.e('Failed to clean orphaned metadata: $e');
+    } catch (e, stackTrace) {
+      _log.e('Failed to clean orphaned metadata: $e', stackTrace: stackTrace);
       if (mounted) {
         completionMessage = localeFailed.replaceFirst('{error}', e.toString());
         completionType = NotificationType.error;

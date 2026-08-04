@@ -313,34 +313,54 @@ class AppNotification {
 
     // Prefer the globally registered navigator key so the notification survives
     // navigation that would otherwise destroy the caller's BuildContext.
-    OverlayState? overlay;
-    if (navigatorKey?.currentState != null) {
-      overlay = navigatorKey!.currentState!.overlay;
-    } else {
-      try {
-        overlay = Navigator.of(context, rootNavigator: true).overlay;
-      } catch (e) {
-        _log.w('AppNotification: could not resolve overlay from context: $e');
-        return;
-      }
-    }
-    if (overlay == null) return;
-
     _currentNotification = OverlayEntry(
-      builder: (context) => CustomNotification(
-        dataNotifier: _currentDataNotifier!,
-        duration: duration,
-        onDismiss: () {
-          _currentNotification?.remove();
-          _currentNotification = null;
-          _currentNotificationId = null;
-          _currentDataNotifier?.dispose();
-          _currentDataNotifier = null;
-        },
-      ),
+      builder: (context) {
+        final notifier = _currentDataNotifier;
+        if (notifier == null) return const SizedBox.shrink();
+        return CustomNotification(
+          dataNotifier: notifier,
+          duration: duration,
+          onDismiss: () {
+            _currentNotification?.remove();
+            _currentNotification = null;
+            _currentNotificationId = null;
+            _currentDataNotifier?.dispose();
+            _currentDataNotifier = null;
+          },
+        );
+      },
     );
 
+    final overlay = _resolveOverlay(context);
+    if (overlay == null) {
+      // The navigator may be between frames during a transition; retry once
+      // after the next frame so the progress notification does not get stuck.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final retryOverlay = _resolveOverlay(context);
+        final entry = _currentNotification;
+        if (retryOverlay == null || entry == null) {
+          _log.w('AppNotification: no overlay available, notification skipped');
+          return;
+        }
+        retryOverlay.insert(entry);
+      });
+      return;
+    }
+
     overlay.insert(_currentNotification!);
+  }
+
+  static OverlayState? _resolveOverlay(BuildContext context) {
+    final state = navigatorKey?.currentState;
+    if (state != null) {
+      return state.overlay;
+    }
+    try {
+      return Navigator.of(context, rootNavigator: true).overlay;
+    } catch (e) {
+      _log.w('AppNotification: could not resolve overlay from context: $e');
+      return null;
+    }
   }
 
   /// Updates the current notification if it exists
