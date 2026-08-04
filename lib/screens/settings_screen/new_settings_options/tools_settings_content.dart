@@ -70,33 +70,37 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
   Future<void> _organizeMultiDiscGames() async {
     if (_isOrganizingMultiDisc) return;
 
+    final localeTitle = AppLocale.organizeMultiDiscGames.getString(context);
+    final localeWarning = AppLocale.organizeMultiDiscWarning.getString(context);
+    final localeNoFolders = AppLocale.organizeMultiDiscNoRomFoldersConfigured
+        .getString(context);
+    final localeScanning = AppLocale.organizeMultiDiscScanning.getString(context);
+    final localeDone = AppLocale.organizeMultiDiscDone.getString(context);
+    final localeNoSetsFound = AppLocale.organizeMultiDiscNoSetsFound
+        .getString(context);
+    final localeSkippedSuffix = AppLocale.organizeMultiDiscSkippedSuffix
+        .getString(context);
+    final localeFailed = AppLocale.organizeMultiDiscFailed.getString(context);
+    final localeConfirm = AppLocale.confirm.getString(context);
+
     if (_currentRomFolders.isEmpty) {
       if (mounted) {
         AppNotification.showNotification(
           context,
-          AppLocale.organizeMultiDiscNoRomFoldersConfigured.getString(context),
+          localeNoFolders,
           type: NotificationType.info,
         );
       }
       return;
     }
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocale.organizeMultiDiscGames.getString(context)),
-        content: Text(AppLocale.organizeMultiDiscWarning.getString(context)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(AppLocale.cancel.getString(context)),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(AppLocale.confirm.getString(context)),
-          ),
-        ],
-      ),
+    final confirmed = await ConfirmActionDialog.show(
+      context,
+      title: localeTitle,
+      body: localeWarning,
+      confirmLabel: localeConfirm,
+      icon: Symbols.folder_managed_rounded,
+      accentColor: Theme.of(context).colorScheme.primary,
     );
     if (confirmed != true || !mounted) return;
 
@@ -108,32 +112,33 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
         .where((folder) => folder.isNotEmpty)
         .toSet();
 
-    setState(() => _isOrganizingMultiDisc = true);
-    if (mounted) {
-      AppNotification.showNotification(
-        context,
-        AppLocale.organizeMultiDiscScanning.getString(context),
-        type: NotificationType.info,
-        duration: const Duration(minutes: 5),
-        notificationId: 'organize_multidisc',
-        progress: 0,
-      );
-    }
-
     String? completionMessage;
     NotificationType? completionType;
+    const notificationId = 'organize_multidisc';
+
     try {
+      if (mounted) setState(() => _isOrganizingMultiDisc = true);
+
+      GlobalNotificationService().show(
+        id: notificationId,
+        message: localeScanning,
+        type: GlobalNotificationType.info,
+        duration: const Duration(minutes: 5),
+        progress: 0,
+        autoDismiss: false,
+      );
+
       final result = await RomFolderOrganizerService.organizeRomFolders(
         _currentRomFolders,
         supportedSystemFolders: supportedFolders,
         onProgress: (completed, total) {
-          if (!mounted || total == 0) return;
-          AppNotification.showNotification(
-            context,
-            AppLocale.organizeMultiDiscScanning.getString(context),
-            type: NotificationType.info,
-            notificationId: 'organize_multidisc',
+          if (total == 0) return;
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: localeScanning,
+            type: GlobalNotificationType.info,
             progress: completed / total,
+            autoDismiss: false,
           );
         },
       );
@@ -150,47 +155,47 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
 
       if (mounted) {
         final skippedNote = result.rootsSkipped > 0
-            ? AppLocale.organizeMultiDiscSkippedSuffix
-                  .getString(context)
-                  .replaceFirst('{count}', result.rootsSkipped.toString())
+            ? localeSkippedSuffix.replaceFirst(
+                '{count}',
+                result.rootsSkipped.toString(),
+              )
             : '';
         completionMessage = result.hasChanges
-            ? AppLocale.organizeMultiDiscDone
-                  .getString(context)
-                  .replaceFirst('{groups}', result.groupsOrganized.toString())
-                  .replaceFirst('{files}', result.filesMoved.toString())
-                  .replaceFirst(
-                    '{playlists}',
-                    result.playlistsCreated.toString(),
-                  )
-                  .replaceFirst('{skipped}', skippedNote)
-            : AppLocale.organizeMultiDiscNoSetsFound
-                  .getString(context)
-                  .replaceFirst('{skipped}', skippedNote);
+            ? localeDone
+                .replaceFirst('{groups}', result.groupsOrganized.toString())
+                .replaceFirst('{files}', result.filesMoved.toString())
+                .replaceFirst('{playlists}', result.playlistsCreated.toString())
+                .replaceFirst('{skipped}', skippedNote)
+            : localeNoSetsFound.replaceFirst('{skipped}', skippedNote);
         completionType = result.hasChanges
             ? NotificationType.success
             : NotificationType.info;
       }
-    } catch (e) {
-      _log.e('Failed to organize multi-disc games: $e');
+    } catch (e, stackTrace) {
+      _log.e('Failed to organize multi-disc games: $e', stackTrace: stackTrace);
       if (mounted) {
-        completionMessage = AppLocale.organizeMultiDiscFailed
-            .getString(context)
-            .replaceFirst('{error}', e.toString());
+        completionMessage = localeFailed.replaceFirst('{error}', e.toString());
         completionType = NotificationType.error;
       }
     } finally {
       if (mounted) {
         setState(() => _isOrganizingMultiDisc = false);
         await _loadRomFolders();
-        if (completionMessage != null && completionType != null && mounted) {
-          AppNotification.showNotification(
-            context,
-            completionMessage,
-            type: completionType,
+        if (completionMessage != null && completionType != null) {
+          final globalType = completionType == NotificationType.success
+              ? GlobalNotificationType.success
+              : GlobalNotificationType.error;
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: completionMessage,
+            type: globalType,
+            progress: null,
+            autoDismiss: true,
             duration: const Duration(seconds: 10),
           );
         }
+      } else {
+        GlobalNotificationService().dismiss(notificationId);
       }
     }
   }
