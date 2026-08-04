@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_localization/flutter_localization.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
+import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import 'package:neostation/utils/nav_tabs.dart';
 import 'package:neostation/models/config_model.dart';
@@ -20,6 +24,7 @@ import '../widgets/scraper_content.dart';
 import 'package:neostation/services/game_service.dart';
 import 'package:neostation/providers/theme_provider.dart';
 import 'package:neostation/repositories/emulator_repository.dart';
+import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -81,6 +86,11 @@ class AppNavigation {
   static void previousTab() {
     AppScreenState._navigateToPreviousTabStatic();
   }
+
+  /// Requests the root-level exit confirmation from the active home layout.
+  static void requestExit() {
+    AppScreenState._currentInstance?._handleBackNavigation();
+  }
 }
 
 class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
@@ -94,6 +104,8 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   /// Input orchestration layer for gamepad and keyboard support.
   late GamepadNavigation _gamepadNav;
+
+  bool _exitConfirmationOpen = false;
 
   /// Static reference to the currently active instance for global access.
   static AppScreenState? _currentInstance;
@@ -400,11 +412,13 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   /// Returns whether the selection moved, so the gamepad handler can suppress
   /// the nav sound when repeating against the start/end of a list.
+  ///
+  /// The achievements tab is absent: `RAContent` pushes its own navigation
+  /// layer unconditionally, so this handler is deactivated whenever that tab is
+  /// mounted. Keeping a second route to the same screen is what caused the
+  /// double-dispatch bug fixed in #255.
   bool _navigateContentDown() {
     if (_selectedTabIndex == AppTabs.systems) return true;
-    if (_selectedTabIndex == AppTabs.achievements) {
-      return RAContent.navigateDown();
-    }
     if (_selectedTabIndex == AppTabs.scraper) {
       NewScraperOptionsScreen.navigateDown();
       return true;
@@ -417,9 +431,6 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   bool _navigateContentUp() {
     if (_selectedTabIndex == AppTabs.systems) return true;
-    if (_selectedTabIndex == AppTabs.achievements) {
-      return RAContent.navigateUp();
-    }
     if (_selectedTabIndex == AppTabs.scraper) {
       NewScraperOptionsScreen.navigateUp();
       return true;
@@ -437,8 +448,32 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   }
 
   void _handleBackNavigation() {
-    if (_selectedTabIndex == AppTabs.scraper) {
+    if (_selectedTabIndex == AppTabs.systems && !Platform.isAndroid) {
+      unawaited(_confirmExitApplication());
+    } else if (_selectedTabIndex == AppTabs.scraper) {
       NewScraperOptionsScreen.backCurrent();
+    }
+  }
+
+  Future<void> _confirmExitApplication() async {
+    if (_exitConfirmationOpen || !mounted) return;
+    _exitConfirmationOpen = true;
+
+    final confirmed = await ConfirmActionDialog.show(
+      context,
+      title: AppLocale.exitApplication.getString(context),
+      body: AppLocale.exitConfirmation.getString(context),
+      confirmLabel: AppLocale.confirmExit.getString(context),
+      icon: Symbols.exit_to_app_rounded,
+    );
+
+    _exitConfirmationOpen = false;
+    if (!confirmed || !mounted) return;
+
+    if (Platform.isAndroid) {
+      SystemNavigator.pop();
+    } else {
+      exit(0);
     }
   }
 
@@ -482,7 +517,11 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
     // Re-verify navigation focus after tab transition.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _gamepadNav.activate();
+      // The destination tab may have pushed its own navigation layer during
+      // the rebuild. Reactivate the stack's top layer instead of unconditionally
+      // reactivating AppScreen, which would leave two controllers handling the
+      // same D-pad event (e.g. Username -> API Key -> Connect in one press).
+      GamepadNavigationManager.reactivate();
     });
   }
 
