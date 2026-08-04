@@ -10,6 +10,7 @@ import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/repositories/config_repository.dart';
 import 'package:neostation/repositories/system_repository.dart';
 import 'package:neostation/services/logger_service.dart';
+import 'package:neostation/services/global_notification_service.dart';
 import 'package:neostation/services/metadata_cleanup_service.dart';
 import 'package:neostation/services/rom_folder_organizer_service.dart';
 import 'package:neostation/widgets/confirm_action_dialog.dart';
@@ -242,8 +243,8 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
       ..writeln(localeWarning)
       ..writeln()
       ..writeln(
-        'Found ${analysis.orphanedItems.length} orphaned metadata entr${analysis.orphanedItems.length == 1 ? 'y' : 'ies'}.'
-            ' $neoStationCount will be deleted from the database and disk.',
+        'Found ${analysis.orphanedItems.length} orphaned metadata entr${analysis.orphanedItems.length == 1 ? 'y' : 'ies'}. '
+            '$neoStationCount will be deleted from the database and disk.',
       );
     if (esdeCount > 0) {
       body.writeln(
@@ -262,28 +263,34 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     );
     if (confirmed != true || !mounted) return;
 
-    setState(() => _isCleaningMetadata = true);
-    AppNotification.showNotification(
-      context,
-      localeScanning,
-      type: NotificationType.info,
-      duration: const Duration(minutes: 5),
-      notificationId: 'clean_orphaned_metadata',
-      progress: 0,
-      autoDismiss: false,
-    );
-
     String? completionMessage;
     NotificationType? completionType;
+    const notificationId = 'clean_orphaned_metadata';
+
     try {
+      if (mounted) setState(() => _isCleaningMetadata = true);
+
+      // Use the global notification service so the progress bar survives tab
+      // and menu navigation while the cleanup runs.
+      GlobalNotificationService().show(
+        id: notificationId,
+        message: localeScanning,
+        type: GlobalNotificationType.info,
+        duration: const Duration(minutes: 5),
+        progress: 0,
+        autoDismiss: false,
+      );
+
       final result = await MetadataCleanupService.clean(
         fileProvider: fileProvider,
         onProgress: (progress, currentItem) {
-          AppNotification.showNotification(
-            context,
-            localeCleaningItem.replaceFirst('{filename}', currentItem.filename),
-            type: NotificationType.info,
-            notificationId: 'clean_orphaned_metadata',
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: localeCleaningItem.replaceFirst(
+              '{filename}',
+              currentItem.filename,
+            ),
+            type: GlobalNotificationType.info,
             progress: progress,
             autoDismiss: false,
           );
@@ -299,9 +306,9 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             : '';
         if (result.hasDeletions) {
           completionMessage = localeDone
-              .replaceFirst('{entries}', result.deletedItems.length.toString())
-              .replaceFirst('{files}', result.deletedMediaFiles.toString())
-              + esdeSkippedNote;
+                  .replaceFirst('{entries}', result.deletedItems.length.toString())
+                  .replaceFirst('{files}', result.deletedMediaFiles.toString()) +
+              esdeSkippedNote;
           completionType = NotificationType.success;
         } else {
           completionMessage = localeNothingFound + esdeSkippedNote;
@@ -317,14 +324,23 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     } finally {
       if (mounted) {
         setState(() => _isCleaningMetadata = false);
-        if (completionMessage != null && completionType != null && mounted) {
-          AppNotification.showNotification(
-            context,
-            completionMessage,
-            type: completionType,
+        if (completionMessage != null && completionType != null) {
+          final globalType = completionType == NotificationType.success
+              ? GlobalNotificationType.success
+              : GlobalNotificationType.error;
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: completionMessage,
+            type: globalType,
+            progress: null,
+            autoDismiss: true,
             duration: const Duration(seconds: 10),
           );
         }
+      } else {
+        // Make sure the persistent notification is removed if the widget that
+        // started the operation is no longer in the tree.
+        GlobalNotificationService().dismiss(notificationId);
       }
     }
   }

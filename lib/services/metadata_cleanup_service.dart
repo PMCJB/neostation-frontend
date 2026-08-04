@@ -93,73 +93,82 @@ class MetadataCleanupService {
     String? mediaDirectoryPath,
     void Function(double progress, OrphanedMetadataItem currentItem)? onProgress,
   }) async {
-    final analysis = await analyze();
-    final orphanedItems = analysis.orphanedItems;
+    try {
+      final analysis = await analyze();
+      final orphanedItems = analysis.orphanedItems;
 
-    if (orphanedItems.isEmpty) {
-      return analysis;
-    }
+      if (orphanedItems.isEmpty) {
+        return analysis;
+      }
 
-    final db = await SqliteService.getDatabase();
-    final deletedItems = <OrphanedMetadataItem>[];
-    final skippedEsdeItems = <OrphanedMetadataItem>[];
-    final errors = <String>[];
-    int deletedMediaFiles = 0;
+      final db = await SqliteService.getDatabase();
+      final deletedItems = <OrphanedMetadataItem>[];
+      final skippedEsdeItems = <OrphanedMetadataItem>[];
+      final errors = <String>[];
+      int deletedMediaFiles = 0;
 
-    final resolvedMediaDir = mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
+      final resolvedMediaDir = mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
 
-    for (var index = 0; index < orphanedItems.length; index++) {
-      final item = orphanedItems[index];
+      for (var index = 0; index < orphanedItems.length; index++) {
+        final item = orphanedItems[index];
 
-      try {
-        if (item.esdeImported) {
-          skippedEsdeItems.add(item);
-          _log.i(
-            'Metadata cleanup: skipping ES-DE imported row '
-            '${item.systemFolderName}/${item.filename}',
+        try {
+          if (item.esdeImported) {
+            skippedEsdeItems.add(item);
+            _log.i(
+              'Metadata cleanup: skipping ES-DE imported row '
+              '${item.systemFolderName}/${item.filename}',
+            );
+            continue;
+          }
+
+          // Delete the orphaned database row first so the DB stays consistent
+          // even if file deletion fails.
+          await db.delete(
+            'user_screenscraper_metadata',
+            where: 'app_system_id = ? AND filename = ?',
+            whereArgs: [item.appSystemId, item.filename],
           );
-          continue;
-        }
 
-        // Delete the orphaned database row first so the DB stays consistent
-        // even if file deletion fails.
-        await db.delete(
-          'user_screenscraper_metadata',
-          where: 'app_system_id = ? AND filename = ?',
-          whereArgs: [item.appSystemId, item.filename],
-        );
+          deletedItems.add(item);
 
-        deletedItems.add(item);
-
-        if (resolvedMediaDir != null) {
-          final romBaseName = FileProvider.stripRomExtension(item.filename);
-          final mediaDeleted = await GameRepository.deleteNeoStationScrapedMedia(
-            systemFolderName: item.systemFolderName,
-            filename: item.filename,
-            romBaseName: romBaseName,
-            mediaDirectoryPath: resolvedMediaDir,
-          );
-          deletedMediaFiles += mediaDeleted;
-        }
-      } catch (e) {
-        final message =
-            'Failed to clean metadata for ${item.systemFolderName}/${item.filename}: $e';
-        _log.e(message);
-        errors.add(message);
-      } finally {
-        if (onProgress != null && orphanedItems.isNotEmpty) {
-          onProgress((index + 1) / orphanedItems.length, item);
+          if (resolvedMediaDir != null) {
+            final romBaseName = FileProvider.stripRomExtension(item.filename);
+            final mediaDeleted = await GameRepository.deleteNeoStationScrapedMedia(
+              systemFolderName: item.systemFolderName,
+              filename: item.filename,
+              romBaseName: romBaseName,
+              mediaDirectoryPath: resolvedMediaDir,
+            );
+            deletedMediaFiles += mediaDeleted;
+          }
+        } catch (e, stackTrace) {
+          final message =
+              'Failed to clean metadata for ${item.systemFolderName}/${item.filename}: $e';
+          _log.e(message, stackTrace: stackTrace);
+          errors.add(message);
+        } finally {
+          if (onProgress != null && orphanedItems.isNotEmpty) {
+            try {
+              onProgress((index + 1) / orphanedItems.length, item);
+            } catch (e, stackTrace) {
+              _log.e('Metadata cleanup onProgress callback failed: $e', stackTrace: stackTrace);
+            }
+          }
         }
       }
-    }
 
-    return MetadataCleanupResult(
-      orphanedItems: orphanedItems,
-      deletedItems: deletedItems,
-      skippedEsdeItems: skippedEsdeItems,
-      deletedMediaFiles: deletedMediaFiles,
-      errors: errors,
-    );
+      return MetadataCleanupResult(
+        orphanedItems: orphanedItems,
+        deletedItems: deletedItems,
+        skippedEsdeItems: skippedEsdeItems,
+        deletedMediaFiles: deletedMediaFiles,
+        errors: errors,
+      );
+    } catch (e, stackTrace) {
+      _log.e('Metadata cleanup failed: $e', stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   static OrphanedMetadataItem _rowToItem(Map<String, Object?> row) {
