@@ -9,8 +9,36 @@ import 'package:neostation/services/global_notification_service.dart';
 /// notifications, including their progress.
 ///
 /// Designed to live in the top header next to the clock.
-class NotificationBell extends StatelessWidget {
+class NotificationBell extends StatefulWidget {
   const NotificationBell({super.key});
+
+  @override
+  State<NotificationBell> createState() => _NotificationBellState();
+}
+
+class _NotificationBellState extends State<NotificationBell>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 0.4).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,30 +49,39 @@ class NotificationBell extends StatelessWidget {
         return GestureDetector(
           onTap: () => _openDropdown(context),
           child: Container(
-            padding: EdgeInsets.all(6.r),
+            padding: EdgeInsets.all(4.r),
             decoration: BoxDecoration(
               color: hasNotifications
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
                   : Colors.transparent,
               shape: BoxShape.circle,
             ),
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(
-                  hasNotifications
-                      ? Symbols.notifications_active_rounded
-                      : Symbols.notifications_rounded,
-                  color: Theme.of(context).colorScheme.onSurface,
-                  size: 18.r,
+                AnimatedBuilder(
+                  animation: _pulseAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: hasNotifications ? _pulseAnimation.value : 1.0,
+                      child: child,
+                    );
+                  },
+                  child: Icon(
+                    hasNotifications
+                        ? Symbols.notifications_active_rounded
+                        : Symbols.notifications_rounded,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    size: 16.r,
+                  ),
                 ),
                 if (hasNotifications)
                   Positioned(
-                    top: 0,
-                    right: 0,
+                    top: 1.r,
+                    right: 1.r,
                     child: Container(
-                      width: 8.r,
-                      height: 8.r,
+                      width: 6.r,
+                      height: 6.r,
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
                         shape: BoxShape.circle,

@@ -20,7 +20,6 @@ import 'package:neostation/services/steam_scraper_service.dart';
 import 'package:neostation/providers/system_background_provider.dart';
 import 'package:neostation/providers/neo_assets_provider.dart';
 import 'package:neostation/widgets/app_lifecycle_handler.dart';
-import 'package:neostation/widgets/custom_notification.dart';
 import 'package:neostation/widgets/shimmering_logo.dart';
 import 'package:neostation/widgets/permission_check_wrapper.dart';
 import 'package:neostation/utils/custom_scroll_behavior.dart';
@@ -366,8 +365,6 @@ void main() async {
   SyncManager.instance.restoreActive(
     sqliteConfigProvider.config.activeSyncProvider,
   );
-
-  AppNotification.navigatorKey = rootNavigatorKey;
 
   runApp(
     MyApp(
