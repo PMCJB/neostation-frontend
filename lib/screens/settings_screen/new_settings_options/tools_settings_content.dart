@@ -5,11 +5,14 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:provider/provider.dart';
 
 import 'package:neostation/l10n/app_locale.dart';
+import 'package:neostation/providers/file_provider.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/repositories/config_repository.dart';
 import 'package:neostation/repositories/system_repository.dart';
 import 'package:neostation/services/logger_service.dart';
+import 'package:neostation/services/metadata_cleanup_service.dart';
 import 'package:neostation/services/rom_folder_organizer_service.dart';
+import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'package:neostation/widgets/custom_notification.dart';
 import 'settings_title.dart';
 import 'widgets/settings_card_row.dart';
@@ -32,6 +35,7 @@ class ToolsSettingsContent extends StatefulWidget {
 class ToolsSettingsContentState extends State<ToolsSettingsContent> {
   static final _log = LoggerService.instance;
   bool _isOrganizingMultiDisc = false;
+  bool _isCleaningMetadata = false;
   List<String> _currentRomFolders = [];
 
   @override
@@ -49,12 +53,17 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     }
   }
 
-  int getItemCount() => 1;
+  int getItemCount() => 2;
 
   void scrollToIndex(int index) {}
 
   void selectItem(int index) {
-    if (index == 0) _organizeMultiDiscGames();
+    switch (index) {
+      case 0:
+        _organizeMultiDiscGames();
+      case 1:
+        _cleanOrphanedMetadata();
+    }
   }
 
   Future<void> _organizeMultiDiscGames() async {
@@ -185,6 +194,141 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     }
   }
 
+  Future<void> _cleanOrphanedMetadata() async {
+    if (_isCleaningMetadata) return;
+
+    final locale = AppLocale.cleanOrphanedMetadata.getString(context);
+    final localeWarning = AppLocale.cleanOrphanedMetadataWarning.getString(context);
+    final localeNothingFound = AppLocale.cleanOrphanedMetadataNothingFound.getString(context);
+    final localeScanning = AppLocale.cleanOrphanedMetadataScanning.getString(context);
+    final localeDelete = AppLocale.delete.getString(context);
+    final localeFailed = AppLocale.cleanOrphanedMetadataFailed.getString(context);
+    final localeDone = AppLocale.cleanOrphanedMetadataDone.getString(context);
+    final localeEsdeSkipped = AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix.getString(context);
+
+    final fileProvider = Provider.of<FileProvider>(context, listen: false);
+    if (!fileProvider.isInitialized) {
+      if (mounted) {
+        AppNotification.showNotification(
+          context,
+          localeFailed.replaceFirst(
+            '{error}',
+            'File provider not initialized',
+          ),
+          type: NotificationType.error,
+        );
+      }
+      return;
+    }
+
+    // Analyze without deleting so the user can review what will be affected.
+    final analysis = await MetadataCleanupService.analyze();
+    if (!mounted) return;
+
+    if (!analysis.hasOrphans) {
+      AppNotification.showNotification(
+        context,
+        localeNothingFound,
+        type: NotificationType.info,
+      );
+      return;
+    }
+
+    final neoStationCount = analysis.orphanedItems.where((i) => i.isNeoStation).length;
+    final esdeCount = analysis.orphanedItems.where((i) => i.esdeImported).length;
+
+    final body = StringBuffer()
+      ..writeln(localeWarning)
+      ..writeln()
+      ..writeln(
+        'Found ${analysis.orphanedItems.length} orphaned metadata entr${analysis.orphanedItems.length == 1 ? 'y' : 'ies'}.'
+            ' $neoStationCount will be deleted from the database and disk.',
+      );
+    if (esdeCount > 0) {
+      body.writeln(
+        '$esdeCount ES-DE imported entr${esdeCount == 1 ? 'y' : 'ies'} will be left untouched.',
+      );
+    }
+
+    final accentColor = Theme.of(context).colorScheme.error;
+    final confirmed = await ConfirmActionDialog.show(
+      context,
+      title: locale,
+      body: body.toString().trim(),
+      confirmLabel: localeDelete,
+      icon: Symbols.cleaning_services_rounded,
+      accentColor: accentColor,
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isCleaningMetadata = true);
+    if (mounted) {
+      AppNotification.showNotification(
+        context,
+        localeScanning,
+        type: NotificationType.info,
+        duration: const Duration(minutes: 5),
+        notificationId: 'clean_orphaned_metadata',
+        progress: 0,
+      );
+    }
+
+    String? completionMessage;
+    NotificationType? completionType;
+    try {
+      final result = await MetadataCleanupService.clean(
+        fileProvider: fileProvider,
+        onProgress: (progress) {
+          if (!mounted) return;
+          AppNotification.showNotification(
+            context,
+            localeScanning,
+            type: NotificationType.info,
+            notificationId: 'clean_orphaned_metadata',
+            progress: progress,
+          );
+        },
+      );
+
+      if (mounted) {
+        final esdeSkippedNote = result.skippedEsdeItems.isNotEmpty
+            ? localeEsdeSkipped.replaceFirst(
+                '{count}',
+                result.skippedEsdeItems.length.toString(),
+              )
+            : '';
+        if (result.hasDeletions) {
+          completionMessage = localeDone
+              .replaceFirst('{entries}', result.deletedItems.length.toString())
+              .replaceFirst('{files}', result.deletedMediaFiles.toString())
+              + esdeSkippedNote;
+          completionType = NotificationType.success;
+        } else {
+          completionMessage = localeNothingFound + esdeSkippedNote;
+          completionType = NotificationType.info;
+        }
+      }
+    } catch (e) {
+      _log.e('Failed to clean orphaned metadata: $e');
+      if (mounted) {
+        completionMessage = localeFailed.replaceFirst('{error}', e.toString());
+        completionType = NotificationType.error;
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCleaningMetadata = false);
+        if (completionMessage != null && completionType != null && mounted) {
+          AppNotification.showNotification(
+            context,
+            completionMessage,
+            type: completionType,
+            duration: const Duration(seconds: 10),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSelected =
@@ -214,6 +358,20 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
                 trailing: SettingsActionButton(
                   icon: Symbols.folder_managed_rounded,
                   selected: isSelected,
+                ),
+              ),
+              SettingsCardRow(
+                icon: Symbols.cleaning_services_rounded,
+                title: AppLocale.cleanOrphanedMetadata.getString(context),
+                subtitle: AppLocale.cleanOrphanedMetadataSubtitle.getString(
+                  context,
+                ),
+                subtitleMaxLines: 2,
+                selected: widget.isContentFocused && widget.selectedContentIndex == 1,
+                onTap: () => _cleanOrphanedMetadata(),
+                trailing: SettingsActionButton(
+                  icon: Symbols.cleaning_services_rounded,
+                  selected: widget.isContentFocused && widget.selectedContentIndex == 1,
                 ),
               ),
             ],

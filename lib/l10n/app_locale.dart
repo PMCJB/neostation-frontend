@@ -214,6 +214,21 @@ mixin AppLocale {
   static const String organizeMultiDiscFailed = 'organize_multi_disc_failed';
   static const String organizeMultiDiscWarning = 'organize_multi_disc_warning';
 
+  static const String cleanOrphanedMetadata = 'clean_orphaned_metadata';
+  static const String cleanOrphanedMetadataSubtitle =
+      'clean_orphaned_metadata_subtitle';
+  static const String cleanOrphanedMetadataWarning =
+      'clean_orphaned_metadata_warning';
+  static const String cleanOrphanedMetadataScanning =
+      'clean_orphaned_metadata_scanning';
+  static const String cleanOrphanedMetadataNothingFound =
+      'clean_orphaned_metadata_nothing_found';
+  static const String cleanOrphanedMetadataDone = 'clean_orphaned_metadata_done';
+  static const String cleanOrphanedMetadataEsdeSkippedSuffix =
+      'clean_orphaned_metadata_esde_skipped_suffix';
+  static const String cleanOrphanedMetadataFailed =
+      'clean_orphaned_metadata_failed';
+
   // ---------------------------------------------------------------------------
   // Exit
   // ---------------------------------------------------------------------------
