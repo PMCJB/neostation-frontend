@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/l10n/app_locale.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:neostation/providers/scraping_provider.dart';
+import 'package:neostation/services/global_notification_service.dart';
 import 'package:neostation/services/screenscraper_service.dart';
 import 'package:neostation/services/screenscraper/screenscraper_exceptions.dart';
 import 'package:neostation/widgets/custom_notification.dart';
@@ -43,6 +45,22 @@ class ScrapingContentState extends State<ScrapingContent> {
 
   Future<void> _startScraping() async {
     final scrapingProvider = context.read<ScrapingProvider>();
+    const notificationId = 'scraping_progress';
+
+    // Resolve strings before any async gap so the progress timer callback
+    // (which has no BuildContext) can use them safely.
+    final localeScrapingInProgress =
+        AppLocale.scrapingInProgress.getString(context);
+    final localeSyncError = AppLocale.syncError.getString(context);
+    final localeAllGamesUpToDate =
+        AppLocale.allGamesUpToDate.getString(context);
+    final localeScrapingCompleted =
+        AppLocale.scrapingCompleted.getString(context);
+    final localeScrapingCancelled =
+        AppLocale.scrapingCancelled.getString(context);
+    final localeMetadataError = AppLocale.metadataError.getString(context);
+    final localeScrapeQuotaExceeded =
+        AppLocale.scrapeQuotaExceeded.getString(context);
 
     setState(() {});
 
@@ -52,22 +70,54 @@ class ScrapingContentState extends State<ScrapingContent> {
 
     scrapingProvider.startScraping(maxThreads: maxThreads);
 
+    Timer? progressTimer;
+    void updateProgressNotification() {
+      final total = scrapingProvider.totalGames;
+      final processed = scrapingProvider.processedGames;
+      final message = total > 0
+          ? '$localeScrapingInProgress $processed / $total'
+          : localeScrapingInProgress;
+      GlobalNotificationService().update(
+        id: notificationId,
+        message: message,
+        type: GlobalNotificationType.info,
+        progress: total > 0 ? processed / total : null,
+        autoDismiss: false,
+      );
+    }
+
     try {
+      // Show the persistent progress notification up front.
+      GlobalNotificationService().show(
+        id: notificationId,
+        message: localeScrapingInProgress,
+        type: GlobalNotificationType.info,
+        progress: 0,
+        autoDismiss: false,
+      );
+
       // Paso 1: Sincronizar system IDs
       _log.i('Step 1: Synchronizing system IDs...');
       final syncSuccess = await ScreenScraperService.syncSystemIds();
 
       if (!syncSuccess) {
-        if (mounted) {
-          AppNotification.showNotification(
-            context,
-            AppLocale.syncError.getString(context),
-            type: NotificationType.error,
-          );
-        }
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeSyncError,
+          type: GlobalNotificationType.error,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
+        );
         scrapingProvider.stopScraping();
         return;
       }
+
+      // Refresh the bar periodically while the workers run.
+      progressTimer = Timer.periodic(
+        const Duration(milliseconds: 500),
+        (_) => updateProgressNotification(),
+      );
 
       // Paso 2: Iniciar scraping de metadata
       _log.i('Step 2: Starting metadata scraping...');
@@ -78,55 +128,78 @@ class ScrapingContentState extends State<ScrapingContent> {
         shouldCancel: () => !scrapingProvider.isScraping,
       );
 
+      progressTimer.cancel();
+      progressTimer = null;
+
       if (scrapingSuccess) {
         if (scrapingProvider.successfulGames > 0) {
           scrapingProvider.markArtworkUpdated();
         }
         if (mounted) {
           final message = scrapingProvider.totalGames == 0
-              ? AppLocale.allGamesUpToDate.getString(context)
-              : AppLocale.scrapingCompleted.getString(context);
-          AppNotification.showNotification(
-            context,
-            message,
-            type: NotificationType.success,
+              ? localeAllGamesUpToDate
+              : localeScrapingCompleted;
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: message,
+            type: GlobalNotificationType.success,
+            progress: null,
+            autoDismiss: true,
+            duration: const Duration(seconds: 10),
           );
         }
       } else if (!scrapingProvider.isScraping) {
         // Si fue cancelado, no mostrar notificación de error
         if (mounted) {
-          AppNotification.showNotification(
-            context,
-            AppLocale.scrapingCancelled.getString(context),
-            type: NotificationType.info,
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: localeScrapingCancelled,
+            type: GlobalNotificationType.info,
+            progress: null,
+            autoDismiss: true,
+            duration: const Duration(seconds: 10),
           );
         }
       } else {
         if (mounted) {
-          AppNotification.showNotification(
-            context,
-            AppLocale.metadataError.getString(context),
-            type: NotificationType.error,
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: localeMetadataError,
+            type: GlobalNotificationType.error,
+            progress: null,
+            autoDismiss: true,
+            duration: const Duration(seconds: 10),
           );
         }
       }
     } on ScreenscraperQuotaExceededException {
+      progressTimer?.cancel();
+      progressTimer = null;
       if (mounted) {
-        AppNotification.showNotification(
-          context,
-          AppLocale.scrapeQuotaExceeded.getString(context),
-          type: NotificationType.error,
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeScrapeQuotaExceeded,
+          type: GlobalNotificationType.error,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
         );
       }
     } catch (e) {
+      progressTimer?.cancel();
+      progressTimer = null;
       if (mounted) {
-        AppNotification.showNotification(
-          context,
-          'Error: ${e.toString()}',
-          type: NotificationType.error,
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: 'Error: ${e.toString()}',
+          type: GlobalNotificationType.error,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
         );
       }
     } finally {
+      progressTimer?.cancel();
       if (mounted) {
         setState(() {});
       }

@@ -10,6 +10,7 @@ import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'package:neostation/providers/file_provider.dart';
 import 'package:neostation/providers/sqlite_config_provider.dart';
 import 'package:neostation/services/esde_import_service.dart';
+import 'package:neostation/services/global_notification_service.dart';
 import 'package:neostation/repositories/config_repository.dart';
 import 'package:neostation/services/config_service.dart';
 import 'package:neostation/services/logger_service.dart';
@@ -305,12 +306,22 @@ class DirectoriesSettingsContentState
     }
     if (_isImporting) return;
 
+    const notificationId = 'esde_import_progress';
+
     setState(() {
       _isImporting = true;
       _importProgress = 0.0;
       _importLabel = '';
       _lastEsdeResult = null;
     });
+
+    GlobalNotificationService().show(
+      id: notificationId,
+      message: AppLocale.esdeImporting.getString(context),
+      type: GlobalNotificationType.info,
+      progress: 0,
+      autoDismiss: false,
+    );
 
     EsdeImportResult? result;
     String? error;
@@ -324,6 +335,15 @@ class DirectoriesSettingsContentState
               _importLabel = label;
             });
           }
+          GlobalNotificationService().update(
+            id: notificationId,
+            message: label.isEmpty
+                ? AppLocale.esdeImporting.getString(context)
+                : '${AppLocale.esdeImporting.getString(context)}: $label',
+            type: GlobalNotificationType.info,
+            progress: p,
+            autoDismiss: false,
+          );
         },
       );
       // Rebuild the fallback map now that esde_media_dir rows exist.
@@ -349,33 +369,46 @@ class DirectoriesSettingsContentState
     });
 
     if (error != null) {
-      AppNotification.showNotification(
-        context,
-        error,
-        type: NotificationType.error,
+      GlobalNotificationService().update(
+        id: notificationId,
+        message: error,
+        type: GlobalNotificationType.error,
+        progress: null,
+        autoDismiss: true,
+        duration: const Duration(seconds: 10),
       );
     } else if (result != null) {
       if (!result.gamelistsDirFound) {
         // No gamelists/ dir — the picked folder isn't an ES-DE installation.
-        AppNotification.showNotification(
-          context,
-          AppLocale.esdeImportNotEsdeFolder.getString(context),
-          type: NotificationType.error,
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: AppLocale.esdeImportNotEsdeFolder.getString(context),
+          type: GlobalNotificationType.error,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
         );
       } else if (result.gamesImported == 0 && result.systemsMatched == 0) {
         // Valid ES-DE folder, but nothing here mapped to a NeoStation system.
-        AppNotification.showNotification(
-          context,
-          AppLocale.esdeImportNothingFound.getString(context),
-          type: NotificationType.info,
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: AppLocale.esdeImportNothingFound.getString(context),
+          type: GlobalNotificationType.info,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
         );
       } else {
-        AppNotification.showNotification(
-          context,
-          '${AppLocale.esdeImportComplete.getString(context)}: '
-          '${result.gamesImported} ${AppLocale.esdeSummaryGames.getString(context)}, '
-          '${result.systemsMatched} ${AppLocale.esdeSummarySystems.getString(context)}',
-          type: NotificationType.success,
+        GlobalNotificationService().update(
+          id: notificationId,
+          message:
+              '${AppLocale.esdeImportComplete.getString(context)}: '
+              '${result.gamesImported} ${AppLocale.esdeSummaryGames.getString(context)}, '
+              '${result.systemsMatched} ${AppLocale.esdeSummarySystems.getString(context)}',
+          type: GlobalNotificationType.success,
+          progress: null,
+          autoDismiss: true,
+          duration: const Duration(seconds: 10),
         );
       }
     }

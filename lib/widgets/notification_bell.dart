@@ -48,52 +48,45 @@ class _NotificationBellState extends State<NotificationBell>
         final hasNotifications = notifications.isNotEmpty;
         return GestureDetector(
           onTap: () => _openDropdown(context),
-          child: Container(
-            padding: EdgeInsets.all(4.r),
-            decoration: BoxDecoration(
-              color: hasNotifications
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                AnimatedBuilder(
-                  animation: _pulseAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: hasNotifications ? _pulseAnimation.value : 1.0,
-                      child: child,
-                    );
-                  },
-                  child: Icon(
-                    hasNotifications
-                        ? Symbols.notifications_active_rounded
-                        : Symbols.notifications_rounded,
-                    color: Theme.of(context).colorScheme.onSurface,
-                    size: 16.r,
-                  ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: hasNotifications ? _pulseAnimation.value : 1.0,
+                    child: child,
+                  );
+                },
+                child: Icon(
+                  hasNotifications
+                      ? Symbols.notifications_active_rounded
+                      : Symbols.notifications_rounded,
+                  color: hasNotifications
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
+                  size: 14.r,
                 ),
-                if (hasNotifications)
-                  Positioned(
-                    top: 1.r,
-                    right: 1.r,
-                    child: Container(
-                      width: 6.r,
-                      height: 6.r,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surface,
-                          width: 1.r,
-                        ),
+              ),
+              if (hasNotifications)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 5.r,
+                    height: 5.r,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.surface,
+                        width: 0.8.r,
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         );
       },
