@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
@@ -15,13 +14,6 @@ class GlobalNotificationData {
   final GlobalNotificationType type;
   final double? progress;
 
-  /// When false, the notification stays visible until explicitly dismissed or
-  /// updated to auto-dismiss. Use this for long-running operations.
-  final bool autoDismiss;
-
-  /// How long the notification remains listed before auto-dismissing.
-  final Duration duration;
-
   const GlobalNotificationData({
     required this.id,
     required this.message,
@@ -30,8 +22,6 @@ class GlobalNotificationData {
     this.icon,
     required this.type,
     this.progress,
-    this.autoDismiss = true,
-    this.duration = const Duration(seconds: 4),
   });
 }
 
@@ -41,16 +31,17 @@ class GlobalNotificationData {
 /// header notification bell renders the list in a dropdown, including progress
 /// bars. There is no floating overlay; every notification lives in the dropdown.
 ///
-/// Auto-dismiss is handled here so notifications still time out even when the
-/// dropdown is closed.
+/// Notifications never auto-dismiss: they stay listed until the user dismisses
+/// them, either individually or with the "Clear all" action in the dropdown.
 class GlobalNotificationService {
   static final GlobalNotificationService _instance =
       GlobalNotificationService._internal();
   factory GlobalNotificationService() => _instance;
   GlobalNotificationService._internal();
 
-  final ValueNotifier<List<GlobalNotificationData>> notifier = ValueNotifier([]);
-  final Map<String, Timer> _dismissTimers = {};
+  final ValueNotifier<List<GlobalNotificationData>> notifier = ValueNotifier(
+    [],
+  );
 
   /// Displays a notification. If a notification with the same [id] is already
   /// active, it is updated in place and moved to the end (most recent).
@@ -62,8 +53,6 @@ class GlobalNotificationService {
     IconData? icon,
     GlobalNotificationType type = GlobalNotificationType.info,
     double? progress,
-    bool autoDismiss = true,
-    Duration duration = const Duration(seconds: 4),
   }) {
     final current = notifier.value;
     final existingIndex = current.indexWhere((n) => n.id == id);
@@ -75,8 +64,6 @@ class GlobalNotificationService {
       icon: icon,
       type: type,
       progress: progress,
-      autoDismiss: autoDismiss,
-      duration: duration,
     );
 
     if (existingIndex == -1) {
@@ -86,12 +73,6 @@ class GlobalNotificationService {
       copy.removeAt(existingIndex);
       copy.add(updated);
       notifier.value = copy;
-    }
-
-    if (autoDismiss) {
-      _scheduleDismiss(id, duration);
-    } else {
-      _cancelDismiss(id);
     }
   }
 
@@ -104,16 +85,12 @@ class GlobalNotificationService {
     IconData? icon,
     GlobalNotificationType? type,
     double? progress,
-    bool? autoDismiss,
-    Duration? duration,
   }) {
     final current = notifier.value;
     final index = current.indexWhere((n) => n.id == id);
     if (index == -1) return;
 
     final existing = current[index];
-    final newAutoDismiss = autoDismiss ?? existing.autoDismiss;
-    final newDuration = duration ?? existing.duration;
 
     notifier.value = [
       ...current.sublist(0, index),
@@ -125,42 +102,19 @@ class GlobalNotificationService {
         icon: icon ?? existing.icon,
         type: type ?? existing.type,
         progress: progress ?? existing.progress,
-        autoDismiss: newAutoDismiss,
-        duration: newDuration,
       ),
       ...current.sublist(index + 1),
     ];
-
-    if (newAutoDismiss) {
-      _scheduleDismiss(id, newDuration);
-    } else {
-      _cancelDismiss(id);
-    }
   }
 
   /// Removes the notification with the given [id], or clears all notifications
   /// when no [id] is provided.
   void dismiss([String? id]) {
     if (id == null) {
-      for (final timer in _dismissTimers.values) {
-        timer.cancel();
-      }
-      _dismissTimers.clear();
       notifier.value = [];
       return;
     }
 
-    _cancelDismiss(id);
     notifier.value = notifier.value.where((n) => n.id != id).toList();
-  }
-
-  void _scheduleDismiss(String id, Duration duration) {
-    _dismissTimers[id]?.cancel();
-    _dismissTimers[id] = Timer(duration, () => dismiss(id));
-  }
-
-  void _cancelDismiss(String id) {
-    _dismissTimers[id]?.cancel();
-    _dismissTimers.remove(id);
   }
 }

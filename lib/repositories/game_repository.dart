@@ -114,7 +114,8 @@ class GameRepository {
     String? mediaDirectoryPath,
   }) async {
     final log = LoggerService.instance;
-    final mediaDir = mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
+    final mediaDir =
+        mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
     if (mediaDir == null) {
       log.w('deleteNeoStationScrapedMedia: mediaDir is null, skipping');
       return 0;
@@ -154,7 +155,9 @@ class GameRepository {
           }
         }
       } catch (e) {
-        log.e('deleteNeoStationScrapedMedia: Error deleting $type media for $filename: $e');
+        log.e(
+          'deleteNeoStationScrapedMedia: Error deleting $type media for $filename: $e',
+        );
       }
     }
 

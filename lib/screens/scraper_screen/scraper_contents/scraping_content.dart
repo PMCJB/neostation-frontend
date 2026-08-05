@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/l10n/app_locale.dart';
@@ -47,20 +46,25 @@ class ScrapingContentState extends State<ScrapingContent> {
     final scrapingProvider = context.read<ScrapingProvider>();
     const notificationId = 'scraping_progress';
 
-    // Resolve strings before any async gap so the progress timer callback
-    // (which has no BuildContext) can use them safely.
-    final localeScrapingInProgress =
-        AppLocale.scrapingInProgress.getString(context);
+    // Resolve strings before any async gap so the completion updates below
+    // (which may run after this screen is gone) can use them safely.
+    final localeScrapingInProgress = AppLocale.scrapingInProgress.getString(
+      context,
+    );
     final localeSyncError = AppLocale.syncError.getString(context);
-    final localeAllGamesUpToDate =
-        AppLocale.allGamesUpToDate.getString(context);
-    final localeScrapingCompleted =
-        AppLocale.scrapingCompleted.getString(context);
-    final localeScrapingCancelled =
-        AppLocale.scrapingCancelled.getString(context);
+    final localeAllGamesUpToDate = AppLocale.allGamesUpToDate.getString(
+      context,
+    );
+    final localeScrapingCompleted = AppLocale.scrapingCompleted.getString(
+      context,
+    );
+    final localeScrapingCancelled = AppLocale.scrapingCancelled.getString(
+      context,
+    );
     final localeMetadataError = AppLocale.metadataError.getString(context);
-    final localeScrapeQuotaExceeded =
-        AppLocale.scrapeQuotaExceeded.getString(context);
+    final localeScrapeQuotaExceeded = AppLocale.scrapeQuotaExceeded.getString(
+      context,
+    );
 
     setState(() {});
 
@@ -70,30 +74,15 @@ class ScrapingContentState extends State<ScrapingContent> {
 
     scrapingProvider.startScraping(maxThreads: maxThreads);
 
-    Timer? progressTimer;
-    void updateProgressNotification() {
-      final total = scrapingProvider.totalGames;
-      final processed = scrapingProvider.processedGames;
-      final message = total > 0
-          ? '$localeScrapingInProgress $processed / $total'
-          : localeScrapingInProgress;
-      GlobalNotificationService().update(
-        id: notificationId,
-        message: message,
-        type: GlobalNotificationType.info,
-        progress: total > 0 ? processed / total : null,
-        autoDismiss: false,
-      );
-    }
-
     try {
-      // Show the persistent progress notification up front.
+      // Show the persistent progress notification up front. Its progress bar
+      // is kept in sync by the app-level ScrapingNotificationListener, so it
+      // keeps advancing regardless of which tab is visible.
       GlobalNotificationService().show(
         id: notificationId,
         message: localeScrapingInProgress,
         type: GlobalNotificationType.info,
         progress: 0,
-        autoDismiss: false,
       );
 
       // Paso 1: Sincronizar system IDs
@@ -106,103 +95,72 @@ class ScrapingContentState extends State<ScrapingContent> {
           message: localeSyncError,
           type: GlobalNotificationType.error,
           progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
         );
         scrapingProvider.stopScraping();
         return;
       }
 
-      // Refresh the bar periodically while the workers run.
-      progressTimer = Timer.periodic(
-        const Duration(milliseconds: 500),
-        (_) => updateProgressNotification(),
-      );
-
       // Paso 2: Iniciar scraping de metadata
       _log.i('Step 2: Starting metadata scraping...');
-      if (!mounted) return;
+      // The context is only used inside the service for the final summary
+      // dialog, which is itself guarded by `context.mounted`, so starting the
+      // session is safe even after this screen was disposed mid-sync. Not
+      // returning early lets the background session finish and the global
+      // notification report the result after the user switched tabs.
       final scrapingSuccess = await ScreenScraperService.startMetadataScraping(
+        // ignore: use_build_context_synchronously
         context,
         scrapingProvider,
         shouldCancel: () => !scrapingProvider.isScraping,
       );
 
-      progressTimer.cancel();
-      progressTimer = null;
-
       if (scrapingSuccess) {
         if (scrapingProvider.successfulGames > 0) {
           scrapingProvider.markArtworkUpdated();
         }
-        if (mounted) {
-          final summary = scrapingProvider.totalGames > 0
-              ? '${scrapingProvider.processedGames} / ${scrapingProvider.totalGames}'
-              : '';
-          final message = scrapingProvider.totalGames == 0
-              ? localeAllGamesUpToDate
-              : '$localeScrapingCompleted ${summary.isNotEmpty ? '($summary)' : ''}';
-          GlobalNotificationService().update(
-            id: notificationId,
-            message: message,
-            type: GlobalNotificationType.success,
-            progress: null,
-            autoDismiss: true,
-            duration: const Duration(seconds: 10),
-          );
-        }
+        final summary = scrapingProvider.totalGames > 0
+            ? '${scrapingProvider.processedGames} / ${scrapingProvider.totalGames}'
+            : '';
+        final message = scrapingProvider.totalGames == 0
+            ? localeAllGamesUpToDate
+            : '$localeScrapingCompleted ${summary.isNotEmpty ? '($summary)' : ''}';
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: message,
+          type: GlobalNotificationType.success,
+          progress: null,
+        );
       } else if (!scrapingProvider.isScraping) {
         // Si fue cancelado, no mostrar notificación de error
-        if (mounted) {
-          GlobalNotificationService().update(
-            id: notificationId,
-            message: localeScrapingCancelled,
-            type: GlobalNotificationType.info,
-            progress: null,
-            autoDismiss: true,
-            duration: const Duration(seconds: 10),
-          );
-        }
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeScrapingCancelled,
+          type: GlobalNotificationType.info,
+          progress: null,
+        );
       } else {
-        if (mounted) {
-          GlobalNotificationService().update(
-            id: notificationId,
-            message: localeMetadataError,
-            type: GlobalNotificationType.error,
-            progress: null,
-            autoDismiss: true,
-            duration: const Duration(seconds: 10),
-          );
-        }
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeMetadataError,
+          type: GlobalNotificationType.error,
+          progress: null,
+        );
       }
     } on ScreenscraperQuotaExceededException {
-      progressTimer?.cancel();
-      progressTimer = null;
-      if (mounted) {
-        GlobalNotificationService().update(
-          id: notificationId,
-          message: localeScrapeQuotaExceeded,
-          type: GlobalNotificationType.error,
-          progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
-        );
-      }
+      GlobalNotificationService().update(
+        id: notificationId,
+        message: localeScrapeQuotaExceeded,
+        type: GlobalNotificationType.error,
+        progress: null,
+      );
     } catch (e) {
-      progressTimer?.cancel();
-      progressTimer = null;
-      if (mounted) {
-        GlobalNotificationService().update(
-          id: notificationId,
-          message: 'Error: ${e.toString()}',
-          type: GlobalNotificationType.error,
-          progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
-        );
-      }
+      GlobalNotificationService().update(
+        id: notificationId,
+        message: 'Error: ${e.toString()}',
+        type: GlobalNotificationType.error,
+        progress: null,
+      );
     } finally {
-      progressTimer?.cancel();
       if (mounted) {
         setState(() {});
       }

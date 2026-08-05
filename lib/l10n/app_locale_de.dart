@@ -224,9 +224,11 @@ const Map<String, dynamic> appLocaleDe = {
       'Entfernt Metadaten und Medien, die von gelöschten ROMs zurückgelassen wurden',
   AppLocale.cleanOrphanedMetadataWarning:
       'Dies löscht dauerhaft Metadatenzeilen und Mediendateien für ROMs, die sich nicht mehr in Ihrer Bibliothek befinden. Aus ES-DE importierte Einträge werden nicht entfernt.',
-  AppLocale.cleanOrphanedMetadataScanning: 'Verwaiste Metadaten werden bereinigt...',
+  AppLocale.cleanOrphanedMetadataScanning:
+      'Verwaiste Metadaten werden bereinigt...',
   AppLocale.cleanOrphanedMetadataCleaningItem: 'Bereinigung von {filename}...',
-  AppLocale.cleanOrphanedMetadataNothingFound: 'Keine verwaisten Metadaten gefunden.',
+  AppLocale.cleanOrphanedMetadataNothingFound:
+      'Keine verwaisten Metadaten gefunden.',
   AppLocale.cleanOrphanedMetadataDone:
       '{entries} Metadateneintrag/-einträge und {files} Mediendatei(en) bereinigt.',
   AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix:

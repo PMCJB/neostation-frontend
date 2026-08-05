@@ -221,9 +221,11 @@ const Map<String, dynamic> appLocaleIt = {
       'Rimuove metadati e media lasciati dai ROM eliminati',
   AppLocale.cleanOrphanedMetadataWarning:
       'Questo elimina definitivamente le righe di metadati e i file multimediali per i ROM che non sono più nella tua libreria. Le voci importate da ES-DE non verranno rimosse.',
-  AppLocale.cleanOrphanedMetadataScanning: 'Pulizia metadati orfani in corso...',
+  AppLocale.cleanOrphanedMetadataScanning:
+      'Pulizia metadati orfani in corso...',
   AppLocale.cleanOrphanedMetadataCleaningItem: 'Pulizia di {filename}...',
-  AppLocale.cleanOrphanedMetadataNothingFound: 'Nessun metadato orfano trovato.',
+  AppLocale.cleanOrphanedMetadataNothingFound:
+      'Nessun metadato orfano trovato.',
   AppLocale.cleanOrphanedMetadataDone:
       'Puliti {entries} voce/i di metadati e {files} file multimediali.',
   AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix:

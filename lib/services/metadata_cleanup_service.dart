@@ -91,7 +91,8 @@ class MetadataCleanupService {
   static Future<MetadataCleanupResult> clean({
     FileProvider? fileProvider,
     String? mediaDirectoryPath,
-    void Function(double progress, OrphanedMetadataItem currentItem)? onProgress,
+    void Function(double progress, OrphanedMetadataItem currentItem)?
+    onProgress,
   }) async {
     try {
       final analysis = await analyze();
@@ -107,7 +108,8 @@ class MetadataCleanupService {
       final errors = <String>[];
       int deletedMediaFiles = 0;
 
-      final resolvedMediaDir = mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
+      final resolvedMediaDir =
+          mediaDirectoryPath ?? fileProvider?.getMediaDirectoryPath();
 
       for (var index = 0; index < orphanedItems.length; index++) {
         final item = orphanedItems[index];
@@ -134,12 +136,13 @@ class MetadataCleanupService {
 
           if (resolvedMediaDir != null) {
             final romBaseName = FileProvider.stripRomExtension(item.filename);
-            final mediaDeleted = await GameRepository.deleteNeoStationScrapedMedia(
-              systemFolderName: item.systemFolderName,
-              filename: item.filename,
-              romBaseName: romBaseName,
-              mediaDirectoryPath: resolvedMediaDir,
-            );
+            final mediaDeleted =
+                await GameRepository.deleteNeoStationScrapedMedia(
+                  systemFolderName: item.systemFolderName,
+                  filename: item.filename,
+                  romBaseName: romBaseName,
+                  mediaDirectoryPath: resolvedMediaDir,
+                );
             deletedMediaFiles += mediaDeleted;
           }
         } catch (e, stackTrace) {
@@ -152,7 +155,10 @@ class MetadataCleanupService {
             try {
               onProgress((index + 1) / orphanedItems.length, item);
             } catch (e, stackTrace) {
-              _log.e('Metadata cleanup onProgress callback failed: $e', stackTrace: stackTrace);
+              _log.e(
+                'Metadata cleanup onProgress callback failed: $e',
+                stackTrace: stackTrace,
+              );
             }
           }
         }
@@ -176,9 +182,10 @@ class MetadataCleanupService {
       appSystemId: row['app_system_id']?.toString() ?? '',
       filename: row['filename']?.toString() ?? '',
       systemFolderName: row['system_folder_name']?.toString() ?? '',
-      isFullyScraped: (int.tryParse(row['is_fully_scraped']?.toString() ?? '0') ?? 0) == 1,
-      esdeImported: (int.tryParse(row['esde_imported']?.toString() ?? '0') ?? 0) == 1,
+      isFullyScraped:
+          (int.tryParse(row['is_fully_scraped']?.toString() ?? '0') ?? 0) == 1,
+      esdeImported:
+          (int.tryParse(row['esde_imported']?.toString() ?? '0') ?? 0) == 1,
     );
   }
-
 }

@@ -225,7 +225,8 @@ mixin AppLocale {
       'clean_orphaned_metadata_cleaning_item';
   static const String cleanOrphanedMetadataNothingFound =
       'clean_orphaned_metadata_nothing_found';
-  static const String cleanOrphanedMetadataDone = 'clean_orphaned_metadata_done';
+  static const String cleanOrphanedMetadataDone =
+      'clean_orphaned_metadata_done';
   static const String cleanOrphanedMetadataEsdeSkippedSuffix =
       'clean_orphaned_metadata_esde_skipped_suffix';
   static const String cleanOrphanedMetadataFailed =

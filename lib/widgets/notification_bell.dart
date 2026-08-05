@@ -4,11 +4,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/services/global_notification_service.dart';
+import 'package:neostation/themes/app_themes.dart';
+import 'package:neostation/themes/corner_radii.dart';
 
 /// Notification bell icon that opens a dropdown with all active global
 /// notifications, including their progress.
 ///
 /// Designed to live in the top header next to the clock.
+///
+/// The dropdown is rendered through an [OverlayEntry] (not `showMenu`) so the
+/// notification list can rebuild live without `showMenu`'s `IntrinsicWidth`
+/// choking on the shrink-wrapping list viewport.
 class NotificationBell extends StatefulWidget {
   const NotificationBell({super.key});
 
@@ -20,6 +26,13 @@ class _NotificationBellState extends State<NotificationBell>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  OverlayEntry? _overlayEntry;
+
+  /// Vertical gap between the bell icon and the top of the dropdown.
+  static const double _dropdownGap = 14;
+
+  /// Inset of the dropdown from the right edge of the screen.
+  static const double _dropdownRightInset = 8;
 
   @override
   void initState() {
@@ -36,6 +49,7 @@ class _NotificationBellState extends State<NotificationBell>
 
   @override
   void dispose() {
+    _closeDropdown();
     _pulseController.dispose();
     super.dispose();
   }
@@ -47,7 +61,7 @@ class _NotificationBellState extends State<NotificationBell>
       builder: (context, notifications, _) {
         final hasNotifications = notifications.isNotEmpty;
         return GestureDetector(
-          onTap: () => _openDropdown(context),
+          onTap: () => _toggleDropdown(context),
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -64,7 +78,7 @@ class _NotificationBellState extends State<NotificationBell>
                       ? Symbols.notifications_active_rounded
                       : Symbols.notifications_rounded,
                   color: hasNotifications
-                      ? Theme.of(context).colorScheme.primary
+                      ? AppThemes.getCustomColors(context).warningColor
                       : Theme.of(context).colorScheme.onSurface,
                   size: 14.r,
                 ),
@@ -77,7 +91,7 @@ class _NotificationBellState extends State<NotificationBell>
                     width: 5.r,
                     height: 5.r,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: AppThemes.getCustomColors(context).warningColor,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
@@ -93,6 +107,14 @@ class _NotificationBellState extends State<NotificationBell>
     );
   }
 
+  void _toggleDropdown(BuildContext context) {
+    if (_overlayEntry != null) {
+      _closeDropdown();
+    } else {
+      _openDropdown(context);
+    }
+  }
+
   void _openDropdown(BuildContext context) {
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
@@ -100,122 +122,134 @@ class _NotificationBellState extends State<NotificationBell>
     final offset = renderBox.localToGlobal(Offset.zero);
     final size = renderBox.size;
 
-    showMenu<void>(
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + size.height + 4.r,
-        offset.dx + size.width,
-        offset.dy + size.height + 4.r,
-      ),
-      color: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
-      items: [
-        _NotificationsDropdownMenu(),
-      ],
+    _overlayEntry = OverlayEntry(
+      builder: (overlayContext) {
+        return Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: _closeDropdown,
+              ),
+            ),
+            Positioned(
+              top: offset.dy + size.height + _dropdownGap,
+              right: _dropdownRightInset,
+              child: const _NotificationsDropdownMenu(),
+            ),
+          ],
+        );
+      },
     );
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+  void _closeDropdown() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 }
 
-class _NotificationsDropdownMenu extends PopupMenuEntry<void> {
+class _NotificationsDropdownMenu extends StatelessWidget {
   const _NotificationsDropdownMenu();
 
-  @override
-  State<StatefulWidget> createState() => _NotificationsDropdownMenuState();
-
-  @override
-  double get height => 0;
-
-  @override
-  bool represents(void value) => false;
-}
-
-class _NotificationsDropdownMenuState extends State<_NotificationsDropdownMenu> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<GlobalNotificationData>>(
       valueListenable: GlobalNotificationService().notifier,
       builder: (context, notifications, _) {
-        return ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: 300.r,
-            minWidth: 200.r,
-            maxHeight: 360.r,
+        return Material(
+          color: Theme.of(context).colorScheme.surface,
+          elevation: 6,
+          shadowColor: Theme.of(
+            context,
+          ).colorScheme.shadow.withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: CornerRadii.of(context).radiusExternal,
+            side: BorderSide(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 10.r),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppLocale.notifications.getString(context),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 12.r,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (notifications.isNotEmpty)
-                      GestureDetector(
-                        onTap: () => GlobalNotificationService().dismiss(),
-                        child: Text(
-                          AppLocale.clearAll.getString(context),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 10.r,
-                            fontWeight: FontWeight.w600,
-                          ),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: 300.r,
+              minWidth: 200.r,
+              maxHeight: 360.r,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.r,
+                    vertical: 10.r,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        AppLocale.notifications.getString(context),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 12.r,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                  ],
+                      if (notifications.isNotEmpty)
+                        GestureDetector(
+                          onTap: () => GlobalNotificationService().dismiss(),
+                          child: Text(
+                            AppLocale.clearAll.getString(context),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 10.r,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              if (notifications.isEmpty)
-                Padding(
-                  padding: EdgeInsets.all(16.r),
-                  child: Center(
-                    child: Text(
-                      AppLocale.noActiveNotifications.getString(context),
-                      style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
-                        fontSize: 11.r,
+                if (notifications.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.all(16.r),
+                    child: Center(
+                      child: Text(
+                        AppLocale.noActiveNotifications.getString(context),
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                          fontSize: 11.r,
+                        ),
                       ),
                     ),
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: notifications.length,
-                    separatorBuilder: (_, _) => Divider(
-                      height: 1.r,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.2),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: EdgeInsets.zero,
+                      itemCount: notifications.length,
+                      separatorBuilder: (_, _) => Divider(
+                        height: 1.r,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                      itemBuilder: (context, index) {
+                        return _NotificationDropdownItem(
+                          data: notifications[index],
+                        );
+                      },
                     ),
-                    itemBuilder: (context, index) {
-                      return _NotificationDropdownItem(
-                        data: notifications[index],
-                      );
-                    },
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -271,10 +305,9 @@ class _NotificationDropdownItem extends StatelessWidget {
                 Text(
                   data.message,
                   style: TextStyle(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.8),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.8),
                     fontSize: 10.r,
                   ),
                   maxLines: 3,
@@ -298,9 +331,9 @@ class _NotificationDropdownItem extends StatelessWidget {
             onTap: () => GlobalNotificationService().dismiss(data.id),
             child: Icon(
               Symbols.close_rounded,
-              color: Theme.of(context).colorScheme.onSurface.withValues(
-                alpha: 0.5,
-              ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
               size: 14.r,
             ),
           ),

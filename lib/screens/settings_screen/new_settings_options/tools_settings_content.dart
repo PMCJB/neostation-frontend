@@ -75,10 +75,13 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     final localeWarning = AppLocale.organizeMultiDiscWarning.getString(context);
     final localeNoFolders = AppLocale.organizeMultiDiscNoRomFoldersConfigured
         .getString(context);
-    final localeScanning = AppLocale.organizeMultiDiscScanning.getString(context);
+    final localeScanning = AppLocale.organizeMultiDiscScanning.getString(
+      context,
+    );
     final localeDone = AppLocale.organizeMultiDiscDone.getString(context);
-    final localeNoSetsFound = AppLocale.organizeMultiDiscNoSetsFound
-        .getString(context);
+    final localeNoSetsFound = AppLocale.organizeMultiDiscNoSetsFound.getString(
+      context,
+    );
     final localeSkippedSuffix = AppLocale.organizeMultiDiscSkippedSuffix
         .getString(context);
     final localeFailed = AppLocale.organizeMultiDiscFailed.getString(context);
@@ -124,9 +127,7 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
         id: notificationId,
         message: localeScanning,
         type: GlobalNotificationType.info,
-        duration: const Duration(minutes: 5),
         progress: 0,
-        autoDismiss: false,
       );
 
       final result = await RomFolderOrganizerService.organizeRomFolders(
@@ -139,7 +140,6 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             message: localeScanning,
             type: GlobalNotificationType.info,
             progress: completed / total,
-            autoDismiss: false,
           );
         },
       );
@@ -163,10 +163,13 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             : '';
         completionMessage = result.hasChanges
             ? localeDone
-                .replaceFirst('{groups}', result.groupsOrganized.toString())
-                .replaceFirst('{files}', result.filesMoved.toString())
-                .replaceFirst('{playlists}', result.playlistsCreated.toString())
-                .replaceFirst('{skipped}', skippedNote)
+                  .replaceFirst('{groups}', result.groupsOrganized.toString())
+                  .replaceFirst('{files}', result.filesMoved.toString())
+                  .replaceFirst(
+                    '{playlists}',
+                    result.playlistsCreated.toString(),
+                  )
+                  .replaceFirst('{skipped}', skippedNote)
             : localeNoSetsFound.replaceFirst('{skipped}', skippedNote);
         completionType = result.hasChanges
             ? NotificationType.success
@@ -191,8 +194,6 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             message: completionMessage,
             type: globalType,
             progress: null,
-            autoDismiss: true,
-            duration: const Duration(seconds: 10),
           );
         }
       } else {
@@ -205,24 +206,30 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     if (_isCleaningMetadata) return;
 
     final locale = AppLocale.cleanOrphanedMetadata.getString(context);
-    final localeWarning = AppLocale.cleanOrphanedMetadataWarning.getString(context);
-    final localeNothingFound = AppLocale.cleanOrphanedMetadataNothingFound.getString(context);
-    final localeScanning = AppLocale.cleanOrphanedMetadataScanning.getString(context);
-    final localeCleaningItem = AppLocale.cleanOrphanedMetadataCleaningItem.getString(context);
+    final localeWarning = AppLocale.cleanOrphanedMetadataWarning.getString(
+      context,
+    );
+    final localeNothingFound = AppLocale.cleanOrphanedMetadataNothingFound
+        .getString(context);
+    final localeScanning = AppLocale.cleanOrphanedMetadataScanning.getString(
+      context,
+    );
+    final localeCleaningItem = AppLocale.cleanOrphanedMetadataCleaningItem
+        .getString(context);
     final localeDelete = AppLocale.delete.getString(context);
-    final localeFailed = AppLocale.cleanOrphanedMetadataFailed.getString(context);
+    final localeFailed = AppLocale.cleanOrphanedMetadataFailed.getString(
+      context,
+    );
     final localeDone = AppLocale.cleanOrphanedMetadataDone.getString(context);
-    final localeEsdeSkipped = AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix.getString(context);
+    final localeEsdeSkipped = AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix
+        .getString(context);
 
     final fileProvider = Provider.of<FileProvider>(context, listen: false);
     if (!fileProvider.isInitialized) {
       if (mounted) {
         AppNotification.showNotification(
           context,
-          localeFailed.replaceFirst(
-            '{error}',
-            'File provider not initialized',
-          ),
+          localeFailed.replaceFirst('{error}', 'File provider not initialized'),
           type: NotificationType.error,
         );
       }
@@ -244,15 +251,19 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
       return;
     }
 
-    final neoStationCount = analysis.orphanedItems.where((i) => i.isNeoStation).length;
-    final esdeCount = analysis.orphanedItems.where((i) => i.esdeImported).length;
+    final neoStationCount = analysis.orphanedItems
+        .where((i) => i.isNeoStation)
+        .length;
+    final esdeCount = analysis.orphanedItems
+        .where((i) => i.esdeImported)
+        .length;
 
     final body = StringBuffer()
       ..writeln(localeWarning)
       ..writeln()
       ..writeln(
         'Found ${analysis.orphanedItems.length} orphaned metadata entr${analysis.orphanedItems.length == 1 ? 'y' : 'ies'}. '
-            '$neoStationCount will be deleted from the database and disk.',
+        '$neoStationCount will be deleted from the database and disk.',
       );
     if (esdeCount > 0) {
       body.writeln(
@@ -284,9 +295,7 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
         id: notificationId,
         message: localeScanning,
         type: GlobalNotificationType.info,
-        duration: const Duration(minutes: 5),
         progress: 0,
-        autoDismiss: false,
       );
 
       final result = await MetadataCleanupService.clean(
@@ -300,7 +309,6 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             ),
             type: GlobalNotificationType.info,
             progress: progress,
-            autoDismiss: false,
           );
         },
       );
@@ -313,9 +321,16 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
               )
             : '';
         if (result.hasDeletions) {
-          completionMessage = localeDone
-                  .replaceFirst('{entries}', result.deletedItems.length.toString())
-                  .replaceFirst('{files}', result.deletedMediaFiles.toString()) +
+          completionMessage =
+              localeDone
+                  .replaceFirst(
+                    '{entries}',
+                    result.deletedItems.length.toString(),
+                  )
+                  .replaceFirst(
+                    '{files}',
+                    result.deletedMediaFiles.toString(),
+                  ) +
               esdeSkippedNote;
           completionType = NotificationType.success;
         } else {
@@ -341,8 +356,6 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
             message: completionMessage,
             type: globalType,
             progress: null,
-            autoDismiss: true,
-            duration: const Duration(seconds: 10),
           );
         }
       } else {
@@ -367,41 +380,139 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
         ),
         SizedBox(height: 12.r),
         Expanded(
-          child: ListView(
-            physics: const ClampingScrollPhysics(),
+          child: ValueListenableBuilder<List<GlobalNotificationData>>(
+            valueListenable: GlobalNotificationService().notifier,
+            builder: (context, notifications, _) {
+              final multiDiscProgress = _progressFor(
+                notifications,
+                'organize_multidisc',
+              );
+              final metadataProgress = _progressFor(
+                notifications,
+                'clean_orphaned_metadata',
+              );
+
+              return ListView(
+                physics: const ClampingScrollPhysics(),
+                children: [
+                  SettingsCardRow(
+                    icon: Symbols.folder_managed_rounded,
+                    title: AppLocale.organizeMultiDiscGames.getString(context),
+                    subtitle: AppLocale.organizeMultiDiscGamesSubtitle
+                        .getString(context),
+                    subtitleMaxLines: 2,
+                    selected: isSelected,
+                    onTap: () => _organizeMultiDiscGames(),
+                    trailing: SettingsActionButton(
+                      icon: Symbols.folder_managed_rounded,
+                      selected: isSelected,
+                    ),
+                    belowContent: _buildInlineProgress(
+                      context,
+                      multiDiscProgress,
+                    ),
+                  ),
+                  SettingsCardRow(
+                    icon: Symbols.cleaning_services_rounded,
+                    title: AppLocale.cleanOrphanedMetadata.getString(context),
+                    subtitle: AppLocale.cleanOrphanedMetadataSubtitle.getString(
+                      context,
+                    ),
+                    subtitleMaxLines: 2,
+                    selected:
+                        widget.isContentFocused &&
+                        widget.selectedContentIndex == 1,
+                    onTap: () => _cleanOrphanedMetadata(),
+                    trailing: SettingsActionButton(
+                      icon: Symbols.cleaning_services_rounded,
+                      selected:
+                          widget.isContentFocused &&
+                          widget.selectedContentIndex == 1,
+                    ),
+                    belowContent: _buildInlineProgress(
+                      context,
+                      metadataProgress,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  static GlobalNotificationData? _progressFor(
+    List<GlobalNotificationData> notifications,
+    String id,
+  ) {
+    for (final notification in notifications) {
+      if (notification.id == id) return notification;
+    }
+    return null;
+  }
+
+  /// Inline progress shown inside the card row while a long-running tool runs,
+  /// mirroring the notification the header bell keeps for the same operation.
+  Widget _buildInlineProgress(
+    BuildContext context,
+    GlobalNotificationData? notification,
+  ) {
+    if (notification == null || notification.progress == null) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+    final progress = notification.progress!;
+
+    return Padding(
+      padding: EdgeInsets.only(top: 8.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              SettingsCardRow(
-                icon: Symbols.folder_managed_rounded,
-                title: AppLocale.organizeMultiDiscGames.getString(context),
-                subtitle: AppLocale.organizeMultiDiscGamesSubtitle.getString(
-                  context,
-                ),
-                subtitleMaxLines: 2,
-                selected: isSelected,
-                onTap: () => _organizeMultiDiscGames(),
-                trailing: SettingsActionButton(
-                  icon: Symbols.folder_managed_rounded,
-                  selected: isSelected,
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2.r),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 4.r,
+                    backgroundColor: theme.colorScheme.surface.withValues(
+                      alpha: 0.4,
+                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
-              SettingsCardRow(
-                icon: Symbols.cleaning_services_rounded,
-                title: AppLocale.cleanOrphanedMetadata.getString(context),
-                subtitle: AppLocale.cleanOrphanedMetadataSubtitle.getString(
-                  context,
-                ),
-                subtitleMaxLines: 2,
-                selected: widget.isContentFocused && widget.selectedContentIndex == 1,
-                onTap: () => _cleanOrphanedMetadata(),
-                trailing: SettingsActionButton(
-                  icon: Symbols.cleaning_services_rounded,
-                  selected: widget.isContentFocused && widget.selectedContentIndex == 1,
+              SizedBox(width: 8.r),
+              Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontSize: 10.r,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-        ),
-      ],
+          if (notification.message.isNotEmpty) ...[
+            SizedBox(height: 4.r),
+            Text(
+              notification.message,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontSize: 9.r,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

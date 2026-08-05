@@ -308,6 +308,23 @@ class DirectoriesSettingsContentState
 
     const notificationId = 'esde_import_progress';
 
+    // Resolve ES-DE strings before the async import so the progress callback
+    // (which may run after this screen was left) can use them safely.
+    final localeEsdeImporting = AppLocale.esdeImporting.getString(context);
+    final localeEsdeImportNotEsdeFolder = AppLocale.esdeImportNotEsdeFolder
+        .getString(context);
+    final localeEsdeImportNothingFound = AppLocale.esdeImportNothingFound
+        .getString(context);
+    final localeEsdeImportComplete = AppLocale.esdeImportComplete.getString(
+      context,
+    );
+    final localeEsdeSummaryGames = AppLocale.esdeSummaryGames.getString(
+      context,
+    );
+    final localeEsdeSummarySystems = AppLocale.esdeSummarySystems.getString(
+      context,
+    );
+
     setState(() {
       _isImporting = true;
       _importProgress = 0.0;
@@ -317,10 +334,9 @@ class DirectoriesSettingsContentState
 
     GlobalNotificationService().show(
       id: notificationId,
-      message: AppLocale.esdeImporting.getString(context),
+      message: localeEsdeImporting,
       type: GlobalNotificationType.info,
       progress: 0,
-      autoDismiss: false,
     );
 
     EsdeImportResult? result;
@@ -338,11 +354,10 @@ class DirectoriesSettingsContentState
           GlobalNotificationService().update(
             id: notificationId,
             message: label.isEmpty
-                ? AppLocale.esdeImporting.getString(context)
-                : '${AppLocale.esdeImporting.getString(context)}: $label',
+                ? localeEsdeImporting
+                : '$localeEsdeImporting: $label',
             type: GlobalNotificationType.info,
             progress: p,
-            autoDismiss: false,
           );
         },
       );
@@ -351,6 +366,45 @@ class DirectoriesSettingsContentState
     } catch (e) {
       error = e.toString();
       _log.e('ES-DE import failed: $e');
+    }
+
+    // Report the outcome through the global notification so the header
+    // dropdown reflects it even if this screen was left mid-import.
+    if (error != null) {
+      GlobalNotificationService().update(
+        id: notificationId,
+        message: error,
+        type: GlobalNotificationType.error,
+        progress: null,
+      );
+    } else if (result != null) {
+      if (!result.gamelistsDirFound) {
+        // No gamelists/ dir — the picked folder isn't an ES-DE installation.
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeEsdeImportNotEsdeFolder,
+          type: GlobalNotificationType.error,
+          progress: null,
+        );
+      } else if (result.gamesImported == 0 && result.systemsMatched == 0) {
+        // Valid ES-DE folder, but nothing here mapped to a NeoStation system.
+        GlobalNotificationService().update(
+          id: notificationId,
+          message: localeEsdeImportNothingFound,
+          type: GlobalNotificationType.info,
+          progress: null,
+        );
+      } else {
+        GlobalNotificationService().update(
+          id: notificationId,
+          message:
+              '$localeEsdeImportComplete: '
+              '${result.gamesImported} $localeEsdeSummaryGames, '
+              '${result.systemsMatched} $localeEsdeSummarySystems',
+          type: GlobalNotificationType.success,
+          progress: null,
+        );
+      }
     }
 
     if (!mounted) return;
@@ -367,51 +421,6 @@ class DirectoriesSettingsContentState
       _isImporting = false;
       _lastEsdeResult = showSummary ? result : null;
     });
-
-    if (error != null) {
-      GlobalNotificationService().update(
-        id: notificationId,
-        message: error,
-        type: GlobalNotificationType.error,
-        progress: null,
-        autoDismiss: true,
-        duration: const Duration(seconds: 10),
-      );
-    } else if (result != null) {
-      if (!result.gamelistsDirFound) {
-        // No gamelists/ dir — the picked folder isn't an ES-DE installation.
-        GlobalNotificationService().update(
-          id: notificationId,
-          message: AppLocale.esdeImportNotEsdeFolder.getString(context),
-          type: GlobalNotificationType.error,
-          progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
-        );
-      } else if (result.gamesImported == 0 && result.systemsMatched == 0) {
-        // Valid ES-DE folder, but nothing here mapped to a NeoStation system.
-        GlobalNotificationService().update(
-          id: notificationId,
-          message: AppLocale.esdeImportNothingFound.getString(context),
-          type: GlobalNotificationType.info,
-          progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
-        );
-      } else {
-        GlobalNotificationService().update(
-          id: notificationId,
-          message:
-              '${AppLocale.esdeImportComplete.getString(context)}: '
-              '${result.gamesImported} ${AppLocale.esdeSummaryGames.getString(context)}, '
-              '${result.systemsMatched} ${AppLocale.esdeSummarySystems.getString(context)}',
-          type: GlobalNotificationType.success,
-          progress: null,
-          autoDismiss: true,
-          duration: const Duration(seconds: 10),
-        );
-      }
-    }
   }
 
   Future<void> _resetEsdeImport() async {

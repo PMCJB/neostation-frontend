@@ -181,8 +181,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.organizeMultiDiscWarning:
       '一致するROMファイルを新しいゲームフォルダへ移動し、ストレージに.m3uプレイリストを作成します。この操作を自動的に元に戻すことはできません。',
   AppLocale.cleanOrphanedMetadata: '孤立したメタデータを削除',
-  AppLocale.cleanOrphanedMetadataSubtitle:
-      '削除された ROM が残したメタデータとメディアを削除します',
+  AppLocale.cleanOrphanedMetadataSubtitle: '削除された ROM が残したメタデータとメディアを削除します',
   AppLocale.cleanOrphanedMetadataWarning:
       'ライブラリに存在しない ROM のメタデータ行とメディアファイルを完全に削除します。ES-DE からインポートしたエントリは削除されません。',
   AppLocale.cleanOrphanedMetadataScanning: '孤立したメタデータを削除中...',
@@ -192,8 +191,7 @@ const Map<String, dynamic> appLocaleJa = {
       '{entries} 件のメタデータエントリと {files} 個のメディアファイルを削除しました。',
   AppLocale.cleanOrphanedMetadataEsdeSkippedSuffix:
       '{count} 件の ES-DE からインポートしたエントリはそのまま残されています。',
-  AppLocale.cleanOrphanedMetadataFailed:
-      '孤立したメタデータの削除に失敗しました: {error}',
+  AppLocale.cleanOrphanedMetadataFailed: '孤立したメタデータの削除に失敗しました: {error}',
   AppLocale.notifications: '通知',
   AppLocale.clearAll: 'すべてクリア',
   AppLocale.noActiveNotifications: 'アクティブな通知はありません',

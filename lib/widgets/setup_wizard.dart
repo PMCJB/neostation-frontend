@@ -1465,16 +1465,19 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
     // Resolve ES-DE strings before the async import so progress callbacks can
     // use them without a BuildContext.
     final localeEsdeImporting = AppLocale.esdeImporting.getString(context);
-    final localeEsdeImportNotEsdeFolder =
-        AppLocale.esdeImportNotEsdeFolder.getString(context);
-    final localeEsdeImportNothingFound =
-        AppLocale.esdeImportNothingFound.getString(context);
-    final localeEsdeImportComplete =
-        AppLocale.esdeImportComplete.getString(context);
-    final localeEsdeSummaryGames =
-        AppLocale.esdeSummaryGames.getString(context);
-    final localeEsdeSummarySystems =
-        AppLocale.esdeSummarySystems.getString(context);
+    final localeEsdeImportNotEsdeFolder = AppLocale.esdeImportNotEsdeFolder
+        .getString(context);
+    final localeEsdeImportNothingFound = AppLocale.esdeImportNothingFound
+        .getString(context);
+    final localeEsdeImportComplete = AppLocale.esdeImportComplete.getString(
+      context,
+    );
+    final localeEsdeSummaryGames = AppLocale.esdeSummaryGames.getString(
+      context,
+    );
+    final localeEsdeSummarySystems = AppLocale.esdeSummarySystems.getString(
+      context,
+    );
 
     await context.read<SqliteConfigProvider>().updateEsdeFolderPath(selected);
 
@@ -1490,7 +1493,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
       message: localeEsdeImporting,
       type: GlobalNotificationType.info,
       progress: 0,
-      autoDismiss: false,
     );
 
     EsdeImportResult? result;
@@ -1512,7 +1514,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
                 : '$localeEsdeImporting: $label',
             type: GlobalNotificationType.info,
             progress: p,
-            autoDismiss: false,
           );
         },
       );
@@ -1542,8 +1543,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
         message: error,
         type: GlobalNotificationType.error,
         progress: null,
-        autoDismiss: true,
-        duration: const Duration(seconds: 10),
       );
     } else if (result != null && !result.gamelistsDirFound) {
       GlobalNotificationService().update(
@@ -1551,8 +1550,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
         message: localeEsdeImportNotEsdeFolder,
         type: GlobalNotificationType.error,
         progress: null,
-        autoDismiss: true,
-        duration: const Duration(seconds: 10),
       );
     } else if (!matched) {
       GlobalNotificationService().update(
@@ -1560,8 +1557,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
         message: localeEsdeImportNothingFound,
         type: GlobalNotificationType.info,
         progress: null,
-        autoDismiss: true,
-        duration: const Duration(seconds: 10),
       );
     } else {
       final importResult = result;
@@ -1573,8 +1568,6 @@ class _SetupWizardState extends State<SetupWizard> with WidgetsBindingObserver {
             '${importResult.systemsMatched} $localeEsdeSummarySystems',
         type: GlobalNotificationType.success,
         progress: null,
-        autoDismiss: true,
-        duration: const Duration(seconds: 10),
       );
     }
   }

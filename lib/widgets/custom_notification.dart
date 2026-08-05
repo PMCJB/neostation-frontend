@@ -49,10 +49,8 @@ class AppNotification {
     Uint8List? imageBytes,
     IconData? icon,
     NotificationType type = NotificationType.info,
-    Duration duration = const Duration(seconds: 4),
     String? notificationId,
     double? progress,
-    bool autoDismiss = true,
   }) {
     final id = notificationId ?? _generateId();
     GlobalNotificationService().show(
@@ -62,9 +60,7 @@ class AppNotification {
       imageBytes: imageBytes,
       icon: icon,
       type: _mapType(type),
-      duration: duration,
       progress: progress,
-      autoDismiss: autoDismiss,
     );
   }
 
@@ -77,7 +73,6 @@ class AppNotification {
     Uint8List? imageBytes,
     IconData? icon,
     NotificationType type = NotificationType.info,
-    bool autoDismiss = true,
   }) {
     GlobalNotificationService().update(
       id: notificationId,
@@ -86,7 +81,6 @@ class AppNotification {
       imageBytes: imageBytes,
       icon: icon,
       type: _mapType(type),
-      autoDismiss: autoDismiss,
     );
   }
 
