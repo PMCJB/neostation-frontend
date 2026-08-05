@@ -15,6 +15,7 @@ import 'package:neostation/services/metadata_cleanup_service.dart';
 import 'package:neostation/services/rom_folder_organizer_service.dart';
 import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'package:neostation/widgets/custom_notification.dart';
+import 'package:neostation/widgets/info_dialog.dart';
 import 'settings_title.dart';
 import 'widgets/settings_card_row.dart';
 import 'widgets/settings_action_button.dart';
@@ -233,10 +234,12 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
     if (!mounted) return;
 
     if (!analysis.hasOrphans) {
-      AppNotification.showNotification(
+      await InfoDialog.show(
         context,
-        localeNothingFound,
-        type: NotificationType.info,
+        title: locale,
+        body: localeNothingFound,
+        okLabel: AppLocale.ok.getString(context),
+        icon: Symbols.cleaning_services_rounded,
       );
       return;
     }

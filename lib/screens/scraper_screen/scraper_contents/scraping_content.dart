@@ -136,9 +136,12 @@ class ScrapingContentState extends State<ScrapingContent> {
           scrapingProvider.markArtworkUpdated();
         }
         if (mounted) {
+          final summary = scrapingProvider.totalGames > 0
+              ? '${scrapingProvider.processedGames} / ${scrapingProvider.totalGames}'
+              : '';
           final message = scrapingProvider.totalGames == 0
               ? localeAllGamesUpToDate
-              : localeScrapingCompleted;
+              : '$localeScrapingCompleted ${summary.isNotEmpty ? '($summary)' : ''}';
           GlobalNotificationService().update(
             id: notificationId,
             message: message,
