@@ -710,10 +710,15 @@ extension NeoSyncCore on NeoSyncProvider {
         isState: isState,
       );
 
+      final parsed = CloudPathBuilder.parse(relativePath);
       final result = await _neoSyncService.syncFile(
         file,
         game.name,
         customFilename: relativePath,
+        systemId: game.systemFolderName,
+        emulatorId: parsed?.emulatorSlug,
+        isState: isState,
+        scope: parsed?.scope,
       );
 
       if (result['success']) {
@@ -1205,25 +1210,30 @@ extension NeoSyncCore on NeoSyncProvider {
         final file = File(gameState.localSave!.filePath);
         if (file.existsSync()) {
           // Calcular la ruta relativa correcta
-          final savesPath = await _getRetroArchSavesPath();
-          if (savesPath != null) {
-            final relativePath = await _calculateSyncRelativePath(
-              game,
-              file,
-              savesPath,
-            );
+      final savesPath = await _getRetroArchSavesPath();
+      if (savesPath != null) {
+        final relativePath = await _calculateSyncRelativePath(
+          game,
+          file,
+          savesPath,
+        );
 
-            final result = await _neoSyncService.syncFile(
-              file,
-              game.name,
-              customFilename: relativePath,
-            );
+        final parsed = CloudPathBuilder.parse(relativePath);
+        final result = await _neoSyncService.syncFile(
+          file,
+          game.name,
+          customFilename: relativePath,
+          systemId: game.systemFolderName,
+          emulatorId: parsed?.emulatorSlug,
+          isState: false,
+          scope: parsed?.scope,
+        );
 
-            if (result['success']) {
-              // Actualizar estado después del sync
-              await detectGameSaveFiles(game);
-            }
-          }
+        if (result['success']) {
+          // Actualizar estado después del sync
+          await detectGameSaveFiles(game);
+        }
+      }
         }
       } else if (gameState.status == neo_sync.GameSyncStatus.cloudOnly &&
           gameState.cloudSave != null) {
@@ -1274,10 +1284,15 @@ extension NeoSyncCore on NeoSyncProvider {
             savesPath,
           );
 
+          final parsed = CloudPathBuilder.parse(relativePath);
           final result = await _neoSyncService.syncFile(
             file,
             game.name,
             customFilename: relativePath,
+            systemId: game.systemFolderName,
+            emulatorId: parsed?.emulatorSlug,
+            isState: false,
+            scope: parsed?.scope,
           );
 
           if (result['success']) {

@@ -13,6 +13,7 @@ import '../../models/emulator_model.dart';
 import '../../models/core_emulator_model.dart';
 // import '../models/neo_sync_models.dart'; // Removido si no se usa directamente aquí
 import '../../models/database_game_model.dart';
+import '../../utils/cloud_path_builder.dart';
 import 'sqlite_migrations.dart';
 import '../../services/config_service.dart'; // Required for ConfigService usage
 import '../../services/json_config_service.dart';
@@ -421,7 +422,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 110;
+  static const int _databaseVersion = 111;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -848,6 +849,19 @@ class SqliteService {
         final bool retroAchievementsCompatible =
             emuDef.isretroAchievementsCompatible ?? (!isStandalone);
 
+        // Determine the NeoSync v2 cloud slug. RetroArch cores collapse all
+        // variants (RA/RA64/RA32) into one `retroarch.<core>` slug so saves are
+        // portable between them; standalone emulators use the declared slug or
+        // a derivation from their unique id.
+        String? neosyncSlug;
+        if (!isStandalone) {
+          neosyncSlug = CloudPathBuilder.retroArchCoreSlug(
+            coreFilename ?? emuDef.uniqueId,
+          );
+        } else {
+          neosyncSlug = emuDef.effectiveNeoSyncSlug;
+        }
+
         // Insert/Update
         final existing = await txn.query(
           'app_emulators',
@@ -866,6 +880,7 @@ class SqliteService {
             'android_package_name': packageName,
             'android_activity_name': platformData['_resolved_activity_name'],
             'is_ra_compatible': retroAchievementsCompatible ? 1 : 0,
+            'neosync_slug': neosyncSlug,
           };
 
           if (isDefaultCore) {
@@ -901,6 +916,7 @@ class SqliteService {
               'android_package_name': packageName,
               'android_activity_name': platformData['_resolved_activity_name'],
               'is_ra_compatible': retroAchievementsCompatible ? 1 : 0,
+              'neosync_slug': neosyncSlug,
             };
             if (isDefaultCore) {
               updateData['is_default_core'] = 1;
@@ -930,6 +946,7 @@ class SqliteService {
               // only thing that can see the whole (system_id, os_id) group.
               'is_default': 0,
               'is_ra_compatible': retroAchievementsCompatible ? 1 : 0,
+              'neosync_slug': neosyncSlug,
             };
             if (isDefaultCore) {
               insertData['is_default_core'] = 1;
@@ -1310,6 +1327,21 @@ class SqliteService {
     // Add newly created table to known set.
     if (!tableNames.contains('user_rom_folders')) {
       tableNames.add('user_rom_folders');
+    }
+
+    // FIX: Ensure user_custom_save_folders exists even if migrations were
+    // skipped. NeoSync stores user-selected save folders per system + emulator.
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS user_custom_save_folders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        system_folder_name TEXT NOT NULL COLLATE NOCASE,
+        emulator_slug TEXT NOT NULL,
+        folder_path TEXT NOT NULL,
+        UNIQUE(system_folder_name, emulator_slug)
+      );
+    ''');
+    if (!tableNames.contains('user_custom_save_folders')) {
+      tableNames.add('user_custom_save_folders');
     }
 
     // FIX: Ensure user_screenscraper_config columns are up to date (v29).
@@ -1718,9 +1750,19 @@ class SqliteService {
           is_ra_compatible INTEGER NOT NULL DEFAULT 0,
           android_package_name TEXT,
           android_activity_name TEXT,
+          neosync_slug TEXT,
           PRIMARY KEY (os_id, unique_identifier),
           FOREIGN KEY (os_id) REFERENCES app_os(id) ON DELETE CASCADE,
           FOREIGN KEY (system_id) REFERENCES app_systems(id) ON DELETE CASCADE
+      );
+      ''',
+      '''
+      CREATE TABLE IF NOT EXISTS user_custom_save_folders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        system_folder_name TEXT NOT NULL COLLATE NOCASE,
+        emulator_slug TEXT NOT NULL,
+        folder_path TEXT NOT NULL,
+        UNIQUE(system_folder_name, emulator_slug)
       );
       ''',
     ];
@@ -4839,6 +4881,31 @@ class SqliteService {
         stackTrace: stackTrace,
       );
       // Non-critical: allow initialization to proceed even if this sync fails.
+    }
+  }
+
+  /// Finds systems whose emulators reference a RetroArch core by display name
+  /// or core filename. Used by the NeoSync migration to resolve the system for
+  /// legacy `saves/<core>/<game>.ext` paths.
+  static Future<List<Map<String, dynamic>>?> findSystemByCoreName(
+    String coreName,
+  ) async {
+    try {
+      final db = await instance.database;
+      final results = await db.rawQuery(
+        '''
+        SELECT DISTINCT s.id, s.folder_name
+        FROM app_emulators e
+        JOIN app_systems s ON e.system_id = s.id
+        WHERE (e.name LIKE ? OR e.core_filename LIKE ?)
+        LIMIT 1
+        ''',
+        ['%$coreName%', '%$coreName%'],
+      );
+      return results;
+    } catch (e) {
+      _log.e('Error finding system by core name: $e');
+      return null;
     }
   }
 }

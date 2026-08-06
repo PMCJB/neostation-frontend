@@ -96,10 +96,18 @@ class NeoSyncService extends ChangeNotifier {
   ///
   /// Performs a pre-flight check to avoid redundant uploads. Updates the local
   /// sync state in the database upon success.
+  ///
+  /// [systemId] and [emulatorId] are the NeoSync v2 structured metadata: they
+  /// let the backend index files without parsing the cloud path. [isState] and
+  /// [scope] (shared/game) describe the file kind.
   Future<Map<String, dynamic>> syncFile(
     File file,
     String gameName, {
     String? customFilename,
+    String? systemId,
+    String? emulatorId,
+    bool? isState,
+    String? scope,
   }) async {
     _isLoading = true;
     _lastError = null;
@@ -172,6 +180,18 @@ class NeoSyncService extends ChangeNotifier {
       request.fields['file_size'] = fileBytes.length.toString();
       request.fields['file_modified_at_timestamp'] = fileModifiedAtTimestamp
           .toString();
+      if (systemId != null && systemId.isNotEmpty) {
+        request.fields['system_id'] = systemId;
+      }
+      if (emulatorId != null && emulatorId.isNotEmpty) {
+        request.fields['emulator_id'] = emulatorId;
+      }
+      if (isState != null) {
+        request.fields['is_state'] = isState.toString();
+      }
+      if (scope != null && scope.isNotEmpty) {
+        request.fields['scope'] = scope;
+      }
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
@@ -350,10 +370,54 @@ class NeoSyncService extends ChangeNotifier {
     }
   }
 
-  /// Fetches the user's current cloud storage quota and usage details.
-  Future<Map<String, dynamic>> getQuota() async {
+  /// Migrates a cloud file to a new path (NeoSync v2).
+  ///
+  /// The backend copies the object in GCS (without re-uploading bytes) and
+  /// updates the metadata path. Used by the legacy -> v2 migration job.
+  Future<Map<String, dynamic>> migrateFile(
+    String fileId,
+    String newPath,
+  ) async {
     _isLoading = true;
     _lastError = null;
+    _safeNotifyListeners();
+
+    try {
+      final headers = await _getHeaders();
+      final baseUrl = AppConfig.neoSyncBaseUrl;
+      final uri = Uri.parse('$baseUrl/api/v1/files/migrate');
+
+      final response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode({'file_id': fileId, 'new_path': newPath}),
+      );
+
+      if (response.statusCode == 200) {
+        return {'success': true};
+      } else {
+        String error = 'Migration failed';
+        try {
+          final data = jsonDecode(response.body);
+          error = data['error'] ?? error;
+        } catch (_) {}
+        _log.e('Migrate failed: $error');
+        return {'success': false, 'message': error};
+      }
+    } catch (e) {
+      final error = 'Network error: $e';
+      _log.e('Migrate error: $error');
+      _lastError = error;
+      return {'success': false, 'message': error};
+    } finally {
+      _isLoading = false;
+      _safeNotifyListeners();
+    }
+  }
+
+  /// Fetches the user's current cloud storage quota and usage details.
+  Future<Map<String, dynamic>> getQuota() async {
+    _isLoading = true;    _lastError = null;
     _safeNotifyListeners();
 
     try {

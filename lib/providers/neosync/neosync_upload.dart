@@ -137,9 +137,38 @@ extension NeoSyncUpload on NeoSyncProvider {
         return;
       }
 
+      // 3. Collect user-configured custom save folders (ARMSX2, ARMSX1, etc.)
+      // from the NeoSync module. Each entry carries its system + emulator slug
+      // so the cloud path identifies the emulator that produced the save.
+      final customFiles = <({File file, String system, String emulatorSlug})>[];
+      try {
+        final systems = await SystemRepository.getAllSystems();
+        for (final system in systems) {
+          final folders = await NeoSyncSaveFolderRepository.getFoldersForSystem(
+            system.folderName,
+          );
+          for (final entry in folders.entries) {
+            if (!Directory(entry.value).existsSync()) continue;
+            final files = await _getSaveFiles(entry.value);
+            for (final file in files) {
+              customFiles.add(
+                (
+                  file: file,
+                  system: system.folderName,
+                  emulatorSlug: entry.key,
+                ),
+              );
+            }
+          }
+        }
+      } catch (e) {
+        NeoSyncProvider._log.e('Error scanning custom save folders: $e');
+      }
+
       _totalFiles =
           retroArchSaves.length +
           retroArchStates.length +
+          customFiles.length +
           saveFiles.length; // saveFiles contains Switch files here
 
       _processedItems.add('Auto-syncing $_totalFiles local files...');
@@ -157,6 +186,20 @@ extension NeoSyncUpload on NeoSyncProvider {
       // Process RetroArch States
       for (final file in retroArchStates) {
         await _processAutoUploadFile(file, statesPath!, isState: true);
+        _processedFiles++;
+        _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
+        notify();
+      }
+
+      // Process custom save folders using their emulator slug namespace.
+      for (final entry in customFiles) {
+        await _processAutoUploadFile(
+          entry.file,
+          entry.file.parent.path,
+          isState: false,
+          customFolderSystem: entry.system,
+          customFolderEmulatorSlug: entry.emulatorSlug,
+        );
         _processedFiles++;
         _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
         notify();
@@ -227,6 +270,8 @@ extension NeoSyncUpload on NeoSyncProvider {
     File file,
     String basePath, {
     bool isState = false,
+    String? customFolderSystem,
+    String? customFolderEmulatorSlug,
   }) async {
     try {
       final isNandFile = file.path.contains(
@@ -238,17 +283,28 @@ extension NeoSyncUpload on NeoSyncProvider {
         return;
       }
 
-      String relativePath = _calculateRelativePath(
-        file,
-        basePath,
-        isState: isState,
-      );
+      final String relativePath;
+      if (customFolderSystem != null &&
+          customFolderEmulatorSlug != null) {
+        relativePath = CloudPathBuilder.build(
+          system: customFolderSystem,
+          emulatorSlug: customFolderEmulatorSlug,
+          scope: 'shared',
+          filePath: path.basename(file.path),
+        );
+      } else {
+        relativePath = _calculateRelativePath(file, basePath, isState: isState);
+      }
       final gameName = _extractGameNameFromPath(file.path);
 
       final result = await _neoSyncService.syncFile(
         file,
         gameName,
         customFilename: relativePath,
+        systemId: customFolderSystem,
+        emulatorId: customFolderEmulatorSlug,
+        isState: isState,
+        scope: customFolderSystem != null ? 'shared' : null,
       );
 
       if (result['success']) {
@@ -395,4 +451,82 @@ extension NeoSyncUpload on NeoSyncProvider {
       }
     }
   }
+
+  /// Migrates the user's legacy cloud files to the NeoSync v2 path standard.
+  ///
+  /// Lists every cloud file, maps legacy paths to their v2 equivalent using
+  /// [CloudMigrationService], and asks the backend to rename each one. Files
+  /// that already follow the v2 layout (or cannot be mapped) are skipped.
+  Future<MigrationResult> migrateCloudToV2() async {
+    final result = MigrationResult();
+    if (!isNeoSyncAuthenticated) return result;
+
+    _setSyncing(true);
+    _error = null;
+    _syncStatus = 'Migrating cloud files to NeoSync v2...';
+    _processedItems = [];
+    notify();
+
+    try {
+      final filesResult = await _neoSyncService.getFiles();
+      if (!filesResult['success']) {
+        _error = 'Failed to fetch cloud files: ${filesResult['message']}';
+        _syncStatus = 'Error: $_error';
+        _processedItems.add(_syncStatus);
+        return result;
+      }
+
+      final cloudFiles = (filesResult['files'] as List<NeoSyncFile>?) ?? [];
+      _totalFiles = cloudFiles.length;
+      _processedFiles = 0;
+      notify();
+
+      for (final cloudFile in cloudFiles) {
+        final legacyPath = cloudFile.fileName;
+        final v2Path = await CloudMigrationService.mapLegacyToV2(legacyPath);
+
+        if (v2Path == null || v2Path == legacyPath) {
+          result.skipped++;
+          _processedFiles++;
+          _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
+          continue;
+        }
+
+        final migrateResult = await _neoSyncService.migrateFile(
+          cloudFile.id,
+          v2Path,
+        );
+        if (migrateResult['success'] == true) {
+          result.migrated++;
+          _processedItems.add('🔄 $legacyPath -> $v2Path');
+        } else {
+          result.failed++;
+          _processedItems.add(
+            '❌ Failed to migrate $legacyPath: ${migrateResult['message']}',
+          );        }
+        _processedFiles++;
+        _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
+        notify();
+      }
+
+      _syncStatus =
+          'Migration complete: ${result.migrated} migrated, ${result.skipped} skipped, ${result.failed} failed';
+      _processedItems.add(_syncStatus);
+    } catch (e) {
+      _error = 'Error migrating cloud files: $e';
+      _syncStatus = 'Error: $_error';
+      _processedItems.add(_syncStatus);
+      NeoSyncProvider._log.e(_error!);
+    } finally {
+      _setSyncing(false);
+    }
+    return result;
+  }
+}
+
+/// Result of a NeoSync v2 cloud migration run.
+class MigrationResult {
+  int migrated = 0;
+  int skipped = 0;
+  int failed = 0;
 }

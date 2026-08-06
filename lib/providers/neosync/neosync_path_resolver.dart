@@ -21,6 +21,20 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       resolvedPaths.addAll(resolved);
     }
 
+    // User-selected custom save folders (ARMSX2, ARMSX1, etc.) are stored per
+    // system + emulator in the NeoSync module. Append every configured folder
+    // for this system so custom emulator saves sync regardless of the JSON.
+    final customFolders = await NeoSyncSaveFolderRepository.getFoldersForSystem(
+      system.folderName,
+    );
+    if (customFolders.isNotEmpty) {
+      for (final folderPath in customFolders.values) {
+        if (!ensureExists || Directory(folderPath).existsSync()) {
+          resolvedPaths.add(folderPath);
+        }
+      }
+    }
+
     // Eliminar duplicados y rutas inexistentes si requireExists es true
     var result = resolvedPaths.toSet();
     if (ensureExists) {
@@ -184,6 +198,18 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     String basePath, {
     bool isState = false,
   }) async {
+    // Try the NeoSync v2 standard path first. It carries system + emulator, so
+    // the cloud always knows which emulator produced the save.
+    final v2Path = await _buildV2CloudPath(
+      game,
+      file,
+      basePath,
+      isState: isState,
+    );
+    if (v2Path.startsWith('saves/') || v2Path.startsWith('states/')) {
+      return v2Path;
+    }
+
     // Check for Dreamcast game
     bool isDreamcast =
         game.systemFolderName == 'dreamcast' || game.systemFolderName == 'dc';
@@ -252,6 +278,89 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     return path.join(root, path.basename(file.path)).replaceAll('\\', '/');
   }
 
+  /// Builds a NeoSync v2 cloud path for a game save/state.
+  ///
+  /// Uses the standard `saves|states/<system>/<emulator-slug>/<scope>/...`
+  /// layout so the emulator that produced the save is always identifiable.
+  /// When the emulator slug cannot be determined it falls back to the legacy
+  /// relative path so existing flows keep working.
+  Future<String> _buildV2CloudPath(
+    GameModel game,
+    File file,
+    String basePath, {
+    bool isState = false,
+  }) async {
+    final system = await _getSystemForGame(game);
+    final emulatorSlug = await _resolveEmulatorSlugForGame(game, system);
+
+    if (system == null || emulatorSlug == null) {
+      return _calculateRelativePath(file, basePath, isState: isState);
+    }
+
+    final systemFolder = system.folderName;
+    final fileName = path.basename(file.path);
+
+    // Memory-card style files are shared between games (PS2 .ps2 memcards,
+    // Dreamcast VMU, etc.), so they go under the `shared` scope without a game
+    // segment. Everything else is per-game.
+    final lowerName = fileName.toLowerCase();
+    final isSharedCard =
+        (systemFolder == 'ps2' && lowerName.endsWith('.ps2')) ||
+        (systemFolder == 'dc' &&
+            lowerName.contains('vmu_save')) ||
+        systemFolder == 'dreamcast' &&
+            lowerName.contains('vmu_save');
+
+    final scope = isSharedCard ? 'shared' : 'game';
+
+    return CloudPathBuilder.build(
+      system: systemFolder,
+      emulatorSlug: emulatorSlug,
+      scope: scope,
+      filePath: fileName,
+      gameName: isSharedCard ? null : game.name,
+      isState: isState,
+    );
+  }
+
+  /// Resolves the NeoSync v2 emulator slug for a game.
+  ///
+  /// Tries, in order: the emulator's stored `neosync_slug`, a derivation from
+  /// the game's emulator unique id (handles RetroArch cores collapsing
+  /// RA/RA64/RA32), then the system's default standalone slug. Returns null
+  /// when no emulator information is available.
+  Future<String?> _resolveEmulatorSlugForGame(
+    GameModel game,
+    SystemModel? system,
+  ) async {
+    final uniqueId = game.emulatorName?.trim() ?? '';
+    if (uniqueId.isNotEmpty) {
+      return CloudPathBuilder.slugFromEmulatorUniqueId(uniqueId);
+    }
+
+    if (game.coreName != null && game.coreName!.isNotEmpty) {
+      return CloudPathBuilder.retroArchCoreSlug(game.coreName!);
+    }
+
+    if (system == null) return null;
+    try {
+      final standalone = await SqliteService.getStandaloneEmulatorsBySystemId(
+        system.id ?? system.folderName,
+      );
+      if (standalone.isNotEmpty) {
+        final slug = standalone.first['neosync_slug']?.toString();
+        if (slug != null && slug.isNotEmpty) return slug;
+        final uniqueId = standalone.first['unique_identifier']?.toString();
+        if (uniqueId != null && uniqueId.isNotEmpty) {
+          return CloudPathBuilder.slugFromEmulatorUniqueId(uniqueId);
+        }
+      }
+    } catch (e) {
+      NeoSyncProvider._log.w('Error resolving emulator slug: $e');
+    }
+    return null;
+  }
+
   /// Resuelve la ruta local para un archivo de la nube para un juego específico
   /// Resuelve la ruta local para un archivo de la nube para un juego específico
   /// Puede retornar múltiples rutas si el sistema lo requiere (ej. múltiples emuladores Switch)
@@ -275,6 +384,20 @@ extension NeoSyncPathResolver on NeoSyncProvider {
 
     // Buscar la carpeta más apropiada.
     String targetFolder = resolvedFolders.first;
+
+    // NeoSync v2 paths carry system/emulator/scope. For per-game saves, prefer
+    // the configured custom folder when the emulator has one, otherwise fall
+    // back to the standard resolution below.
+    final v2Path = CloudPathBuilder.parse(cloudFile.fileName);
+    if (v2Path != null && !v2Path.isShared) {
+      final customFolder = await NeoSyncSaveFolderRepository.getFolder(
+        v2Path.system,
+        v2Path.emulatorSlug,
+      );
+      if (customFolder != null && customFolder.isNotEmpty) {
+        return [path.join(customFolder, v2Path.filePath)];
+      }
+    }
 
     if (isState) {
       final statesPath = await _getRetroArchStatesPath();
@@ -308,10 +431,14 @@ extension NeoSyncPathResolver on NeoSyncProvider {
 
     // Limpiar el nombre del archivo (quitar prefijos 'saves/' o 'states/')
     String relativeName = cloudFile.fileName;
-    if (isState) {
+    if (v2Path != null) {
+      // For v2 game paths, filePath is the actual file name (the game segment
+      // is dropped because RetroArch keeps per-game files flat in its saves
+      // dir). Preserve any emulator-internal structure inside filePath.
+      relativeName = v2Path.filePath;
+    } else if (isState) {
       relativeName = relativeName.replaceFirst(RegExp(r'^states[/\\]'), '');
-    }
-    if (isSave) {
+    } else if (isSave) {
       relativeName = relativeName.replaceFirst(RegExp(r'^saves[/\\]'), '');
     }
 
