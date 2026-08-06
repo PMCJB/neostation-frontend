@@ -21,6 +21,7 @@ import 'package:neostation/repositories/game_repository.dart';
 import 'package:neostation/utils/gamepad_nav.dart';
 import '../../app_screen.dart';
 import 'package:neostation/utils/centered_scroll_controller.dart';
+import 'custom_save_folders_panel.dart';
 
 class NeoSyncContent extends StatefulWidget {
   const NeoSyncContent({super.key});
@@ -646,6 +647,8 @@ class NeoSyncContentState extends State<NeoSyncContent>
                 ),
                 SizedBox(height: 8.r),
               ],
+              CustomSaveFoldersPanel(),
+              SizedBox(height: 8.r),
               // Upgrade Plan Steam-style button (Compacto)
               SizedBox(
                 width: double.infinity,

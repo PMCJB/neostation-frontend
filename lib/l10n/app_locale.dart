@@ -999,6 +999,13 @@ mixin AppLocale {
   static const String raRecentlyPlayedTitle = 'ra_recently_played_title';
   static const String raNoRecentlyPlayed = 'ra_no_recently_played';
 
+  // Custom save folders (NeoSync v2)
+  static const String customSaveFoldersTitle = 'custom_save_folders_title';
+  static const String customSaveFolderPickSystem = 'custom_save_folder_pick_system';
+  static const String customSaveFolderSelect = 'custom_save_folder_select';
+  static const String customSaveFolderInvalid = 'custom_save_folder_invalid';
+  static const String customSaveFoldersMigrate = 'custom_save_folders_migrate';
+
   // ==========================================================================
   // Localization Maps
   // ==========================================================================

@@ -848,6 +848,13 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.raRecentlyPlayedTitle: '최근 플레이한 게임',
   AppLocale.raNoRecentlyPlayed: '최근에 플레이한 게임이 없습니다',
 
+  // Custom save folders (NeoSync v2)
+  AppLocale.customSaveFoldersTitle: '사용자 지정 저장 폴더',
+  AppLocale.customSaveFolderPickSystem: '시스템 선택',
+  AppLocale.customSaveFolderSelect: '폴더 선택',
+  AppLocale.customSaveFolderInvalid: '선택한 폴더가 존재하지 않습니다',
+  AppLocale.customSaveFoldersMigrate: '클라우드 저장을 NeoSync v2로 마이그레이션',
+
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE 가져오기',
   AppLocale.esdeImportSubtitle: 'ES-DE에서 메타데이터 및 아트워크 가져오기',

@@ -854,6 +854,13 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.raRecentlyPlayedTitle: '最近プレイ',
   AppLocale.raNoRecentlyPlayed: '最近プレイしたゲームはありません',
 
+  // Custom save folders (NeoSync v2)
+  AppLocale.customSaveFoldersTitle: 'カスタムセーブフォルダー',
+  AppLocale.customSaveFolderPickSystem: 'システムを選択',
+  AppLocale.customSaveFolderSelect: 'フォルダーを選択',
+  AppLocale.customSaveFolderInvalid: '選択したフォルダーが存在しません',
+  AppLocale.customSaveFoldersMigrate: 'クラウドセーブをNeoSync v2に移行',
+
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',
   AppLocale.esdeImportSubtitle: 'Import metadata and artwork from ES-DE',

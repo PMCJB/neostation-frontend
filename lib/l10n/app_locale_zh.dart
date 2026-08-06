@@ -840,6 +840,13 @@ const Map<String, dynamic> appLocaleZh = {
   AppLocale.raRecentlyPlayedTitle: '最近游玩',
   AppLocale.raNoRecentlyPlayed: '没有最近游玩的游戏',
 
+  // Custom save folders (NeoSync v2)
+  AppLocale.customSaveFoldersTitle: '自定义存档文件夹',
+  AppLocale.customSaveFolderPickSystem: '选择系统',
+  AppLocale.customSaveFolderSelect: '选择文件夹',
+  AppLocale.customSaveFolderInvalid: '所选文件夹不存在',
+  AppLocale.customSaveFoldersMigrate: '将云存档迁移到 NeoSync v2',
+
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',
   AppLocale.esdeImportSubtitle: 'Import metadata and artwork from ES-DE',

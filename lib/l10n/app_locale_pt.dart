@@ -951,6 +951,13 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.raRecentlyPlayedTitle: 'Jogados Recentemente',
   AppLocale.raNoRecentlyPlayed: 'Nenhum jogo jogado recentemente',
 
+  // Custom save folders (NeoSync v2)
+  AppLocale.customSaveFoldersTitle: 'Pastas de save personalizadas',
+  AppLocale.customSaveFolderPickSystem: 'Escolha um sistema',
+  AppLocale.customSaveFolderSelect: 'Selecionar pasta',
+  AppLocale.customSaveFolderInvalid: 'A pasta selecionada não existe',
+  AppLocale.customSaveFoldersMigrate: 'Migrar saves da nuvem para o NeoSync v2',
+
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',
   AppLocale.esdeImportSubtitle: 'Import metadata and artwork from ES-DE',
