@@ -103,6 +103,14 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
       );
       if (!mounted) return;
       await _loadConfigured();
+      if (!mounted) return;
+
+      // Upload the folder's existing saves right away so they are backed up
+      // immediately instead of waiting for the next global auto-sync.
+      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
+        system,
+        'unknown',
+      );
     } catch (e) {
       if (mounted) {
         custom.AppNotification.showNotification(

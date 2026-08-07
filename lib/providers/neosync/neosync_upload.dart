@@ -485,6 +485,75 @@ extension NeoSyncUpload on NeoSyncProvider {
     }
   }
 
+  /// Uploads every file in a single configured custom save folder.
+  ///
+  /// Used right after the user selects a folder so its existing saves are
+  /// backed up immediately, without waiting for the next global auto-sync.
+  Future<void> syncCustomSaveFolder(
+    String systemFolderName,
+    String emulatorSlug,
+  ) async {
+    if (!isNeoSyncAuthenticated) return;
+    if (_isSyncing) return;
+
+    final folder = await NeoSyncSaveFolderRepository.getFolder(
+      systemFolderName,
+      emulatorSlug,
+    );
+    if (folder == null || folder.isEmpty) return;
+    if (!Directory(folder).existsSync()) return;
+
+    _setSyncing(true);
+    _error = null;
+    _syncProgress = 0.0;
+    _syncStatus = 'Uploading custom save folder...';
+    _totalFiles = 0;
+    _processedFiles = 0;
+    _uploadedFiles = 0;
+    _skippedFiles = 0;
+    _downloadedFiles = 0;
+    _processedItems = [];
+    notify();
+
+    try {
+      final files = await _getSaveFiles(folder);
+      _totalFiles = files.length;
+      if (files.isEmpty) {
+        _syncStatus = 'No save files found in the selected folder';
+        _processedItems.add(_syncStatus);
+        return;
+      }
+
+      _processedItems.add('Uploading $_totalFiles save files...');
+      notify();
+
+      for (final file in files) {
+        await _processAutoUploadFile(
+          file,
+          file.parent.path,
+          isState: false,
+          customFolderSystem: systemFolderName,
+          customFolderEmulatorSlug: emulatorSlug,
+        );
+        _processedFiles++;
+        _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
+        notify();
+      }
+
+      _syncProgress = 1.0;
+      _syncStatus =
+          'Upload complete: $_uploadedFiles uploaded, $_skippedFiles already synced';
+      _processedItems.add(_syncStatus);
+    } catch (e) {
+      _error = 'Error uploading custom save folder: $e';
+      _syncStatus = 'Error: $_error';
+      _processedItems.add(_syncStatus);
+      NeoSyncProvider._log.e(_error!);
+    } finally {
+      _setSyncing(false);
+    }
+  }
+
   /// Migrates the user's legacy cloud files to the NeoSync v2 path standard.
   ///
   /// Lists every cloud file, maps legacy paths to their v2 equivalent using
