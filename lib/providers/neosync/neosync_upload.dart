@@ -175,17 +175,27 @@ extension NeoSyncUpload on NeoSyncProvider {
       _syncStatus = 'Checking files for upload...';
       notify();
 
-      // Process RetroArch Saves
+      // Process RetroArch Saves (derive emulator slug from the core folder)
       for (final file in retroArchSaves) {
-        await _processAutoUploadFile(file, savesPath!, isState: false);
+        await _processAutoUploadFile(
+          file,
+          savesPath!,
+          isState: false,
+          retroArchBasePath: savesPath,
+        );
         _processedFiles++;
         _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
         notify();
       }
 
-      // Process RetroArch States
+      // Process RetroArch States (derive emulator slug from the core folder)
       for (final file in retroArchStates) {
-        await _processAutoUploadFile(file, statesPath!, isState: true);
+        await _processAutoUploadFile(
+          file,
+          statesPath!,
+          isState: true,
+          retroArchBasePath: statesPath,
+        );
         _processedFiles++;
         _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
         notify();
@@ -272,6 +282,7 @@ extension NeoSyncUpload on NeoSyncProvider {
     bool isState = false,
     String? customFolderSystem,
     String? customFolderEmulatorSlug,
+    String? retroArchBasePath,
   }) async {
     try {
       final isNandFile = file.path.contains(
@@ -291,6 +302,24 @@ extension NeoSyncUpload on NeoSyncProvider {
           emulatorSlug: customFolderEmulatorSlug,
           scope: 'shared',
           filePath: path.basename(file.path),
+        );
+      } else if (retroArchBasePath != null) {
+        // RetroArch stores saves as <savesPath>/<core>/<game>.srm. Derive the
+        // emulator slug from the core folder so a save always lands under
+        // retroarch.<core> regardless of which standalone the game metadata
+        // points at.
+        final relativeToBase = path.relative(file.path, from: retroArchBasePath);
+        final segments = relativeToBase.split(RegExp(r'[/\\]'));
+        final coreName = segments.isNotEmpty ? segments.first : '';
+        final coreSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
+        final system = await _systemFolderForRetroArchCore(coreName);
+        relativePath = CloudPathBuilder.build(
+          system: system ?? 'unknown',
+          emulatorSlug: coreSlug,
+          scope: 'game',
+          filePath: path.basename(file.path),
+          gameName: path.basenameWithoutExtension(file.path),
+          isState: isState,
         );
       } else {
         relativePath = _calculateRelativePath(file, basePath, isState: isState);

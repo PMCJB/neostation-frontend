@@ -290,14 +290,39 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     String basePath, {
     bool isState = false,
   }) async {
-    final system = await _getSystemForGame(game);
-    final emulatorSlug = await _resolveEmulatorSlugForGame(game, system);
+    var system = await _getSystemForGame(game);
 
-    if (system == null || emulatorSlug == null) {
+    // If the save lives under the RetroArch saves/states dir, prefer the core
+    // folder as the emulator source of truth. RetroArch stores
+    // `<savesPath>/<core>/<game>.srm`, and the game's emulator metadata may
+    // point at a standalone app instead of the core that wrote the save.
+    String? emulatorSlug;
+    String? systemFolderFromCore;
+    final savesPath = await _getRetroArchSavesPath();
+    final statesPath = await _getRetroArchStatesPath();
+    if ((savesPath != null && path.isWithin(savesPath, file.path)) ||
+        (statesPath != null && path.isWithin(statesPath, file.path))) {
+      final base = (savesPath != null && path.isWithin(savesPath, file.path))
+          ? savesPath
+          : statesPath;
+      if (base != null) {
+        final relativeToBase = path.relative(file.path, from: base);
+        final segments = relativeToBase.split(RegExp(r'[/\\]'));
+        final coreName = segments.isNotEmpty ? segments.first : '';
+        if (coreName.isNotEmpty) {
+          emulatorSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
+          systemFolderFromCore = await _systemFolderForRetroArchCore(coreName);
+        }
+      }
+    }
+    emulatorSlug ??= await _resolveEmulatorSlugForGame(game, system);
+    final systemFolder =
+        systemFolderFromCore ?? system?.folderName;
+
+    if (systemFolder == null || emulatorSlug == null) {
       return _calculateRelativePath(file, basePath, isState: isState);
     }
 
-    final systemFolder = system.folderName;
     final fileName = path.basename(file.path);
 
     // Memory-card style files are shared between games (PS2 .ps2 memcards,
@@ -321,6 +346,23 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       gameName: isSharedCard ? null : game.name,
       isState: isState,
     );
+  }
+
+  /// Resolves the system folder name for a RetroArch core display name.
+  ///
+  /// RetroArch organizes saves under `<core>/<game>.srm`, so the core folder is
+  /// the first relative segment. This maps it back to its system (e.g.
+  /// `mgba` -> `gba`) via the emulators table. Returns null when unknown.
+  Future<String?> _systemFolderForRetroArchCore(String coreName) async {
+    if (coreName.isEmpty) return null;
+    try {
+      final rows = await SqliteService.findSystemByCoreName(coreName);
+      if (rows == null || rows.isEmpty) return null;
+      return rows.first['folder_name']?.toString();
+    } catch (e) {
+      NeoSyncProvider._log.w('Error mapping core $coreName to system: $e');
+      return null;
+    }
   }
 
   /// Resolves the NeoSync v2 emulator slug for a game.
