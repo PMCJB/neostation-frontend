@@ -197,6 +197,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     File file,
     String basePath, {
     bool isState = false,
+    String? explicitSystemFolder,
   }) async {
     // Try the NeoSync v2 standard path first. It carries system + emulator, so
     // the cloud always knows which emulator produced the save.
@@ -205,6 +206,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       file,
       basePath,
       isState: isState,
+      explicitSystemFolder: explicitSystemFolder,
     );
     if (v2Path.startsWith('v2/saves/') || v2Path.startsWith('v2/states/')) {
       return v2Path;
@@ -289,6 +291,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     File file,
     String basePath, {
     bool isState = false,
+    String? explicitSystemFolder,
   }) async {
     var system = await _getSystemForGame(game);
 
@@ -300,24 +303,34 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     String? systemFolderFromCore;
     final savesPath = await _getRetroArchSavesPath();
     final statesPath = await _getRetroArchStatesPath();
-    if ((savesPath != null && path.isWithin(savesPath, file.path)) ||
-        (statesPath != null && path.isWithin(statesPath, file.path))) {
-      final base = (savesPath != null && path.isWithin(savesPath, file.path))
-          ? savesPath
-          : statesPath;
-      if (base != null) {
-        final relativeToBase = path.relative(file.path, from: base);
-        final segments = relativeToBase.split(RegExp(r'[/\\]'));
-        final coreName = segments.isNotEmpty ? segments.first : '';
-        if (coreName.isNotEmpty) {
-          emulatorSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
-          systemFolderFromCore = await _systemFolderForRetroArchCore(coreName);
-        }
+    String? retroBase;
+    if (savesPath != null && path.isWithin(savesPath, file.path)) {
+      retroBase = savesPath;
+    } else if (statesPath != null && path.isWithin(statesPath, file.path)) {
+      retroBase = statesPath;
+    }
+    if (retroBase != null) {
+      final relativeToBase = path.relative(file.path, from: retroBase);
+      final segments = relativeToBase.split(RegExp(r'[/\\]'));
+      final coreName = segments.isNotEmpty ? segments.first : '';
+      if (coreName.isNotEmpty) {
+        emulatorSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
+        // A core like mgba serves several systems, so it is only a fallback.
+        // The game's own system is authoritative.
+        systemFolderFromCore = await _systemFolderForRetroArchFile(
+          file,
+          retroBase,
+        );
       }
     }
     emulatorSlug ??= await _resolveEmulatorSlugForGame(game, system);
+    // Priority: the caller's explicit system (from the games list context),
+    // then the game's own system, then the core-derived fallback.
     final systemFolder =
-        systemFolderFromCore ?? system?.folderName;
+        explicitSystemFolder ??
+        game.systemFolderName ??
+        system?.folderName ??
+        systemFolderFromCore;
 
     if (systemFolder == null || emulatorSlug == null) {
       return _calculateRelativePath(file, basePath, isState: isState);
@@ -348,13 +361,39 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     );
   }
 
-  /// Resolves the system folder name for a RetroArch core display name.
+  /// Resolves the system folder name for a RetroArch save file.
   ///
-  /// RetroArch organizes saves under `<core>/<game>.srm`, so the core folder is
-  /// the first relative segment. This maps it back to its system (e.g.
-  /// `mgba` -> `gba`) via the emulators table. Returns null when unknown.
-  Future<String?> _systemFolderForRetroArchCore(String coreName) async {
+  /// RetroArch organizes saves under `<base>/<core>/<game>.srm`. A core can
+  /// serve several systems (e.g. `mgba` runs GBA, GB and GB-hacks), so the
+  /// system is first resolved from the game by its ROM base name — the game
+  /// belongs to exactly one system. Only if no game is found does it fall back
+  /// to mapping the core via the emulators table. Returns null when neither
+  /// matches.
+  Future<String?> _systemFolderForRetroArchFile(
+    File file,
+    String retroArchBase,
+  ) async {
+    final fileName = path.basenameWithoutExtension(file.path);
+
+    // The save base name usually matches the ROM name, so find the game by
+    // prefix and use its system.
+    try {
+      final row = await GameRepository.findRomByFilenamePrefix(
+        '$fileName%',
+      );
+      if (row != null) {
+        final folder = row['folder_name']?.toString();
+        if (folder != null && folder.isNotEmpty) return folder;
+      }
+    } catch (e) {
+      NeoSyncProvider._log.w('Error resolving game system for $fileName: $e');
+    }
+
+    final relativeToBase = path.relative(file.path, from: retroArchBase);
+    final segments = relativeToBase.split(RegExp(r'[/\\]'));
+    final coreName = segments.isNotEmpty ? segments.first : '';
     if (coreName.isEmpty) return null;
+
     try {
       final rows = await SqliteService.findSystemByCoreName(coreName);
       if (rows == null || rows.isEmpty) return null;

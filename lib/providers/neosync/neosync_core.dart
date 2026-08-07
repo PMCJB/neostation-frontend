@@ -708,6 +708,7 @@ extension NeoSyncCore on NeoSyncProvider {
         file,
         basePath,
         isState: isState,
+        explicitSystemFolder: game.systemFolderName,
       );
 
       final parsed = CloudPathBuilder.parse(relativePath);
@@ -1216,6 +1217,7 @@ extension NeoSyncCore on NeoSyncProvider {
           game,
           file,
           savesPath,
+          explicitSystemFolder: game.systemFolderName,
         );
 
         final parsed = CloudPathBuilder.parse(relativePath);
@@ -1282,6 +1284,7 @@ extension NeoSyncCore on NeoSyncProvider {
             game,
             file,
             savesPath,
+            explicitSystemFolder: game.systemFolderName,
           );
 
           final parsed = CloudPathBuilder.parse(relativePath);

@@ -307,12 +307,16 @@ extension NeoSyncUpload on NeoSyncProvider {
         // RetroArch stores saves as <savesPath>/<core>/<game>.srm. Derive the
         // emulator slug from the core folder so a save always lands under
         // retroarch.<core> regardless of which standalone the game metadata
-        // points at.
+        // points at. The system is resolved from the game (a core like mgba
+        // serves several systems) and falls back to the core mapping.
         final relativeToBase = path.relative(file.path, from: retroArchBasePath);
         final segments = relativeToBase.split(RegExp(r'[/\\]'));
         final coreName = segments.isNotEmpty ? segments.first : '';
         final coreSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
-        final system = await _systemFolderForRetroArchCore(coreName);
+        final system = await _systemFolderForRetroArchFile(
+          file,
+          retroArchBasePath,
+        );
         relativePath = CloudPathBuilder.build(
           system: system ?? 'unknown',
           emulatorSlug: coreSlug,
