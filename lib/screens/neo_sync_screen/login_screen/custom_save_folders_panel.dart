@@ -16,6 +16,7 @@ import 'package:provider/provider.dart';
 import 'package:neostation/data/datasources/sqlite_service.dart';
 import 'package:neostation/models/core_emulator_model.dart';
 import 'package:neostation/utils/cloud_path_builder.dart';
+import 'package:neostation/services/logger_service.dart';
 
 /// Compact card that opens a dialog for configuring custom save folders.
 ///
@@ -30,6 +31,8 @@ class CustomSaveFoldersPanel extends StatefulWidget {
 }
 
 class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
+  static final _log = LoggerService.instance;
+
   List<SystemModel> _systems = [];
   List<(String, String, String)> _configured = [];
   bool _syncing = false;
@@ -68,15 +71,20 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
   /// picker backgrounds the app and may dispose the dialog; this widget stays
   /// mounted so the operation always completes.
   Future<void> _selectFolderFor(String system, String emulatorSlug) async {
+    _log.i('CustomSaveFolder: picker start for $system / $emulatorSlug');
     try {
       String? selected;
       final isTV = await PermissionService.isTelevision();
-      if (!mounted) return;
+      if (!mounted) {
+        _log.w('CustomSaveFolder: unmounted before picker');
+        return;
+      }
 
       if (isTV) {
         selected = await TvDirectoryPicker.show(context);
       } else {
         final uri = await PermissionService.requestFolderAccess();
+        _log.i('CustomSaveFolder: SAF uri=$uri');
         if (uri != null) {
           final hasFiles = await PermissionService.hasAllFilesAccess();
           selected =
@@ -85,12 +93,17 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
                 hasAllFilesAccess: hasFiles,
               ) ??
               UserDataLocationService.safUriToRealPath(uri.toString());
+          _log.i('CustomSaveFolder: resolved selected=$selected');
         }
       }
 
-      if (selected == null || !mounted) return;
+      if (selected == null || !mounted) {
+        _log.w('CustomSaveFolder: no selection or unmounted (selected=$selected, mounted=$mounted)');
+        return;
+      }
       selected = selected.replaceFirst(RegExp(r'[\\/]+$'), '');
       if (!Directory(selected).existsSync()) {
+        _log.w('CustomSaveFolder: selected folder does not exist: $selected');
         if (mounted) {
           custom.AppNotification.showNotification(
             context,
@@ -101,27 +114,35 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
         return;
       }
 
+      _log.i('CustomSaveFolder: saving $system / $emulatorSlug -> $selected');
       await NeoSyncSaveFolderRepository.saveFolder(
         system,
         emulatorSlug,
         selected,
       );
+      _log.i('CustomSaveFolder: saved, reloading configured');
       await _loadConfigured();
 
       // Upload the folder's existing saves right away so they are backed up
       // immediately instead of waiting for the next global auto-sync.
-      if (!mounted) return;
+      if (!mounted) {
+        _log.w('CustomSaveFolder: unmounted after save');
+        return;
+      }
       final provider = context.read<NeoSyncProvider>();
       if (mounted) setState(() => _syncing = true);
       try {
+        _log.i('CustomSaveFolder: uploading saves for $system / $emulatorSlug');
         await provider.syncCustomSaveFolder(
           system,
           emulatorSlug,
         );
+        _log.i('CustomSaveFolder: upload finished');
       } finally {
         if (mounted) setState(() => _syncing = false);
       }
-    } catch (e) {
+    } catch (e, st) {
+      _log.e('CustomSaveFolder: error in _selectFolderFor', error: e, stackTrace: st);
       if (mounted) {
         custom.AppNotification.showNotification(
           context,
