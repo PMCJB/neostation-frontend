@@ -946,6 +946,7 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.customSaveFolderSelect: 'Выбрать папку',
   AppLocale.customSaveFolderConfigure: 'Настроить',
   AppLocale.customSaveFolderConfiguredList: 'Настроенные папки',
+  AppLocale.customSaveFolderSync: 'Синхронизировать сейчас',
   AppLocale.customSaveFolderInvalid: 'Выбранная папка не существует',
   AppLocale.customSaveFoldersMigrate: 'Мигрировать облачные сохранения на NeoSync v2',
 

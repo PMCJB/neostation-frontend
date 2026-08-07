@@ -277,6 +277,19 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
     widget.onChanged();
   }
 
+  Future<void> _syncFolder(String system, String emulatorSlug) async {
+    if (_syncingFolder) return;
+    setState(() => _syncingFolder = true);
+    try {
+      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
+        system,
+        emulatorSlug,
+      );
+    } finally {
+      if (mounted) setState(() => _syncingFolder = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -409,6 +422,22 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
                               fontFamily: 'monospace',
                             ),
                           ),
+                        ),
+                        IconButton(
+                          icon: _syncingFolder
+                              ? SizedBox(
+                                  width: 16.r,
+                                  height: 16.r,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(Symbols.sync_rounded, size: 16.r),
+                          tooltip:
+                              AppLocale.customSaveFolderSync.getString(context),
+                          onPressed: isBusy
+                              ? null
+                              : () => _syncFolder(system, slug),
                         ),
                         IconButton(
                           icon: Icon(Symbols.delete_rounded, size: 16.r),
