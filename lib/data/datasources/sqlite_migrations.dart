@@ -339,6 +339,9 @@ class SqliteMigrations {
       case 111:
         await _migrateToVersion111(db);
         break;
+      case 112:
+        await _migrateToVersion112(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -5341,6 +5344,57 @@ class SqliteMigrations {
       _log.i('Migration v111 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v111: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v112: Ensures the NeoSync v2 emulator slug column and the custom
+  /// save folders table exist.
+  ///
+  /// Devices that already reached v111 via an earlier feature branch created
+  /// `user_custom_save_folders` but never added `neosync_slug` to
+  /// [app_emulators]. Because their DB is already at version 111, the v111
+  /// migration above is skipped, so this migration re-applies the missing bits
+  /// idempotently.
+  static Future<void> _migrateToVersion112(Database db) async {
+    _log.i('Migration v112: Ensuring neosync_slug and user_custom_save_folders');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(app_emulators)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('neosync_slug')) {
+        db.execute(
+          'ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT',
+        );
+        _log.i('Column neosync_slug added via v112');
+      }
+
+      db.execute('''
+        UPDATE app_emulators
+        SET neosync_slug = CASE
+          WHEN unique_identifier LIKE '%.ra64.%.%' THEN
+            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra64.') + 6)), '_', '-')
+          WHEN unique_identifier LIKE '%.ra32.%.%' THEN
+            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra32.') + 6)), '_', '-')
+          WHEN unique_identifier LIKE '%.ra.%.%' THEN
+            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra.') + 4)), '_', '-')
+          ELSE lower(substr(unique_identifier, instr(unique_identifier, '.') + 1))
+        END
+        WHERE neosync_slug IS NULL OR neosync_slug = ''
+      ''');
+
+      db.execute('''
+        CREATE TABLE IF NOT EXISTS user_custom_save_folders (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          system_folder_name TEXT NOT NULL COLLATE NOCASE,
+          emulator_slug TEXT NOT NULL,
+          folder_path TEXT NOT NULL,
+          UNIQUE(system_folder_name, emulator_slug)
+        );
+      ''');
+      _log.i('Migration v112 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v112: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
