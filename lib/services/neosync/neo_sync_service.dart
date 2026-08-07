@@ -54,7 +54,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/files/check');
+      final uri = Uri.parse('$baseUrl/api/v2/files/check');
 
       final requestBody = {
         'filename': filename,
@@ -163,7 +163,7 @@ class NeoSyncService extends ChangeNotifier {
       }
 
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/upload');
+      final uri = Uri.parse('$baseUrl/api/v2/upload');
 
       final request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
@@ -263,7 +263,7 @@ class NeoSyncService extends ChangeNotifier {
       }
 
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/upload');
+      final uri = Uri.parse('$baseUrl/api/v2/upload');
 
       final request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
@@ -309,7 +309,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/files');
+      final uri = Uri.parse('$baseUrl/api/v2/files');
 
       final response = await http.get(uri, headers: headers);
 
@@ -347,7 +347,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/files/$fileId');
+      final uri = Uri.parse('$baseUrl/api/v2/files/$fileId');
 
       final response = await http.delete(uri, headers: headers);
 
@@ -385,7 +385,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/files/migrate');
+      final uri = Uri.parse('$baseUrl/api/v2/files/migrate');
 
       final response = await http.post(
         uri,
@@ -423,7 +423,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/quota');
+      final uri = Uri.parse('$baseUrl/api/v2/quota');
 
       final response = await http.get(uri, headers: headers);
 
@@ -461,7 +461,7 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v1/download');
+      final uri = Uri.parse('$baseUrl/api/v2/download');
 
       final requestBody = {'file_id': fileId};
 
