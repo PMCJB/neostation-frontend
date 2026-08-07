@@ -1,8 +1,9 @@
 /// Builds and parses the canonical NeoSync cloud paths.
 ///
-/// Format (applies to both saves and states):
-///   `saves/<system>/<emulator-slug>/<scope>/[<game>/]<file>`
-///   `states/<system>/<emulator-slug>/<scope>/[<game>/]<file>`
+/// Format (applies to both saves and states), always under the `v2/` namespace
+/// so it can never collide with legacy v1 paths (`saves/...` on GCS):
+///   `v2/saves/<system>/<emulator-slug>/<scope>/[<game>/]<file>`
+///   `v2/states/<system>/<emulator-slug>/<scope>/[<game>/]<file>`
 ///
 /// - `system`: the system folder name (e.g. `ps2`, `ps1`, `dc`).
 /// - `emulator-slug`: stable identifier for the emulator that produced the
@@ -16,10 +17,20 @@
 class CloudPathBuilder {
   CloudPathBuilder._();
 
+  static const namespaceV2 = 'v2';
   static const rootSave = 'saves';
   static const rootState = 'states';
 
-  /// Builds a cloud path for a save or state.
+  /// The legacy (v1) namespace prefix, e.g. `saves/`.
+  static const legacySavePrefix = 'saves/';
+  static const legacyStatePrefix = 'states/';
+
+  /// Whether a path belongs to the legacy v1 layout (no `v2/` prefix).
+  static bool isLegacy(String cloudPath) {
+    return !cloudPath.startsWith('$namespaceV2/');
+  }
+
+  /// Builds a cloud path for a save or state under the `v2/` namespace.
   ///
   /// [scope] must be `shared` or `game`. When [scope] is `game`, [gameName]
   /// is included. [filePath] may contain emulator-internal folders, which are
@@ -33,7 +44,7 @@ class CloudPathBuilder {
     bool isState = false,
   }) {
     final root = isState ? rootState : rootSave;
-    final segments = <String>[root, system, emulatorSlug, scope];
+    final segments = <String>[namespaceV2, root, system, emulatorSlug, scope];
     if (scope == 'game' && gameName != null && gameName.isNotEmpty) {
       segments.add(sanitizeGameName(gameName));
     }
@@ -41,23 +52,23 @@ class CloudPathBuilder {
     return segments.join('/').replaceAll('\\', '/');
   }
 
-  /// Parses a standard cloud path into its structured components.
+  /// Parses a standard v2 cloud path into its structured components.
   ///
   /// Returns null when the path does not match the standard layout.
   static ParsedCloudPath? parse(String cloudPath) {
-    final isState = cloudPath.startsWith('$rootState/');
-    if (!isState && !cloudPath.startsWith('$rootSave/')) return null;
+    final isState = cloudPath.startsWith('$namespaceV2/$rootState/');
+    if (!isState && !cloudPath.startsWith('$namespaceV2/$rootSave/')) return null;
 
     final segments = cloudPath.split('/');
-    // saves/<system>/<emulator>/<scope>/... is at least 5 segments.
-    if (segments.length < 5) return null;
+    // v2/saves/<system>/<emulator>/<scope>/... is at least 6 segments.
+    if (segments.length < 6) return null;
 
-    final system = segments[1];
-    final emulatorSlug = segments[2];
-    final scope = segments[3];
+    final system = segments[2];
+    final emulatorSlug = segments[3];
+    final scope = segments[4];
     if (scope != 'shared' && scope != 'game') return null;
 
-    final rest = segments.sublist(4);
+    final rest = segments.sublist(5);
     final String filePath;
     final String? gameName;
     if (scope == 'game' && rest.length >= 2) {

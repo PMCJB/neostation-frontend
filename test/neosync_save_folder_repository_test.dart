@@ -67,17 +67,17 @@ void main() {
   });
 
   group('CloudPathBuilder', () {
-    test('builds a shared memcard path', () {
+    test('builds a shared memcard path under the v2 namespace', () {
       final p = CloudPathBuilder.build(
         system: 'ps2',
         emulatorSlug: 'armsx2',
         scope: 'shared',
         filePath: 'Mcd001.ps2',
       );
-      expect(p, 'saves/ps2/armsx2/shared/Mcd001.ps2');
+      expect(p, 'v2/saves/ps2/armsx2/shared/Mcd001.ps2');
     });
 
-    test('builds a per-game save path', () {
+    test('builds a per-game save path under the v2 namespace', () {
       final p = CloudPathBuilder.build(
         system: 'ps1',
         emulatorSlug: 'duckstation',
@@ -87,11 +87,11 @@ void main() {
       );
       expect(
         p,
-        'saves/ps1/duckstation/game/Street Fighter Alpha 3 (USA)/Street Fighter Alpha 3 (USA).srm',
+        'v2/saves/ps1/duckstation/game/Street Fighter Alpha 3 (USA)/Street Fighter Alpha 3 (USA).srm',
       );
     });
 
-    test('builds a state path', () {
+    test('builds a state path under the v2 namespace', () {
       final p = CloudPathBuilder.build(
         system: 'ps1',
         emulatorSlug: 'retroarch.beetle-psx-hw',
@@ -102,13 +102,13 @@ void main() {
       );
       expect(
         p,
-        'states/ps1/retroarch.beetle-psx-hw/game/Street Fighter Alpha 3 (USA)/Street Fighter Alpha 3 (USA).state',
+        'v2/states/ps1/retroarch.beetle-psx-hw/game/Street Fighter Alpha 3 (USA)/Street Fighter Alpha 3 (USA).state',
       );
     });
 
-    test('parses a standard path', () {
+    test('parses a standard v2 path', () {
       final parsed = CloudPathBuilder.parse(
-        'saves/ps2/armsx2/shared/Mcd001.ps2',
+        'v2/saves/ps2/armsx2/shared/Mcd001.ps2',
       );
       expect(parsed, isNotNull);
       expect(parsed!.system, 'ps2');
@@ -116,6 +116,22 @@ void main() {
       expect(parsed.scope, 'shared');
       expect(parsed.isShared, isTrue);
       expect(parsed.filePath, 'Mcd001.ps2');
+    });
+
+    test('treats legacy paths as legacy', () {
+      expect(CloudPathBuilder.isLegacy('saves/PS2/Mcd001.ps2'), isTrue);
+      expect(
+        CloudPathBuilder.isLegacy('saves/Beetle PSX HW/Game.srm'),
+        isTrue,
+      );
+      expect(CloudPathBuilder.isLegacy('v2/saves/ps2/armsx2/shared/a.ps2'), isFalse);
+    });
+
+    test('does not parse legacy paths as v2', () {
+      expect(
+        CloudPathBuilder.parse('saves/PS2/Mcd001.ps2'),
+        isNull,
+      );
     });
 
     test('derives RetroArch slug from unique id', () {

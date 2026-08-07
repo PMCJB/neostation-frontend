@@ -206,7 +206,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       basePath,
       isState: isState,
     );
-    if (v2Path.startsWith('saves/') || v2Path.startsWith('states/')) {
+    if (v2Path.startsWith('v2/saves/') || v2Path.startsWith('v2/states/')) {
       return v2Path;
     }
 
@@ -379,8 +379,13 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     );
     if (resolvedFolders.isEmpty) return [];
 
-    final isState = cloudFile.fileName.startsWith('states/');
-    final isSave = cloudFile.fileName.startsWith('saves/');
+    final v2Path = CloudPathBuilder.parse(cloudFile.fileName);
+    final isState = v2Path != null
+        ? v2Path.isState
+        : cloudFile.fileName.startsWith('states/');
+    final isSave = v2Path != null
+        ? !v2Path.isState
+        : cloudFile.fileName.startsWith('saves/');
 
     // Buscar la carpeta más apropiada.
     String targetFolder = resolvedFolders.first;
@@ -388,7 +393,6 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     // NeoSync v2 paths carry system/emulator/scope. For per-game saves, prefer
     // the configured custom folder when the emulator has one, otherwise fall
     // back to the standard resolution below.
-    final v2Path = CloudPathBuilder.parse(cloudFile.fileName);
     if (v2Path != null && !v2Path.isShared) {
       final customFolder = await NeoSyncSaveFolderRepository.getFolder(
         v2Path.system,
