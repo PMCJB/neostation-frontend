@@ -19,10 +19,9 @@ import 'package:neostation/utils/cloud_path_builder.dart';
 
 /// Compact card that opens a dialog for configuring custom save folders.
 ///
-/// The dialog lets the user pick a system + standalone emulator and select the
-/// folder where that emulator keeps its saves (ARMSX2, ARMSX1, DuckStation,
-/// etc.). It scrolls so every control fits, and works with both touch and
-/// gamepad navigation.
+/// Folder selection runs on this widget (which survives Android backgrounding
+/// while the SAF picker is open), not inside the dialog, so the chosen folder
+/// is always saved and synced even if the dialog is disposed on resume.
 class CustomSaveFoldersPanel extends StatefulWidget {
   const CustomSaveFoldersPanel({super.key});
 
@@ -33,6 +32,7 @@ class CustomSaveFoldersPanel extends StatefulWidget {
 class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
   List<SystemModel> _systems = [];
   List<(String, String, String)> _configured = [];
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -62,11 +62,103 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
     }
   }
 
+  /// Runs the SAF/TV folder picker, saves the folder, and uploads its saves.
+  ///
+  /// Lives on the panel (not the dialog) because opening the Android SAF
+  /// picker backgrounds the app and may dispose the dialog; this widget stays
+  /// mounted so the operation always completes.
+  Future<void> _selectFolderFor(String system, String emulatorSlug) async {
+    try {
+      String? selected;
+      final isTV = await PermissionService.isTelevision();
+      if (!mounted) return;
+
+      if (isTV) {
+        selected = await TvDirectoryPicker.show(context);
+      } else {
+        final uri = await PermissionService.requestFolderAccess();
+        if (uri != null) {
+          final hasFiles = await PermissionService.hasAllFilesAccess();
+          selected =
+              await UserDataLocationService.resolveAndroidUserDataPath(
+                uri.toString(),
+                hasAllFilesAccess: hasFiles,
+              ) ??
+              UserDataLocationService.safUriToRealPath(uri.toString());
+        }
+      }
+
+      if (selected == null || !mounted) return;
+      selected = selected.replaceFirst(RegExp(r'[\\/]+$'), '');
+      if (!Directory(selected).existsSync()) {
+        if (mounted) {
+          custom.AppNotification.showNotification(
+            context,
+            AppLocale.customSaveFolderInvalid.getString(context),
+            type: custom.NotificationType.error,
+          );
+        }
+        return;
+      }
+
+      await NeoSyncSaveFolderRepository.saveFolder(
+        system,
+        emulatorSlug,
+        selected,
+      );
+      await _loadConfigured();
+
+      // Upload the folder's existing saves right away so they are backed up
+      // immediately instead of waiting for the next global auto-sync.
+      if (!mounted) return;
+      final provider = context.read<NeoSyncProvider>();
+      if (mounted) setState(() => _syncing = true);
+      try {
+        await provider.syncCustomSaveFolder(
+          system,
+          emulatorSlug,
+        );
+      } finally {
+        if (mounted) setState(() => _syncing = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        custom.AppNotification.showNotification(
+          context,
+          '$e',
+          type: custom.NotificationType.error,
+        );
+      }
+    }
+  }
+
+  Future<void> _removeFolder(String system, String emulatorSlug) async {
+    await NeoSyncSaveFolderRepository.removeFolder(system, emulatorSlug);
+    await _loadConfigured();
+  }
+
+  Future<void> _syncFolder(String system, String emulatorSlug) async {
+    if (_syncing) return;
+    if (mounted) setState(() => _syncing = true);
+    try {
+      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
+        system,
+        emulatorSlug,
+      );
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
   void _openDialog() {
     showDialog<void>(
       context: context,
-      builder: (_) => CustomSaveFoldersDialog(
+      builder: (dialogContext) => CustomSaveFoldersDialog(
         systems: _systems,
+        isSyncing: _syncing,
+        onSelectFolder: (system, slug) => _selectFolderFor(system, slug),
+        onSyncFolder: (system, slug) => _syncFolder(system, slug),
+        onRemoveFolder: (system, slug) => _removeFolder(system, slug),
         onChanged: _loadConfigured,
       ),
     );
@@ -75,6 +167,8 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final provider = context.watch<NeoSyncProvider>();
+    final busy = _syncing || provider.isSyncing;
 
     return Container(
       padding: EdgeInsets.all(8.r),
@@ -118,8 +212,14 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
           ),
           SizedBox(width: 8.r),
           OutlinedButton.icon(
-            onPressed: _openDialog,
-            icon: Icon(Symbols.tune_rounded, size: 14.r),
+            onPressed: busy ? null : _openDialog,
+            icon: busy
+                ? SizedBox(
+                    width: 12.r,
+                    height: 12.r,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Symbols.tune_rounded, size: 14.r),
             label: Text(
               AppLocale.customSaveFolderConfigure.getString(context),
               style: TextStyle(fontSize: 9.r),
@@ -131,14 +231,24 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
   }
 }
 
-/// Dialog that configures custom save folders for a system + emulator.
+/// Dialog that lets the user pick a system + emulator and see configured
+/// folders. Folder selection and sync run in the parent panel so they survive
+/// Android backgrounding.
 class CustomSaveFoldersDialog extends StatefulWidget {
   final List<SystemModel> systems;
+  final bool isSyncing;
+  final Future<void> Function(String system, String emulatorSlug) onSelectFolder;
+  final Future<void> Function(String system, String emulatorSlug) onSyncFolder;
+  final Future<void> Function(String system, String emulatorSlug) onRemoveFolder;
   final VoidCallback onChanged;
 
   const CustomSaveFoldersDialog({
     super.key,
     required this.systems,
+    required this.isSyncing,
+    required this.onSelectFolder,
+    required this.onSyncFolder,
+    required this.onRemoveFolder,
     required this.onChanged,
   });
 
@@ -151,8 +261,7 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
   List<CoreEmulatorModel> _emulators = [];
   String? _selectedEmulatorUniqueId;
   List<(String, String, String)> _configured = [];
-  bool _configuring = false;
-  bool _syncingFolder = false;
+  bool _pickingFolder = false;
 
   @override
   void initState() {
@@ -203,98 +312,21 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
   Future<void> _selectFolder() async {
     final system = _selectedSystem;
     final emulatorSlug = _selectedEmulatorSlug;
-    if (system == null || emulatorSlug == null || _configuring) return;
-    setState(() => _configuring = true);
+    if (system == null || emulatorSlug == null || _pickingFolder) return;
 
-    try {
-      String? selected;
-      final isTV = await PermissionService.isTelevision();
-      if (!mounted) return;
-
-      if (isTV) {
-        selected = await TvDirectoryPicker.show(context);
-      } else {
-        final uri = await PermissionService.requestFolderAccess();
-        if (uri != null) {
-          final hasFiles = await PermissionService.hasAllFilesAccess();
-          selected =
-              await UserDataLocationService.resolveAndroidUserDataPath(
-                uri.toString(),
-                hasAllFilesAccess: hasFiles,
-              ) ??
-              UserDataLocationService.safUriToRealPath(uri.toString());
-        }
-      }
-
-      if (selected == null || !mounted) return;
-      selected = selected.replaceFirst(RegExp(r'[\\/]+$'), '');
-      if (!Directory(selected).existsSync()) {
-        custom.AppNotification.showNotification(
-          context,
-          AppLocale.customSaveFolderInvalid.getString(context),
-          type: custom.NotificationType.error,
-        );
-        return;
-      }
-
-      await NeoSyncSaveFolderRepository.saveFolder(
-        system,
-        emulatorSlug,
-        selected,
-      );
-      if (!mounted) return;
-      await _loadConfigured();
-      widget.onChanged();
-      if (!mounted) return;
-
-      // Upload the folder's existing saves right away so they are backed up
-      // immediately instead of waiting for the next global auto-sync.
-      setState(() => _syncingFolder = true);
-      try {
-        await context.read<NeoSyncProvider>().syncCustomSaveFolder(
-          system,
-          emulatorSlug,
-        );
-      } finally {
-        if (mounted) setState(() => _syncingFolder = false);
-      }
-    } catch (e) {
-      if (mounted) {
-        custom.AppNotification.showNotification(
-          context,
-          '$e',
-          type: custom.NotificationType.error,
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _configuring = false);
-    }
-  }
-
-  Future<void> _removeFolder(String system, String emulatorSlug) async {
-    await NeoSyncSaveFolderRepository.removeFolder(system, emulatorSlug);
-    await _loadConfigured();
+    setState(() => _pickingFolder = true);
+    // Closing the dialog before opening the SAF picker avoids the dialog being
+    // disposed mid-flight on Android resume; the parent panel completes the
+    // operation and refreshes the list.
+    if (mounted) Navigator.of(context).pop();
+    await widget.onSelectFolder(system, emulatorSlug);
     widget.onChanged();
-  }
-
-  Future<void> _syncFolder(String system, String emulatorSlug) async {
-    if (_syncingFolder) return;
-    setState(() => _syncingFolder = true);
-    try {
-      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
-        system,
-        emulatorSlug,
-      );
-    } finally {
-      if (mounted) setState(() => _syncingFolder = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = context.watch<NeoSyncProvider>();
-    final isBusy = _configuring || provider.isSyncing || _syncingFolder;
+    final isBusy = widget.isSyncing || _pickingFolder;
 
     final selectDecoration = InputDecoration(
       isDense: true,
@@ -382,7 +414,7 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
                   onPressed: isBusy || _selectedEmulatorSlug == null
                       ? null
                       : _selectFolder,
-                  icon: _syncingFolder
+                  icon: _pickingFolder
                       ? SizedBox(
                           width: 14.r,
                           height: 14.r,
@@ -424,26 +456,21 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _syncingFolder
-                              ? SizedBox(
-                                  width: 16.r,
-                                  height: 16.r,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(Symbols.sync_rounded, size: 16.r),
+                          icon: Icon(Symbols.sync_rounded, size: 16.r),
                           tooltip:
                               AppLocale.customSaveFolderSync.getString(context),
                           onPressed: isBusy
                               ? null
-                              : () => _syncFolder(system, slug),
+                              : () => widget.onSyncFolder(system, slug),
                         ),
                         IconButton(
                           icon: Icon(Symbols.delete_rounded, size: 16.r),
                           onPressed: isBusy
                               ? null
-                              : () => _removeFolder(system, slug),
+                              : () async {
+                                  await widget.onRemoveFolder(system, slug);
+                                  widget.onChanged();
+                                },
                         ),
                       ],
                     ),
