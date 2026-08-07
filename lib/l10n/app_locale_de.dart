@@ -975,6 +975,8 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.customSaveFolderPickSystem: 'System auswählen',
   AppLocale.customSaveFolderPickEmulator: 'Emulator auswählen',
   AppLocale.customSaveFolderSelect: 'Ordner auswählen',
+  AppLocale.customSaveFolderConfigure: 'Konfigurieren',
+  AppLocale.customSaveFolderConfiguredList: 'Konfigurierte Ordner',
   AppLocale.customSaveFolderInvalid: 'Der ausgewählte Ordner existiert nicht',
   AppLocale.customSaveFoldersMigrate: 'Cloud-Spielstände zu NeoSync v2 migrieren',
 

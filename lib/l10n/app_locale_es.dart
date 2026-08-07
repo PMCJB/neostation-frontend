@@ -971,6 +971,8 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.customSaveFolderPickSystem: 'Elige un sistema',
   AppLocale.customSaveFolderPickEmulator: 'Elige un emulador',
   AppLocale.customSaveFolderSelect: 'Seleccionar carpeta',
+  AppLocale.customSaveFolderConfigure: 'Configurar',
+  AppLocale.customSaveFolderConfiguredList: 'Carpetas configuradas',
   AppLocale.customSaveFolderInvalid: 'La carpeta seleccionada no existe',
   AppLocale.customSaveFoldersMigrate: 'Migrar guardados de la nube a NeoSync v2',
 

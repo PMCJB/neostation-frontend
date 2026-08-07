@@ -1004,6 +1004,8 @@ mixin AppLocale {
   static const String customSaveFolderPickSystem = 'custom_save_folder_pick_system';
   static const String customSaveFolderPickEmulator = 'custom_save_folder_pick_emulator';
   static const String customSaveFolderSelect = 'custom_save_folder_select';
+  static const String customSaveFolderConfigure = 'custom_save_folder_configure';
+  static const String customSaveFolderConfiguredList = 'custom_save_folder_configured_list';
   static const String customSaveFolderInvalid = 'custom_save_folder_invalid';
   static const String customSaveFoldersMigrate = 'custom_save_folders_migrate';
 

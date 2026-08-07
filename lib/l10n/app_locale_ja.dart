@@ -859,6 +859,8 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.customSaveFolderPickSystem: 'システムを選択',
   AppLocale.customSaveFolderPickEmulator: 'エミュレーターを選択',
   AppLocale.customSaveFolderSelect: 'フォルダーを選択',
+  AppLocale.customSaveFolderConfigure: '設定',
+  AppLocale.customSaveFolderConfiguredList: '設定済みフォルダー',
   AppLocale.customSaveFolderInvalid: '選択したフォルダーが存在しません',
   AppLocale.customSaveFoldersMigrate: 'クラウドセーブをNeoSync v2に移行',
 
