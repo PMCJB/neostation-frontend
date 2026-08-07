@@ -954,6 +954,7 @@ const Map<String, dynamic> appLocalePt = {
   // Custom save folders (NeoSync v2)
   AppLocale.customSaveFoldersTitle: 'Pastas de save personalizadas',
   AppLocale.customSaveFolderPickSystem: 'Escolha um sistema',
+  AppLocale.customSaveFolderPickEmulator: 'Escolha um emulador',
   AppLocale.customSaveFolderSelect: 'Selecionar pasta',
   AppLocale.customSaveFolderInvalid: 'A pasta selecionada não existe',
   AppLocale.customSaveFoldersMigrate: 'Migrar saves da nuvem para o NeoSync v2',

@@ -13,10 +13,12 @@ import 'package:neostation/services/user_data_location_service.dart';
 import 'package:neostation/widgets/custom_notification.dart' as custom;
 import 'package:neostation/widgets/tv_directory_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:neostation/data/datasources/sqlite_service.dart';
+import 'package:neostation/models/core_emulator_model.dart';
+import 'package:neostation/utils/cloud_path_builder.dart';
 
-/// Panel that lets the user configure a custom save folder for any system +
-/// emulator (ARMSX2, ARMSX1, DuckStation, etc.) and migrate legacy cloud paths
-/// to the NeoSync v2 standard.
+/// Panel that lets the user configure a custom save folder for a specific
+/// system + emulator (ARMSX2, ARMSX1, DuckStation, etc.).
 class CustomSaveFoldersPanel extends StatefulWidget {
   const CustomSaveFoldersPanel({super.key});
 
@@ -29,8 +31,10 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
   bool _configuring = false;
   List<SystemModel> _systems = [];
   String? _selectedSystem;
-  Map<String, String> _configured = {};
-  bool _migrating = false;
+  List<CoreEmulatorModel> _emulators = [];
+  String? _selectedEmulatorUniqueId;
+  List<(String, String, String)> _configured = [];
+  bool _syncingFolder = false;
 
   @override
   void initState() {
@@ -53,16 +57,51 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
 
   Future<void> _loadConfigured() async {
     try {
-      final configured = await NeoSyncSaveFolderRepository.getAllFolders();
+      final configured =
+          await NeoSyncSaveFolderRepository.getAllEntries();
       if (mounted) setState(() => _configured = configured);
     } catch (e) {
       // ignore
     }
   }
 
+  Future<void> _onSystemSelected(String? folderName) async {
+    setState(() {
+      _selectedSystem = folderName;
+      _emulators = [];
+      _selectedEmulatorUniqueId = null;
+    });
+    if (folderName == null) return;
+
+    try {
+      final system = _systems.firstWhere(
+        (s) => s.folderName == folderName,
+        orElse: () => _systems.first,
+      );
+      final emulators = await SqliteService.getEmulatorsForSystemCurrentOs(
+        system.id ?? system.folderName,
+      );
+      // Custom folders target standalone emulators (ARMSX2, DuckStation, ...).
+      // RetroArch cores are discovered automatically from their saves dir, so
+      // they are not offered here.
+      final standalone = emulators.where((e) => e.isStandalone).toList();
+      if (mounted) {
+        setState(() => _emulators = standalone);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  String? get _selectedEmulatorSlug {
+    if (_selectedEmulatorUniqueId == null) return null;
+    return CloudPathBuilder.slugFromEmulatorUniqueId(_selectedEmulatorUniqueId!);
+  }
+
   Future<void> _selectFolder() async {
     final system = _selectedSystem;
-    if (system == null || _configuring) return;
+    final emulatorSlug = _selectedEmulatorSlug;
+    if (system == null || emulatorSlug == null || _configuring) return;
     setState(() => _configuring = true);
 
     try {
@@ -98,7 +137,7 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
 
       await NeoSyncSaveFolderRepository.saveFolder(
         system,
-        'unknown',
+        emulatorSlug,
         selected,
       );
       if (!mounted) return;
@@ -107,10 +146,15 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
 
       // Upload the folder's existing saves right away so they are backed up
       // immediately instead of waiting for the next global auto-sync.
-      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
-        system,
-        'unknown',
-      );
+      setState(() => _syncingFolder = true);
+      try {
+        await context.read<NeoSyncProvider>().syncCustomSaveFolder(
+          system,
+          emulatorSlug,
+        );
+      } finally {
+        if (mounted) setState(() => _syncingFolder = false);
+      }
     } catch (e) {
       if (mounted) {
         custom.AppNotification.showNotification(
@@ -124,27 +168,16 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
     }
   }
 
-  Future<void> _removeFolder(String system) async {
-    await NeoSyncSaveFolderRepository.removeFolder(system, 'unknown');
+  Future<void> _removeFolder(String system, String emulatorSlug) async {
+    await NeoSyncSaveFolderRepository.removeFolder(system, emulatorSlug);
     await _loadConfigured();
-  }
-
-  Future<void> _migrate() async {
-    if (_migrating) return;
-    setState(() => _migrating = true);
-    try {
-      final provider = context.read<NeoSyncProvider>();
-      await provider.migrateCloudToV2();
-    } finally {
-      if (mounted) setState(() => _migrating = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final provider = context.watch<NeoSyncProvider>();
-    final isBusy = _configuring || provider.isSyncing;
+    final isBusy = _configuring || provider.isSyncing || _syncingFolder;
 
     return Container(
       padding: EdgeInsets.all(8.r),
@@ -219,13 +252,47 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
                       ),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _selectedSystem = v),
+                onChanged: _onSystemSelected,
+              ),
+              SizedBox(height: 6.r),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedEmulatorUniqueId,
+                decoration: InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8.r,
+                    vertical: 6.r,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+                style: TextStyle(fontSize: 9.r),
+                hint: Text(
+                  AppLocale.customSaveFolderPickEmulator.getString(context),
+                  style: TextStyle(fontSize: 9.r),
+                ),
+                items: _emulators
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e.uniqueId,
+                        child: Text(
+                          e.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 9.r),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _selectedEmulatorUniqueId = v),
               ),
               SizedBox(height: 6.r),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: isBusy ? null : _selectFolder,
+                  onPressed: isBusy || _selectedEmulatorSlug == null
+                      ? null
+                      : _selectFolder,
                   icon: Icon(Symbols.folder_open_rounded, size: 14.r),
                   label: Text(
                     AppLocale.customSaveFolderSelect.getString(context),
@@ -236,14 +303,14 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
             ],
             if (_configured.isNotEmpty) ...[
               SizedBox(height: 6.r),
-              for (final entry in _configured.entries)
+              for (final (system, slug, path) in _configured)
                 Padding(
                   padding: EdgeInsets.only(bottom: 4.r),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
-                          '${entry.key}: ${entry.value}',
+                          '$system / $slug: $path',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -256,30 +323,12 @@ class _CustomSaveFoldersPanelState extends State<CustomSaveFoldersPanel> {
                         icon: Icon(Symbols.delete_rounded, size: 14.r),
                         onPressed: isBusy
                             ? null
-                            : () => _removeFolder(entry.key),
+                            : () => _removeFolder(system, slug),
                       ),
                     ],
                   ),
                 ),
             ],
-            Divider(height: 10.r),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _migrating ? null : _migrate,
-                icon: _migrating
-                    ? SizedBox(
-                        width: 14.r,
-                        height: 14.r,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(Symbols.auto_awesome_rounded, size: 14.r),
-                label: Text(
-                  AppLocale.customSaveFoldersMigrate.getString(context),
-                  style: TextStyle(fontSize: 9.r),
-                ),
-              ),
-            ),
           ],
         ],
       ),

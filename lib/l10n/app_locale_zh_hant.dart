@@ -843,6 +843,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   // Custom save folders (NeoSync v2)
   AppLocale.customSaveFoldersTitle: '自訂存檔資料夾',
   AppLocale.customSaveFolderPickSystem: '選擇系統',
+  AppLocale.customSaveFolderPickEmulator: '選擇模擬器',
   AppLocale.customSaveFolderSelect: '選擇資料夾',
   AppLocale.customSaveFolderInvalid: '所選資料夾不存在',
   AppLocale.customSaveFoldersMigrate: '將雲端存檔遷移至 NeoSync v2',

@@ -851,6 +851,7 @@ const Map<String, dynamic> appLocaleKo = {
   // Custom save folders (NeoSync v2)
   AppLocale.customSaveFoldersTitle: '사용자 지정 저장 폴더',
   AppLocale.customSaveFolderPickSystem: '시스템 선택',
+  AppLocale.customSaveFolderPickEmulator: '에뮬레이터 선택',
   AppLocale.customSaveFolderSelect: '폴더 선택',
   AppLocale.customSaveFolderInvalid: '선택한 폴더가 존재하지 않습니다',
   AppLocale.customSaveFoldersMigrate: '클라우드 저장을 NeoSync v2로 마이그레이션',

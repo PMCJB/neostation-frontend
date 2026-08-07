@@ -54,6 +54,30 @@ class NeoSyncSaveFolderRepository {
     };
   }
 
+  /// A configured custom save folder entry.
+  static const folderEntryFields = (
+    systemField: 'system_folder_name',
+    emulatorField: 'emulator_slug',
+    pathField: 'folder_path',
+  );
+
+  /// Returns every configured folder as `(system, emulatorSlug, path)`.
+  static Future<List<(String, String, String)>> getAllEntries() async {
+    final db = await SqliteService.getDatabase();
+    final results = await db.query(_table);
+    return [
+      for (final row in results)
+        if (row['system_folder_name'] != null &&
+            row['emulator_slug'] != null &&
+            row['folder_path'] != null)
+          (
+            row['system_folder_name'].toString(),
+            row['emulator_slug'].toString(),
+            row['folder_path'].toString(),
+          ),
+    ];
+  }
+
   /// Persists the selected save folder for a system + emulator, upserting.
   static Future<void> saveFolder(
     String systemFolderName,
