@@ -422,7 +422,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 112;
+  static const int _databaseVersion = 113;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -1340,6 +1340,22 @@ class SqliteService {
         UNIQUE(system_folder_name, emulator_slug)
       );
     ''');
+    // A table created by an earlier feature branch may lack emulator_slug;
+    // CREATE TABLE IF NOT EXISTS won't alter it, so add the column manually.
+    try {
+      final csfInfo = await db.rawQuery(
+        'PRAGMA table_info(user_custom_save_folders)',
+      );
+      final hasEmulatorSlug =
+          csfInfo.any((c) => c['name'].toString() == 'emulator_slug');
+      if (!hasEmulatorSlug) {
+        await db.execute(
+          'ALTER TABLE user_custom_save_folders ADD COLUMN emulator_slug TEXT NOT NULL DEFAULT \'unknown\'',
+        );
+      }
+    } catch (e) {
+      _log.w('Could not ensure emulator_slug on user_custom_save_folders: $e');
+    }
     if (!tableNames.contains('user_custom_save_folders')) {
       tableNames.add('user_custom_save_folders');
     }

@@ -342,6 +342,9 @@ class SqliteMigrations {
       case 112:
         await _migrateToVersion112(db);
         break;
+      case 113:
+        await _migrateToVersion113(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -5395,6 +5398,33 @@ class SqliteMigrations {
       _log.i('Migration v112 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v112: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v113: Adds the `emulator_slug` column to an existing
+  /// [user_custom_save_folders] table.
+  ///
+  /// Devices that created the table via an earlier feature branch only have
+  /// `system_folder_name` + `folder_path`, so `CREATE TABLE IF NOT EXISTS` in
+  /// v112 silently left it unchanged and later inserts failed with "no such
+  /// column: emulator_slug". This migrates the legacy rows to the default slug
+  /// `unknown` and adds the column when missing.
+  static Future<void> _migrateToVersion113(Database db) async {
+    _log.i('Migration v113: Ensuring emulator_slug on user_custom_save_folders');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_custom_save_folders)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('emulator_slug')) {
+        _log.i('Migration v113: Adding emulator_slug column');
+        db.execute(
+          'ALTER TABLE user_custom_save_folders ADD COLUMN emulator_slug TEXT NOT NULL DEFAULT \'unknown\'',
+        );
+      }
+      _log.i('Migration v113 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v113: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
