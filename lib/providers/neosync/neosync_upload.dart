@@ -295,6 +295,8 @@ extension NeoSyncUpload on NeoSyncProvider {
       }
 
       final String relativePath;
+      String? syncSystemId;
+      String? syncEmulatorId;
       if (customFolderSystem != null &&
           customFolderEmulatorSlug != null) {
         relativePath = CloudPathBuilder.build(
@@ -303,6 +305,8 @@ extension NeoSyncUpload on NeoSyncProvider {
           scope: 'shared',
           filePath: path.basename(file.path),
         );
+        syncSystemId = customFolderSystem;
+        syncEmulatorId = customFolderEmulatorSlug;
       } else if (retroArchBasePath != null) {
         // RetroArch stores saves as <savesPath>/<core>/<game>.srm when per-core
         // subfolders are enabled, or flat as <savesPath>/<game>.srm otherwise.
@@ -331,6 +335,8 @@ extension NeoSyncUpload on NeoSyncProvider {
           gameName: path.basenameWithoutExtension(file.path),
           isState: isState,
         );
+        syncSystemId = system;
+        syncEmulatorId = emulatorSlug;
       } else {
         relativePath = _calculateRelativePath(file, basePath, isState: isState);
       }
@@ -357,8 +363,8 @@ extension NeoSyncUpload on NeoSyncProvider {
         file,
         gameName,
         customFilename: relativePath,
-        systemId: customFolderSystem,
-        emulatorId: customFolderEmulatorSlug,
+        systemId: syncSystemId,
+        emulatorId: syncEmulatorId,
         gameHash: gameHash,
         isState: isState,
         scope: customFolderSystem != null ? 'shared' : null,

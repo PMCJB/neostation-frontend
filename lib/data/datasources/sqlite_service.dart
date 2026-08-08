@@ -4946,6 +4946,8 @@ class SqliteService {
   ///
   /// Used to reconcile the system of a save with the emulator that produced it:
   /// a save must never be tagged with a system the emulator doesn't support.
+  /// Systems for which the emulator is the default rank first, since a core
+  /// like flycast can be registered for several arcade systems (dc, naomi, aw).
   static Future<List<String>> findSystemsByEmulatorSlug(
     String neosyncSlug,
   ) async {
@@ -4957,7 +4959,7 @@ class SqliteService {
         FROM app_emulators e
         JOIN app_systems s ON e.system_id = s.id
         WHERE e.neosync_slug = ?
-        ORDER BY s.folder_name
+        ORDER BY (CASE WHEN e.is_default = 1 THEN 0 ELSE 1 END), s.folder_name
         ''',
         [neosyncSlug],
       );
