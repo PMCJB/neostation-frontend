@@ -106,6 +106,7 @@ class NeoSyncService extends ChangeNotifier {
     String? customFilename,
     String? systemId,
     String? emulatorId,
+    String? gameHash,
     bool? isState,
     String? scope,
   }) async {
@@ -185,6 +186,9 @@ class NeoSyncService extends ChangeNotifier {
       }
       if (emulatorId != null && emulatorId.isNotEmpty) {
         request.fields['emulator_id'] = emulatorId;
+      }
+      if (gameHash != null && gameHash.isNotEmpty) {
+        request.fields['game_hash'] = gameHash;
       }
       if (isState != null) {
         request.fields['is_state'] = isState.toString();
@@ -300,8 +304,12 @@ class NeoSyncService extends ChangeNotifier {
     }
   }
 
-  /// Fetches the metadata list of all files currently stored in the user's cloud account.
-  Future<Map<String, dynamic>> getFiles() async {
+  /// Fetches the metadata list of the user's cloud files.
+  ///
+  /// Pass a [filter] to paginate and filter server-side. The result carries the
+  /// page's [files], the filtered [total], the per-kind [counts] breakdown, and
+  /// the distinct [systems]/[emulators] used to build the filter controls.
+  Future<Map<String, dynamic>> getFiles({NeoSyncFileFilter? filter}) async {
     _isLoading = true;
     _lastError = null;
     _safeNotifyListeners();
@@ -309,7 +317,11 @@ class NeoSyncService extends ChangeNotifier {
     try {
       final headers = await _getHeaders();
       final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v2/files');
+
+      final query = filter?.toQueryParameters() ?? <String, String>{};
+      final uri = query.isEmpty
+          ? Uri.parse('$baseUrl/api/v2/files')
+          : Uri.parse('$baseUrl/api/v2/files').replace(queryParameters: query);
 
       final response = await http.get(uri, headers: headers);
 
@@ -320,7 +332,20 @@ class NeoSyncService extends ChangeNotifier {
                 ?.map((file) => NeoSyncFile.fromJson(file))
                 .toList() ??
             [];
-        return {'success': true, 'files': files};
+        return {
+          'success': true,
+          'files': files,
+          'total': (data['total'] as num?)?.toInt() ?? files.length,
+          'counts': data['counts'] is Map
+              ? Map<String, dynamic>.from(data['counts'] as Map)
+              : null,
+          'systems':
+              (data['systems'] as List?)?.map((e) => e.toString()).toList() ??
+              const <String>[],
+          'emulators':
+              (data['emulators'] as List?)?.map((e) => e.toString()).toList() ??
+              const <String>[],
+        };
       } else {
         final data = jsonDecode(response.body);
         final error = data['error'] ?? 'Failed to fetch files';

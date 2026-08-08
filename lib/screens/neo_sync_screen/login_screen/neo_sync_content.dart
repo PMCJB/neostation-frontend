@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:neostation/l10n/app_locale.dart';
@@ -40,6 +41,10 @@ class NeoSyncContentState extends State<NeoSyncContent>
   final GlobalKey<OnlineSavesListViewState> _onlineSavesListKey =
       GlobalKey<OnlineSavesListViewState>();
   bool _isNavigatingFast = false;
+
+  // Búsqueda/filtros de la lista de saves en la nube
+  final TextEditingController _onlineSearchController = TextEditingController();
+  Timer? _onlineSearchDebounce;
 
   // Throttling para evitar eventos duplicados muy rápidos
   DateTime? _lastSelectTime;
@@ -791,6 +796,8 @@ class NeoSyncContentState extends State<NeoSyncContent>
 
   @override
   void dispose() {
+    _onlineSearchDebounce?.cancel();
+    _onlineSearchController.dispose();
     _upgradeButtonFocusNode.dispose();
     _cleanupResources();
     super.dispose();
@@ -1090,6 +1097,9 @@ class NeoSyncContentState extends State<NeoSyncContent>
     );
     if (!confirmed || !mounted) return;
 
+    _onlineSearchDebounce?.cancel();
+    _onlineSearchController.clear();
+
     final authService = Provider.of<AuthService>(context, listen: false);
     authService.logout();
     // Reset profile loaded flag for next login
@@ -1191,6 +1201,290 @@ class NeoSyncContentState extends State<NeoSyncContent>
     );
   }
 
+  void _onOnlineSearchChanged(String value) {
+    _onlineSearchDebounce?.cancel();
+    _onlineSearchDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final provider = Provider.of<NeoSyncProvider>(context, listen: false);
+      final query = value.trim();
+      provider.setOnlineFilter(
+        provider.onlineFilter.copyWith(query: query.isEmpty ? null : query),
+      );
+      _resetSelection();
+    });
+  }
+
+  void _applyOnlineFilter(NeoSyncProvider provider, NeoSyncFileFilter filter) {
+    provider.setOnlineFilter(filter);
+    _resetSelection();
+  }
+
+  Widget _buildOnlineFilterBar(BuildContext context, NeoSyncProvider provider) {
+    final theme = Theme.of(context);
+    final filter = provider.onlineFilter;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 4.r),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _onlineSearchController,
+            onChanged: _onOnlineSearchChanged,
+            style: TextStyle(
+              fontSize: 10.r,
+              color: theme.colorScheme.onSurface,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Search saves...',
+              hintStyle: TextStyle(
+                fontSize: 10.r,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
+              isDense: true,
+              prefixIcon: Icon(Symbols.search_rounded, size: 14.r),
+              suffixIcon: (filter.query ?? '').isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Symbols.close_rounded, size: 14.r),
+                      onPressed: () {
+                        _onlineSearchController.clear();
+                        _onOnlineSearchChanged('');
+                      },
+                    )
+                  : null,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 8.r,
+                vertical: 6.r,
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.r),
+                borderSide: BorderSide.none,
+              ),
+            ),
+          ),
+          SizedBox(height: 4.r),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildOnlineScopeChip(
+                  context,
+                  provider,
+                  'All',
+                  null,
+                ),
+                _buildOnlineScopeChip(
+                  context,
+                  provider,
+                  'Per-Game Saves',
+                  'game',
+                ),
+                _buildOnlineScopeChip(
+                  context,
+                  provider,
+                  'Memory Cards',
+                  'shared',
+                ),
+                SizedBox(width: 10.r),
+                _buildOnlineDropdown(
+                  context,
+                  provider,
+                  label: 'System',
+                  values: provider.onlineSystems,
+                  current: filter.system,
+                  onChanged: (v) => _applyOnlineFilter(
+                    provider,
+                    filter.copyWith(system: v),
+                  ),
+                ),
+                SizedBox(width: 8.r),
+                _buildOnlineDropdown(
+                  context,
+                  provider,
+                  label: 'Emulator',
+                  values: provider.onlineEmulators,
+                  current: filter.emulator,
+                  onChanged: (v) => _applyOnlineFilter(
+                    provider,
+                    filter.copyWith(emulator: v),
+                  ),
+                ),
+                SizedBox(width: 8.r),
+                _buildOnlineSortDropdown(context, provider),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOnlineScopeChip(
+    BuildContext context,
+    NeoSyncProvider provider,
+    String label,
+    String? value,
+  ) {
+    final theme = Theme.of(context);
+    final selected = provider.onlineFilter.scope == value;
+    return Padding(
+      padding: EdgeInsets.only(right: 4.r),
+      child: ChoiceChip(
+        label: Text(label, style: TextStyle(fontSize: 9.r)),
+        selected: selected,
+        onSelected: (_) => _applyOnlineFilter(
+          provider,
+          provider.onlineFilter.copyWith(scope: value),
+        ),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        selectedColor: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.3,
+        ),
+        labelStyle: TextStyle(
+          fontSize: 9.r,
+          color: selected
+              ? theme.colorScheme.onPrimary
+              : theme.colorScheme.onSurface,
+        ),
+        side: BorderSide.none,
+        padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 0.r),
+      ),
+    );
+  }
+
+  Widget _buildOnlineDropdown(
+    BuildContext context,
+    NeoSyncProvider provider, {
+    required String label,
+    required List<String> values,
+    required String? current,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.r),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: DropdownButton<String>(
+        value: current != null && values.contains(current) ? current : null,
+        hint: Text(
+          '$label: All',
+          style: TextStyle(fontSize: 9.r, color: theme.colorScheme.onSurface),
+        ),
+        isDense: true,
+        underline: const SizedBox.shrink(),
+        style: TextStyle(fontSize: 9.r, color: theme.colorScheme.onSurface),
+        icon: Icon(Symbols.expand_more_rounded, size: 14.r),
+        items: values
+            .map(
+              (v) => DropdownMenuItem(
+                value: v,
+                child: Text(v, style: TextStyle(fontSize: 9.r)),
+              ),
+            )
+            .toList(),
+        onChanged: (v) => onChanged(v),
+      ),
+    );
+  }
+
+  Widget _buildOnlineSortDropdown(
+    BuildContext context,
+    NeoSyncProvider provider,
+  ) {
+    final theme = Theme.of(context);
+    final filter = provider.onlineFilter;
+    final sort = filter.sort ?? 'modified';
+    final dir = filter.dir ?? 'desc';
+    final current = '${sort}_$dir';
+    const options = <String, String>{
+      'modified_desc': 'Newest',
+      'modified_asc': 'Oldest',
+      'name_asc': 'Name A–Z',
+      'name_desc': 'Name Z–A',
+    };
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.r),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(6.r),
+      ),
+      child: DropdownButton<String>(
+        value: options.containsKey(current) ? current : 'modified_desc',
+        isDense: true,
+        underline: const SizedBox.shrink(),
+        style: TextStyle(fontSize: 9.r, color: theme.colorScheme.onSurface),
+        icon: Icon(Symbols.expand_more_rounded, size: 14.r),
+        items: options.entries
+            .map(
+              (e) => DropdownMenuItem(
+                value: e.key,
+                child: Text(e.value, style: TextStyle(fontSize: 9.r)),
+              ),
+            )
+            .toList(),
+        onChanged: (v) {
+          if (v == null) return;
+          final parts = v.split('_');
+          _applyOnlineFilter(
+            provider,
+            filter.copyWith(sort: parts[0], dir: parts[1]),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildOnlinePagination(BuildContext context, NeoSyncProvider provider) {
+    if (provider.onlineTotalPages <= 1) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(top: 2.r),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: provider.hasOnlinePrevious
+                ? () {
+                    provider.previousOnlinePage();
+                    _resetSelection();
+                  }
+                : null,
+            icon: Icon(Symbols.chevron_left_rounded, size: 16.r),
+            visualDensity: VisualDensity.compact,
+            color: theme.colorScheme.onSurface,
+          ),
+          Text(
+            'Page ${provider.onlinePage} of ${provider.onlineTotalPages}',
+            style: TextStyle(
+              fontSize: 10.r,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
+          IconButton(
+            onPressed: provider.hasOnlineNext
+                ? () {
+                    provider.nextOnlinePage();
+                    _resetSelection();
+                  }
+                : null,
+            icon: Icon(Symbols.chevron_right_rounded, size: 16.r),
+            visualDensity: VisualDensity.compact,
+            color: theme.colorScheme.onSurface,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildOnlineSavesColumn() {
     return Consumer<NeoSyncProvider>(
       builder: (context, neoSyncProvider, child) {
@@ -1262,11 +1556,18 @@ class NeoSyncContentState extends State<NeoSyncContent>
               ),
               SizedBox(height: 2.r),
 
+              _buildOnlineFilterBar(context, neoSyncProvider),
+
               Expanded(
                 child: neoSyncProvider.isLoadingOnlineFiles
                     ? const Center(child: CircularProgressIndicator())
                     : neoSyncProvider.onlineFiles.isEmpty
-                    ? _buildEmptyState(context)
+                    ? _buildEmptyState(
+                        context,
+                        message: neoSyncProvider.onlineTotal > 0
+                            ? 'No saves match the filters'
+                            : null,
+                      )
                     : OnlineSavesListView(
                         key: _onlineSavesListKey,
                         files: neoSyncProvider.onlineFiles,
@@ -1283,6 +1584,8 @@ class NeoSyncContentState extends State<NeoSyncContent>
                         },
                       ),
               ),
+
+              _buildOnlinePagination(context, neoSyncProvider),
             ],
           ),
         );
@@ -1290,7 +1593,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, {String? message}) {
     return Center(
       child: Padding(
         padding: EdgeInsets.all(12.r),
@@ -1305,7 +1608,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
             ),
             SizedBox(height: 8.r),
             Text(
-              AppLocale.noOnlineSavesFound.getString(context),
+              message ?? AppLocale.noOnlineSavesFound.getString(context),
               style: TextStyle(
                 fontSize: 16.r,
                 color: Theme.of(
