@@ -718,6 +718,7 @@ extension NeoSyncCore on NeoSyncProvider {
         customFilename: relativePath,
         systemId: game.systemFolderName,
         emulatorId: parsed?.emulatorSlug,
+        gameHash: await _resolveGameHashForUpload(game),
         isState: isState,
         scope: parsed?.scope,
       );
@@ -1227,6 +1228,7 @@ extension NeoSyncCore on NeoSyncProvider {
           customFilename: relativePath,
           systemId: game.systemFolderName,
           emulatorId: parsed?.emulatorSlug,
+          gameHash: await _resolveGameHashForUpload(game),
           isState: false,
           scope: parsed?.scope,
         );
@@ -1294,6 +1296,7 @@ extension NeoSyncCore on NeoSyncProvider {
             customFilename: relativePath,
             systemId: game.systemFolderName,
             emulatorId: parsed?.emulatorSlug,
+            gameHash: await _resolveGameHashForUpload(game),
             isState: false,
             scope: parsed?.scope,
           );

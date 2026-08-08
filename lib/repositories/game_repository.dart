@@ -239,14 +239,16 @@ class GameRepository {
     return result.isNotEmpty ? Map<String, dynamic>.from(result.first) : null;
   }
 
-  /// Finds a ROM by filename prefix and returns {filename, title_name, folder_name} or null.
+  /// Finds a ROM by filename prefix and returns
+  /// {filename, title_name, folder_name, emulator_name, rom_path} or null.
   static Future<Map<String, dynamic>?> findRomByFilenamePrefix(
     String prefix,
   ) async {
     final db = await SqliteService.getDatabase();
     final result = await db.rawQuery(
       '''
-      SELECT ur.filename, ur.title_name, s.folder_name
+      SELECT ur.filename, ur.title_name, s.folder_name,
+        ur.app_emulator_unique_id as emulator_name, ur.rom_path
       FROM user_roms ur
       JOIN app_systems s ON ur.app_system_id = s.id
       WHERE ur.filename LIKE ?

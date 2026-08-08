@@ -312,15 +312,21 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     if (retroBase != null) {
       final relativeToBase = path.relative(file.path, from: retroBase);
       final segments = relativeToBase.split(RegExp(r'[/\\]'));
-      final coreName = segments.isNotEmpty ? segments.first : '';
-      if (coreName.isNotEmpty) {
-        emulatorSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
-        // A core like mgba serves several systems, so it is only a fallback.
-        // The game's own system is authoritative.
-        systemFolderFromCore = await _systemFolderForRetroArchFile(
-          file,
-          retroBase,
-        );
+      // Only a per-core subfolder layout (<base>/<core>/<game>.srm) encodes
+      // the core in the path. Flat saves (<base>/<game>.srm, the default)
+      // have a single segment that is the file itself, so the core must come
+      // from the game's emulator metadata below.
+      if (segments.length > 1) {
+        final coreName = segments.first;
+        if (coreName.isNotEmpty) {
+          emulatorSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
+          // A core like mgba serves several systems, so it is only a fallback.
+          // The game's own system is authoritative.
+          systemFolderFromCore = await _systemFolderForRetroArchFile(
+            file,
+            retroBase,
+          );
+        }
       }
     }
     emulatorSlug ??= await _resolveEmulatorSlugForGame(game, system);
@@ -361,6 +367,121 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     );
   }
 
+  /// Resolves the local RetroArch core folder name from an emulator slug.
+  ///
+  /// The v2 cloud path carries the derived slug (`retroarch.mgba`), but the
+  /// on-disk layout uses the core folder name (`mgba`, `mednafen_psx_hw`, ...).
+  /// Looks for an existing subfolder of [baseFolder] whose slug matches first,
+  /// then the emulator's stored `core_filename`, and finally falls back to
+  /// stripping the `retroarch.` prefix.
+  Future<String?> _retroArchCoreFolderForSlug(
+    String emulatorSlug,
+    String baseFolder,
+  ) async {
+    if (!emulatorSlug.startsWith('retroarch.')) return null;
+
+    // Prefer the folder that actually exists on disk and maps back to this
+    // slug (e.g. `mGBA` or `mgba_libretro` vs `mgba`).
+    try {
+      final baseDir = Directory(baseFolder);
+      if (baseDir.existsSync()) {
+        for (final entity in baseDir.listSync().whereType<Directory>()) {
+          final name = path.basename(entity.path);
+          if (name.isNotEmpty &&
+              CloudPathBuilder.retroArchCoreSlug(name) == emulatorSlug) {
+            return name;
+          }
+        }
+      }
+    } catch (e) {
+      NeoSyncProvider._log.w(
+        'Error scanning core folders under $baseFolder: $e',
+      );
+    }
+
+    try {
+      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+        emulatorSlug,
+      );
+      if (folder != null && folder.isNotEmpty) return folder;
+    } catch (e) {
+      NeoSyncProvider._log.w(
+        'Error resolving core folder for $emulatorSlug: $e',
+      );
+    }
+    return emulatorSlug.substring('retroarch.'.length);
+  }
+
+  /// Resolves the NeoSync v2 game hash (`ra_hash`) for an upload.
+  ///
+  /// The cloud `game_hash` identifies the actual ROM behind a save. It uses the
+  /// RetroAchievements hash (the real content hash, which for ZIP ROMs reflects
+  /// the file *inside* the archive) rather than the save file's own hash. If the
+  /// hash is already cached in the local DB it is returned; otherwise it is
+  /// generated and persisted by [RetroAchievementsHashService].
+  Future<String?> _resolveGameHashForUpload(GameModel game) async {
+    try {
+      return await RetroAchievementsHashService.generateHashForGame(game);
+    } catch (e) {
+      NeoSyncProvider._log.w('Error resolving game hash for ${game.name}: $e');
+      return null;
+    }
+  }
+
+  /// Resolves the NeoSync v2 emulator slug for a RetroArch save/state file.
+  ///
+  /// Only a per-core subfolder layout (`<base>/<core>/<game>.srm`) encodes the
+  /// core in the path; flat saves (`<base>/<game>.srm`) have a single segment
+  /// that is the file itself. For flat saves the emulator is resolved from the
+  /// game's own emulator metadata (e.g. a SNES save -> `retroarch.snes9x`)
+  /// instead of misreading the game file name as a core.
+  Future<String?> _resolveRetroArchEmulatorSlug(
+    File file,
+    String retroArchBase,
+  ) async {
+    final relativeToBase = path.relative(file.path, from: retroArchBase);
+    final segments = relativeToBase.split(RegExp(r'[/\\]'));
+    if (segments.length > 1) {
+      final coreName = segments.first;
+      if (coreName.isNotEmpty) {
+        return CloudPathBuilder.retroArchCoreSlug(coreName);
+      }
+    }
+
+    final fileName = path.basenameWithoutExtension(file.path);
+    try {
+      final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
+      if (row == null) return null;
+      final game = _gameModelFromRomRow(row, fileName);
+      final system = await _getSystemForGame(game);
+      return _resolveEmulatorSlugForGame(game, system);
+    } catch (e) {
+      NeoSyncProvider._log.w('Error resolving emulator slug for $fileName: $e');
+      return null;
+    }
+  }
+
+  /// Builds a lightweight [GameModel] from a `findRomByFilenamePrefix` row so
+  /// emulator/slug resolution can reuse the standard game metadata lookups.
+  GameModel _gameModelFromRomRow(Map<String, dynamic> row, String fallback) {
+    final romname = row['filename']?.toString() ?? fallback;
+    final title = row['title_name']?.toString() ?? romname;
+    return GameModel(
+      name: title,
+      realname: title,
+      romname: romname,
+      romPath: row['rom_path']?.toString(),
+      systemFolderName: row['folder_name']?.toString(),
+      emulatorName: row['emulator_name']?.toString(),
+      year: '',
+      developer: '',
+      publisher: '',
+      genre: '',
+      players: '',
+      rating: 0.0,
+    );
+  }
+
   /// Resolves the system folder name for a RetroArch save file.
   ///
   /// RetroArch organizes saves under `<base>/<core>/<game>.srm`. A core can
@@ -391,7 +512,11 @@ extension NeoSyncPathResolver on NeoSyncProvider {
 
     final relativeToBase = path.relative(file.path, from: retroArchBase);
     final segments = relativeToBase.split(RegExp(r'[/\\]'));
-    final coreName = segments.isNotEmpty ? segments.first : '';
+    // Only a per-core subfolder layout (<base>/<core>/<game>.srm) encodes the
+    // core in the path. Flat saves (<base>/<game>.srm) have a single segment
+    // that is the file itself, so there is no core folder to map back.
+    if (segments.length <= 1) return null;
+    final coreName = segments.first;
     if (coreName.isEmpty) return null;
 
     try {
@@ -521,6 +646,20 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       // is dropped because RetroArch keeps per-game files flat in its saves
       // dir). Preserve any emulator-internal structure inside filePath.
       relativeName = v2Path.filePath;
+      // RetroArch keeps per-core saves under <savesPath>/<core>/<game>.srm.
+      // Restore the core folder segment so a download lands in the same
+      // subfolder that the upload logic reads back from. This applies to both
+      // per-game saves and shared memcards, since RetroArch stores those under
+      // the core subfolder as well.
+      if (v2Path.emulatorSlug.startsWith('retroarch.')) {
+        final coreFolder = await _retroArchCoreFolderForSlug(
+          v2Path.emulatorSlug,
+          targetFolder,
+        );
+        if (coreFolder != null && coreFolder.isNotEmpty) {
+          relativeName = path.join(coreFolder, relativeName);
+        }
+      }
     } else if (isState) {
       relativeName = relativeName.replaceFirst(RegExp(r'^states[/\\]'), '');
     } else if (isSave) {

@@ -304,22 +304,24 @@ extension NeoSyncUpload on NeoSyncProvider {
           filePath: path.basename(file.path),
         );
       } else if (retroArchBasePath != null) {
-        // RetroArch stores saves as <savesPath>/<core>/<game>.srm. Derive the
-        // emulator slug from the core folder so a save always lands under
-        // retroarch.<core> regardless of which standalone the game metadata
-        // points at. The system is resolved from the game (a core like mgba
+        // RetroArch stores saves as <savesPath>/<core>/<game>.srm when per-core
+        // subfolders are enabled, or flat as <savesPath>/<game>.srm otherwise.
+        // Derive the emulator slug from the core folder when present so a save
+        // lands under retroarch.<core> regardless of which standalone the game
+        // metadata points at; flat saves fall back to the game's own emulator
+        // metadata. The system is resolved from the game (a core like mgba
         // serves several systems) and falls back to the core mapping.
-        final relativeToBase = path.relative(file.path, from: retroArchBasePath);
-        final segments = relativeToBase.split(RegExp(r'[/\\]'));
-        final coreName = segments.isNotEmpty ? segments.first : '';
-        final coreSlug = CloudPathBuilder.retroArchCoreSlug(coreName);
+        final emulatorSlug = await _resolveRetroArchEmulatorSlug(
+          file,
+          retroArchBasePath,
+        );
         final system = await _systemFolderForRetroArchFile(
           file,
           retroArchBasePath,
         );
         relativePath = CloudPathBuilder.build(
           system: system ?? 'unknown',
-          emulatorSlug: coreSlug,
+          emulatorSlug: emulatorSlug ?? 'unknown',
           scope: 'game',
           filePath: path.basename(file.path),
           gameName: path.basenameWithoutExtension(file.path),
@@ -330,12 +332,30 @@ extension NeoSyncUpload on NeoSyncProvider {
       }
       final gameName = _extractGameNameFromPath(file.path);
 
+      // Resolve the game hash (ra_hash) so the v2 upload carries the ROM hash.
+      // The save base name usually matches the ROM name, so find the game by
+      // prefix and use its hash.
+      String? gameHash;
+      try {
+        final fileName = path.basenameWithoutExtension(file.path);
+        final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
+        if (row != null) {
+          final game = _gameModelFromRomRow(row, fileName);
+          gameHash = await _resolveGameHashForUpload(game);
+        }
+      } catch (e) {
+        NeoSyncProvider._log.w(
+          'Error resolving game hash for ${path.basename(file.path)}: $e',
+        );
+      }
+
       final result = await _neoSyncService.syncFile(
         file,
         gameName,
         customFilename: relativePath,
         systemId: customFolderSystem,
         emulatorId: customFolderEmulatorSlug,
+        gameHash: gameHash,
         isState: isState,
         scope: customFolderSystem != null ? 'shared' : null,
       );
@@ -453,10 +473,25 @@ extension NeoSyncUpload on NeoSyncProvider {
       );
       final gameName = _extractGameNameFromPath(file.path);
 
+      String? gameHash;
+      try {
+        final fileName = path.basenameWithoutExtension(file.path);
+        final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
+        if (row != null) {
+          final game = _gameModelFromRomRow(row, fileName);
+          gameHash = await _resolveGameHashForUpload(game);
+        }
+      } catch (e) {
+        NeoSyncProvider._log.w(
+          'Error resolving game hash for ${path.basename(file.path)}: $e',
+        );
+      }
+
       final result = await _neoSyncService.syncFile(
         file,
         gameName,
         customFilename: relativePath,
+        gameHash: gameHash,
       );
 
       if (result['success']) {

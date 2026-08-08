@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:neostation/data/datasources/sqlite_service.dart';
 import 'package:neostation/repositories/neosync_save_folder_repository.dart';
 import 'package:neostation/utils/cloud_path_builder.dart';
 
@@ -61,6 +62,56 @@ void main() {
       final folder = await NeoSyncSaveFolderRepository.getFolder(
         'ps2',
         'armsx2',
+      );
+      expect(folder, isNull);
+    });
+  });
+
+  group('NeoSync core folder resolution', () {
+    final dbHelper = DatabaseTestHelper();
+
+    setUp(() async => dbHelper.setUp());
+    tearDown(() async => dbHelper.tearDown());
+
+    test('findCoreFolderByNeosyncSlug returns core_filename', () async {
+      final db = await SqliteService.getDatabase();
+      await db.insert('app_emulators', {
+        'system_id': 'snes',
+        'os_id': 1,
+        'name': 'RetroArch64 Snes9x',
+        'unique_identifier': 'snes.ra64.snes9x',
+        'is_standalone': 0,
+        'core_filename': 'snes9x',
+        'neosync_slug': 'retroarch.snes9x',
+      });
+
+      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+        'retroarch.snes9x',
+      );
+      expect(folder, 'snes9x');
+    });
+
+    test('findCoreFolderByNeosyncSlug returns null when slug is unknown', () async {
+      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+        'retroarch.unknown',
+      );
+      expect(folder, isNull);
+    });
+
+    test('findCoreFolderByNeosyncSlug ignores rows without core_filename', () async {
+      final db = await SqliteService.getDatabase();
+      await db.insert('app_emulators', {
+        'system_id': 'gba',
+        'os_id': 1,
+        'name': 'RetroArch64 mGBA',
+        'unique_identifier': 'gba.ra64.mgba',
+        'is_standalone': 0,
+        'core_filename': null,
+        'neosync_slug': 'retroarch.mgba',
+      });
+
+      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+        'retroarch.mgba',
       );
       expect(folder, isNull);
     });
