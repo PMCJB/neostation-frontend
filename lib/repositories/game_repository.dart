@@ -252,6 +252,7 @@ class GameRepository {
       FROM user_roms ur
       JOIN app_systems s ON ur.app_system_id = s.id
       WHERE ur.filename LIKE ?
+      ORDER BY LENGTH(ur.filename) ASC, ur.filename ASC
       LIMIT 1
       ''',
       ['$prefix%'],

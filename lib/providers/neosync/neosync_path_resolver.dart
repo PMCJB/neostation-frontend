@@ -331,12 +331,15 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     }
     emulatorSlug ??= await _resolveEmulatorSlugForGame(game, system);
     // Priority: the caller's explicit system (from the games list context),
-    // then the game's own system, then the core-derived fallback.
-    final systemFolder =
+    // then the game's own system, then the core-derived fallback. Finally the
+    // emulator is cross-checked so the save never lands under a system the
+    // emulator doesn't support.
+    var systemFolder =
         explicitSystemFolder ??
         game.systemFolderName ??
         system?.folderName ??
         systemFolderFromCore;
+    systemFolder = await _reconcileEmulatorSystem(systemFolder, emulatorSlug);
 
     if (systemFolder == null || emulatorSlug == null) {
       return _calculateRelativePath(file, basePath, isState: isState);
@@ -565,6 +568,34 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       NeoSyncProvider._log.w('Error resolving emulator slug: $e');
     }
     return null;
+  }
+
+  /// Ensures [system] and [emulatorSlug] agree.
+  ///
+  /// A save must never be tagged with a system the emulator doesn't support.
+  /// When the emulator is only registered for other systems (e.g. a NES core
+  /// saving under a cps1 game that got mis-associated in the local DB) the
+  /// first system the emulator actually supports is returned instead. When the
+  /// pair is consistent, or the emulator is unknown, [system] is kept.
+  Future<String?> _reconcileEmulatorSystem(
+    String? system,
+    String? emulatorSlug,
+  ) async {
+    if (system == null || emulatorSlug == null) return system;
+    try {
+      final systems = await SqliteService.findSystemsByEmulatorSlug(
+        emulatorSlug,
+      );
+      if (systems.isEmpty || systems.contains(system)) return system;
+      NeoSyncProvider._log.w(
+        'Emulator $emulatorSlug is not registered for system $system; '
+        'using ${systems.first} instead',
+      );
+      return systems.first;
+    } catch (e) {
+      NeoSyncProvider._log.w('Error reconciling emulator/system: $e');
+      return system;
+    }
   }
 
   /// Resuelve la ruta local para un archivo de la nube para un juego específico

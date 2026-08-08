@@ -315,10 +315,14 @@ extension NeoSyncUpload on NeoSyncProvider {
           file,
           retroArchBasePath,
         );
-        final system = await _systemFolderForRetroArchFile(
+        var system = await _systemFolderForRetroArchFile(
           file,
           retroArchBasePath,
         );
+        // The emulator must actually be registered for the resolved system;
+        // otherwise trust the emulator's own system (a save from a NES core can
+        // never belong to cps1, no matter what the game metadata says).
+        system = await _reconcileEmulatorSystem(system, emulatorSlug);
         relativePath = CloudPathBuilder.build(
           system: system ?? 'unknown',
           emulatorSlug: emulatorSlug ?? 'unknown',
