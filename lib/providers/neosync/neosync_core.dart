@@ -782,6 +782,26 @@ extension NeoSyncCore on NeoSyncProvider {
   }
 
   /// Busca TODOS los archivos de guardado locales para un juego específico (saves y states)
+  /// Whether [candidate] (a filename or full path, case-insensitive) refers to
+  /// a save/state of the game with [romName].
+  ///
+  /// The ROM name must end at a word boundary (`.`, `_`, space, `[`, `(`, `/`),
+  /// so a save like `mvsc2u.zip.eeprom` never matches the game `mvsc` the way a
+  /// plain substring check would. A plain substring check is what uploaded the
+  /// orphan Naomi EEPROM under the unrelated CPS2 "Clash of Super Heroes".
+  bool _saveBelongsToRom(String candidate, String romName) {
+    final g = romName.trim().toLowerCase();
+    if (g.isEmpty) return false;
+    final c = candidate.toLowerCase();
+    if (c == g) return true;
+    const boundaries = ['.', '_', ' ', '[', '(', '/'];
+    for (final b in boundaries) {
+      if (c.contains('$g$b')) return true;
+    }
+    // The ROM name as the final path segment (a game folder).
+    return c.endsWith('/$g');
+  }
+
   Future<List<LocalSaveFile>> _findGameSaveFiles(GameModel game) async {
     try {
       // 1. Obtener el sistema para resolver sus rutas JSON
@@ -852,34 +872,22 @@ extension NeoSyncCore on NeoSyncProvider {
               isMatch = true;
             }
           } else {
-            // Para sistemas estándar, filtrar por romname
-            // Extendemos la búsqueda a la ruta completa por si el nombre del juego
-            // está en la carpeta contenedora en vez del propio archivo (ej. Switch)
+            // Para sistemas estándar, filtrar por romname con límite de palabra
+            // (mvsc2u.zip.eeprom no debe casar con el juego "mvsc").
+            // Extendemos la búsqueda a la ruta completa por si el nombre del
+            // juego está en la carpeta contenedora en vez del propio archivo
+            // (ej. Switch).
             final fullPathLower = file.path.toLowerCase();
 
-            if (fileName.contains(gameRomName) ||
-                fullPathLower.contains(gameRomName)) {
+            if (_saveBelongsToRom(fileName, gameRomName) ||
+                _saveBelongsToRom(fullPathLower, gameRomName)) {
               isMatch = true;
             } else if (system.folderName == 'switch' &&
                 game.titleId != null &&
-                game.titleId!.isNotEmpty) {
+                game.titleId!.isNotEmpty &&
+                fullPathLower.contains(game.titleId!.toLowerCase())) {
               // Especial para Switch: matchear por Title ID en la ruta
-              if (fullPathLower.contains(game.titleId!.toLowerCase())) {
-                isMatch = true;
-              }
-            } else {
-              // Comparación flexible
-              final normalizedPath = fullPathLower.replaceAll(
-                RegExp(r'[^\w\s\/\\]'),
-                '',
-              );
-              final normalizedGameName = gameRomName.replaceAll(
-                RegExp(r'[^\w\s]'),
-                '',
-              );
-              if (normalizedPath.contains(normalizedGameName)) {
-                isMatch = true;
-              }
+              isMatch = true;
             }
           }
 
@@ -984,26 +992,13 @@ extension NeoSyncCore on NeoSyncProvider {
             isMatch = true;
           }
         } else {
-          // Para sistemas estándar, filtrar por romname
-          // Usamos la ruta completa del cloudFile por si está en carpetas (ej. Switch)
+          // Para sistemas estándar, filtrar por romname con límite de palabra.
+          // Usamos la ruta completa del cloudFile por si está en carpetas (ej. Switch).
           final fullCloudPathLower = cloudFile.fileName.toLowerCase();
 
-          if (fileName.contains(gameRomName) ||
-              fullCloudPathLower.contains(gameRomName)) {
+          if (_saveBelongsToRom(fileName, gameRomName) ||
+              _saveBelongsToRom(fullCloudPathLower, gameRomName)) {
             isMatch = true;
-          } else {
-            // Comparación flexible en toda la ruta
-            final normalizedCloudPath = fullCloudPathLower.replaceAll(
-              RegExp(r'[^\w\s\/]'),
-              '',
-            );
-            final normalizedGameName = gameRomName.replaceAll(
-              RegExp(r'[^\w\s]'),
-              '',
-            );
-            if (normalizedCloudPath.contains(normalizedGameName)) {
-              isMatch = true;
-            }
           }
         }
 
