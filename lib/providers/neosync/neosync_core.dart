@@ -872,11 +872,10 @@ extension NeoSyncCore on NeoSyncProvider {
               isMatch = true;
             }
           } else {
-            // Para sistemas estándar, filtrar por romname con límite de palabra
-            // (mvsc2u.zip.eeprom no debe casar con el juego "mvsc").
-            // Extendemos la búsqueda a la ruta completa por si el nombre del
-            // juego está en la carpeta contenedora en vez del propio archivo
-            // (ej. Switch).
+            // Standard systems match by ROM name with a word boundary, so
+            // mvsc2u.zip.eeprom can never match the game "mvsc". The full path
+            // is also checked in case the game name lives in the containing
+            // folder instead of the file itself (e.g. Switch).
             final fullPathLower = file.path.toLowerCase();
 
             if (_saveBelongsToRom(fileName, gameRomName) ||
@@ -886,7 +885,7 @@ extension NeoSyncCore on NeoSyncProvider {
                 game.titleId != null &&
                 game.titleId!.isNotEmpty &&
                 fullPathLower.contains(game.titleId!.toLowerCase())) {
-              // Especial para Switch: matchear por Title ID en la ruta
+              // Switch special case: match by Title ID in the path
               isMatch = true;
             }
           }
@@ -992,8 +991,8 @@ extension NeoSyncCore on NeoSyncProvider {
             isMatch = true;
           }
         } else {
-          // Para sistemas estándar, filtrar por romname con límite de palabra.
-          // Usamos la ruta completa del cloudFile por si está en carpetas (ej. Switch).
+          // Standard systems match by ROM name with a word boundary. The full
+          // cloud path is checked too in case it lives in folders (e.g. Switch).
           final fullCloudPathLower = cloudFile.fileName.toLowerCase();
 
           if (_saveBelongsToRom(fileName, gameRomName) ||

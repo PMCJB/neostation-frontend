@@ -42,7 +42,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
       GlobalKey<OnlineSavesListViewState>();
   bool _isNavigatingFast = false;
 
-  // Búsqueda/filtros de la lista de saves en la nube
+  // Search/filters for the online saves list
   final TextEditingController _onlineSearchController = TextEditingController();
   Timer? _onlineSearchDebounce;
 
