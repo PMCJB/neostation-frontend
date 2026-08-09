@@ -308,6 +308,32 @@ extension NeoSyncUpload on NeoSyncProvider {
         syncSystemId = customFolderSystem;
         syncEmulatorId = customFolderEmulatorSlug;
       } else if (retroArchBasePath != null) {
+        final fileName = path.basenameWithoutExtension(file.path);
+        final lowerPath = file.path.toLowerCase();
+
+        // Only sync RetroArch saves that belong to a game still in the local
+        // library (the save base name matches a ROM) or that are shared memory
+        // cards. Orphan saves left behind by removed games (e.g. a Naomi EEPROM
+        // whose ROM is no longer on disk) must not be uploaded, otherwise the
+        // auto-sync picks them up while scanning the whole saves folder.
+        final isSharedCard = lowerPath.endsWith('.ps2') ||
+            lowerPath.endsWith('.mcr') ||
+            lowerPath.endsWith('.mcd') ||
+            lowerPath.endsWith('.vmu') ||
+            lowerPath.endsWith('.vmp') ||
+            lowerPath.contains('vmu_save');
+        final gameRow = await GameRepository.findRomByFilenamePrefix(
+          '$fileName%',
+        );
+        if (gameRow == null && !isSharedCard) {
+          _skippedFiles++;
+          _processedItems.add(
+            '⏭️ Skipped save for a game not in your library: '
+            '${path.basename(file.path)}',
+          );
+          return;
+        }
+
         // RetroArch stores saves as <savesPath>/<core>/<game>.srm when per-core
         // subfolders are enabled, or flat as <savesPath>/<game>.srm otherwise.
         // Derive the emulator slug from the core folder when present so a save
