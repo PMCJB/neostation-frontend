@@ -357,6 +357,9 @@ class SqliteMigrations {
       case 117:
         await _migrateToVersion117(db);
         break;
+      case 118:
+        await _migrateToVersion118(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -5543,6 +5546,39 @@ class SqliteMigrations {
       _log.i('Migration v117 completed');
     } catch (e, stackTrace) {
       _log.e('Error in migration v117: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v118: Backfills `user_system_settings.subfolder_view` for
+  /// databases that skipped main's v111/v113.
+  ///
+  /// This branch originally claimed the v111-113 numbers for NeoSync, so a
+  /// device that migrated while on that branch is already past main's v111
+  /// (subfolder_view) and v113 (backfill) — their `case` clauses never fire and
+  /// `user_system_settings.subfolder_view` is missing, breaking every query
+  /// that joins it. Idempotent: adds the column only when absent, mirroring the
+  /// main-branch backfill so this is a no-op on databases that took the normal
+  /// path.
+  static Future<void> _migrateToVersion118(Database db) async {
+    _log.i('Migration v118: Backfilling subfolder_view if absent');
+    try {
+      final settingsColumns = db
+          .select('PRAGMA table_info(user_system_settings)')
+          .map((c) => c['name'].toString())
+          .toList();
+      if (!settingsColumns.contains('subfolder_view')) {
+        db.execute(
+          'ALTER TABLE user_system_settings ADD COLUMN subfolder_view INTEGER DEFAULT 0',
+        );
+        _log.i('Column subfolder_view backfilled via v118');
+      } else {
+        _log.i('Column subfolder_view already present');
+      }
+      _log.i('Migration v118 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v118: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
