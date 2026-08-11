@@ -95,6 +95,11 @@ const Map<String, dynamic> appLocaleEs = {
       'Escaneo recursivo activado. Escaneando {name}...',
   AppLocale.recursiveScanDisabled:
       'Escaneo recursivo desactivado. Escaneando {name}...',
+  AppLocale.subfolderView: 'Mostrar subcarpetas',
+  AppLocale.subfolderViewSubtitle:
+      'Agrupar las ROMs de subcarpetas en carpetas navegables en lugar de mezclarlas con los juegos',
+  AppLocale.subfolderViewEnabled: 'Subcarpetas mostradas como carpetas',
+  AppLocale.subfolderViewDisabled: 'Subcarpetas mezcladas con los juegos',
   AppLocale.errorScanningSystem: 'Error al escanear el sistema: {error}',
   AppLocale.scrapedTitlesUsed:
       'Se usarán los títulos obtenidos cuando estén disponibles',
@@ -821,6 +826,10 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.pressToClose: 'Presiona [ESC], [ENTER] o [ESPACIO] para cerrar',
 
   AppLocale.selectStorage: 'Seleccionar almacenamiento',
+
+  AppLocale.homeFolder: 'Carpeta personal',
+
+  AppLocale.filesystemRoot: 'Sistema de archivos',
   AppLocale.internalStorage: 'Almacenamiento interno',
   AppLocale.externalStorage: 'Almacenamiento externo ({name})',
   AppLocale.folderRestrictedAndroid: 'Carpeta restringida por Android',
@@ -850,6 +859,7 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.systemsUpdateCurrentVersion: 'Versión actual: {version}',
   AppLocale.systemsUpdateNewVersion: 'Nueva versión: {version}',
   AppLocale.systemsUpdateDownloading: 'Descargando configs de sistemas...',
+  AppLocale.systemsUpdateCancelling: 'Cancelando...',
   AppLocale.systemsUpdateSyncing: 'Sincronizando base de datos de sistemas...',
   AppLocale.systemsUpdateComplete: '¡Sistemas actualizados correctamente!',
   AppLocale.systemsUpdateError:

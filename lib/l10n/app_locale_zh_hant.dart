@@ -83,6 +83,10 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.hideBracketsSubtitle: '當清單使用檔案名稱時，刪除方括號 [] 內的文字',
   AppLocale.recursiveScanEnabled: '遞迴掃描已啟用。正在掃描 {name}...',
   AppLocale.recursiveScanDisabled: '遞迴掃描已停用。正在掃描 {name}...',
+  AppLocale.subfolderView: '顯示子資料夾',
+  AppLocale.subfolderViewSubtitle: '將子資料夾中的 ROM 歸入可瀏覽的資料夾，而非與遊戲混在一起',
+  AppLocale.subfolderViewEnabled: '子資料夾顯示為資料夾',
+  AppLocale.subfolderViewDisabled: '子資料夾與遊戲混合',
   AppLocale.errorScanningSystem: '掃描系統時發生錯誤: {error}',
   AppLocale.scrapedTitlesUsed: '抓取的標題可用時將被使用',
   AppLocale.gameExtensionsHidden: '遊戲副檔名將隱藏',
@@ -715,6 +719,10 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.pressToClose: '按 [ESC], [ENTER] 或 [空格] 關閉',
 
   AppLocale.selectStorage: '選擇儲存空間',
+
+  AppLocale.homeFolder: '主目錄',
+
+  AppLocale.filesystemRoot: '檔案系統',
   AppLocale.internalStorage: '內部儲存空間',
   AppLocale.externalStorage: '外部儲存空間 ({name})',
   AppLocale.folderRestrictedAndroid: '資料夾受 Android 限制',
@@ -740,6 +748,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.systemsUpdateCurrentVersion: '目前版本：{version}',
   AppLocale.systemsUpdateNewVersion: '新版本：{version}',
   AppLocale.systemsUpdateDownloading: '正在下載系統設定...',
+  AppLocale.systemsUpdateCancelling: '正在取消...',
   AppLocale.systemsUpdateSyncing: '正在同步系統資料庫...',
   AppLocale.systemsUpdateComplete: '系統更新成功！',
   AppLocale.systemsUpdateError: '系統更新失敗，請稍後再試。',

@@ -110,6 +110,10 @@ mixin AppLocale {
   static const String hideBracketsSubtitle = 'hide_brackets_subtitle';
   static const String recursiveScanEnabled = 'recursive_scan_enabled';
   static const String recursiveScanDisabled = 'recursive_scan_disabled';
+  static const String subfolderView = 'subfolder_view';
+  static const String subfolderViewSubtitle = 'subfolder_view_subtitle';
+  static const String subfolderViewEnabled = 'subfolder_view_enabled';
+  static const String subfolderViewDisabled = 'subfolder_view_disabled';
   static const String errorScanningSystem = 'error_scanning_system';
   static const String scrapedTitlesUsed = 'scraped_titles_used';
   static const String gameExtensionsHidden = 'game_extensions_hidden';
@@ -821,6 +825,8 @@ mixin AppLocale {
   // TV directory picker
   // ---------------------------------------------------------------------------
   static const String selectStorage = 'select_storage';
+  static const String homeFolder = 'home_folder';
+  static const String filesystemRoot = 'filesystem_root';
   static const String internalStorage = 'internal_storage';
   static const String externalStorage = 'external_storage';
   static const String folderRestrictedAndroid = 'folder_restricted_android';
@@ -850,6 +856,7 @@ mixin AppLocale {
       'systems_update_current_version';
   static const String systemsUpdateNewVersion = 'systems_update_new_version';
   static const String systemsUpdateDownloading = 'systems_update_downloading';
+  static const String systemsUpdateCancelling = 'systems_update_cancelling';
   static const String systemsUpdateSyncing = 'systems_update_syncing';
   static const String systemsUpdateComplete = 'systems_update_complete';
   static const String systemsUpdateError = 'systems_update_error';

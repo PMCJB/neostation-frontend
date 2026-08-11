@@ -84,6 +84,10 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.hideBracketsSubtitle: 'ファイル名使用時に角括弧 [] 内のテキストを削除',
   AppLocale.recursiveScanEnabled: '再帰スキャン有効。{name}をスキャン中...',
   AppLocale.recursiveScanDisabled: '再帰スキャン無効。{name}をスキャン中...',
+  AppLocale.subfolderView: 'サブフォルダを表示',
+  AppLocale.subfolderViewSubtitle: 'サブフォルダ内のROMをゲームと混在させず、閲覧可能なフォルダにまとめます',
+  AppLocale.subfolderViewEnabled: 'サブフォルダをフォルダとして表示',
+  AppLocale.subfolderViewDisabled: 'サブフォルダをゲームと混在',
   AppLocale.errorScanningSystem: 'システムのスキャン中にエラーが発生しました: {error}',
   AppLocale.scrapedTitlesUsed: '利用可能な場合はスクレイピングされたタイトルを使用',
   AppLocale.gameExtensionsHidden: 'ゲームの拡張子が非表示になります',
@@ -725,6 +729,10 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.pressToClose: ' [ESC], [ENTER], または [SPACE] を押して閉じる',
 
   AppLocale.selectStorage: 'ストレージを選択',
+
+  AppLocale.homeFolder: 'ホーム',
+
+  AppLocale.filesystemRoot: 'ファイルシステム',
   AppLocale.internalStorage: '内部ストレージ',
   AppLocale.externalStorage: '外部ストレージ ({name})',
   AppLocale.folderRestrictedAndroid: 'Androidによる制限付きフォルダ',
@@ -751,6 +759,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.systemsUpdateCurrentVersion: '現在のバージョン: {version}',
   AppLocale.systemsUpdateNewVersion: '新しいバージョン: {version}',
   AppLocale.systemsUpdateDownloading: 'システム設定をダウンロード中...',
+  AppLocale.systemsUpdateCancelling: 'キャンセル中...',
   AppLocale.systemsUpdateSyncing: 'システムデータベースを同期中...',
   AppLocale.systemsUpdateComplete: 'システムが正常に更新されました！',
   AppLocale.systemsUpdateError: 'システムの更新に失敗しました。後でもう一度試してください。',

@@ -345,6 +345,18 @@ class SqliteMigrations {
       case 113:
         await _migrateToVersion113(db);
         break;
+      case 114:
+        await _migrateToVersion114(db);
+        break;
+      case 115:
+        await _migrateToVersion115(db);
+        break;
+      case 116:
+        await _migrateToVersion116(db);
+        break;
+      case 117:
+        await _migrateToVersion117(db);
+        break;
       default:
         _log.w('No migration defined for version $version');
     }
@@ -5294,7 +5306,113 @@ class SqliteMigrations {
     }
   }
 
-  /// Migration v111: Adds the `neosync_slug` column to [app_emulators] and
+  /// Migration v111: Adds the per-system `subfolder_view` flag to
+  /// `user_system_settings`, which decides whether that system's ROM
+  /// subfolders are shown as navigable folders instead of a flat game list.
+  static Future<void> _migrateToVersion111(Database db) async {
+    _log.i('Migration v111: Adding subfolder_view to user_system_settings');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_system_settings)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('subfolder_view')) {
+        db.execute(
+          'ALTER TABLE user_system_settings ADD COLUMN subfolder_view INTEGER DEFAULT 0',
+        );
+        _log.i('Column subfolder_view added via v111');
+      } else {
+        _log.i('Column subfolder_view already exists');
+      }
+      _log.i('Migration v111 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v111: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v112: intentionally a no-op.
+  ///
+  /// It originally added `user_config.subfolder_view_default`, the master
+  /// toggle for the subfolder view. That global setting was dropped before
+  /// release in favour of the per-system toggle alone, so nothing reads the
+  /// column. The version number is kept (rather than renumbered away) so
+  /// devices that already migrated to v112 do not read as a downgrade, which
+  /// would recreate the whole database.
+  static Future<void> _migrateToVersion112(Database db) async {
+    _log.i('Migration v112: no-op (global subfolder toggle removed)');
+  }
+
+  /// Migration v113: Backfills the per-system subfolder column if absent.
+  ///
+  /// v111/v112 were originally authored as v96/v97 on this feature branch and
+  /// renumbered when main claimed those numbers. A device that ran a *different*
+  /// branch's v111 first is already past that version, so its `case 111` never
+  /// fires and `user_system_settings.subfolder_view` is never created — every
+  /// query joining it then fails with "no such column" and the library reads as
+  /// 0 systems. Same failure mode main fixed in v97 for `game_carousel_card_style`.
+  ///
+  /// Idempotent: adds the column only when missing, so it is a no-op on
+  /// databases that took the normal v111 path.
+  static Future<void> _migrateToVersion113(Database db) async {
+    _log.i('Migration v113: Backfilling subfolder columns if absent');
+    try {
+      final settingsColumns = db
+          .select('PRAGMA table_info(user_system_settings)')
+          .map((c) => c['name'].toString())
+          .toList();
+      if (!settingsColumns.contains('subfolder_view')) {
+        db.execute(
+          'ALTER TABLE user_system_settings ADD COLUMN subfolder_view INTEGER DEFAULT 0',
+        );
+        _log.i('Column subfolder_view backfilled via v113');
+      }
+
+      _log.i('Migration v113 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v113: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v114: Repairs `user_config.system_view_mode` values that the
+  /// games view used to write into it.
+  ///
+  /// Until the game view settings screen was removed, choosing a games layout
+  /// there wrote the games mode into `system_view_mode` as well — the two
+  /// columns were once one. They do not share a value domain: the systems view
+  /// understands only `grid` and `carousel`, so a user who picked the `list`
+  /// games layout was left with a systems mode nothing recognises. The systems
+  /// view falls back to the grid and neither option shows as selected in the
+  /// sort dropdown, and re-picking the layout by hand is the only way out.
+  ///
+  /// The writer is fixed, so this runs once to normalise the rows it already
+  /// wrote. `grid` matches both the column default and the fallback those users
+  /// are seeing, so the repair changes nothing they can observe except the
+  /// dropdown selection.
+  static Future<void> _migrateToVersion114(Database db) async {
+    _log.i('Migration v114: Normalising unrecognised system_view_mode values');
+    try {
+      final tableInfo = db.select('PRAGMA table_info(user_config)');
+      final columns = tableInfo.map((c) => c['name'].toString()).toList();
+      if (!columns.contains('system_view_mode')) {
+        _log.i('Column system_view_mode absent, nothing to normalise');
+        return;
+      }
+      db.execute(
+        "UPDATE user_config SET system_view_mode = 'grid' "
+        "WHERE system_view_mode IS NULL "
+        "OR system_view_mode NOT IN ('grid', 'carousel')",
+      );
+      _log.i('Migration v114 completed');
+    } catch (e, stackTrace) {
+      _log.e('Error in migration v114: $e');
+      _log.e('   StackTrace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  /// Migration v115: Adds the `neosync_slug` column to [app_emulators] and
   /// backfills it by deriving a slug from each emulator's `unique_identifier`.
   ///
   /// The slug is the stable identifier used in NeoSync v2 cloud paths
@@ -5306,8 +5424,8 @@ class SqliteMigrations {
   /// module to remember the user-selected save/memcard folder per system +
   /// emulator (ARMSX2, ARMSX1, etc.). Keeping it in its own table separates
   /// the module's configuration from the global [user_config].
-  static Future<void> _migrateToVersion111(Database db) async {
-    _log.i('Migration v111: Adding neosync_slug to app_emulators');
+  static Future<void> _migrateToVersion115(Database db) async {
+    _log.i('Migration v115: Adding neosync_slug to app_emulators');
     try {
       final tableInfo = db.select('PRAGMA table_info(app_emulators)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
@@ -5315,7 +5433,7 @@ class SqliteMigrations {
         db.execute(
           'ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT',
         );
-        _log.i('Column neosync_slug added via v111');
+        _log.i('Column neosync_slug added via v115');
       }
 
       db.execute('''
@@ -5332,7 +5450,7 @@ class SqliteMigrations {
         WHERE neosync_slug IS NULL OR neosync_slug = ''
       ''');
 
-      _log.i('Migration v111: Creating user_custom_save_folders table');
+      _log.i('Migration v115: Creating user_custom_save_folders table');
       db.execute('''
         CREATE TABLE IF NOT EXISTS user_custom_save_folders (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -5344,24 +5462,24 @@ class SqliteMigrations {
       ''');
       _log.i('Table user_custom_save_folders created');
 
-      _log.i('Migration v111 completed');
+      _log.i('Migration v115 completed');
     } catch (e, stackTrace) {
-      _log.e('Error in migration v111: $e');
+      _log.e('Error in migration v115: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
   }
 
-  /// Migration v112: Ensures the NeoSync v2 emulator slug column and the custom
+  /// Migration v116: Ensures the NeoSync v2 emulator slug column and the custom
   /// save folders table exist.
   ///
-  /// Devices that already reached v111 via an earlier feature branch created
+  /// Devices that already reached v115 via an earlier feature branch created
   /// `user_custom_save_folders` but never added `neosync_slug` to
-  /// [app_emulators]. Because their DB is already at version 111, the v111
+  /// [app_emulators]. Because their DB is already at version 115, the v115
   /// migration above is skipped, so this migration re-applies the missing bits
   /// idempotently.
-  static Future<void> _migrateToVersion112(Database db) async {
-    _log.i('Migration v112: Ensuring neosync_slug and user_custom_save_folders');
+  static Future<void> _migrateToVersion116(Database db) async {
+    _log.i('Migration v116: Ensuring neosync_slug and user_custom_save_folders');
     try {
       final tableInfo = db.select('PRAGMA table_info(app_emulators)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
@@ -5369,7 +5487,7 @@ class SqliteMigrations {
         db.execute(
           'ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT',
         );
-        _log.i('Column neosync_slug added via v112');
+        _log.i('Column neosync_slug added via v116');
       }
 
       db.execute('''
@@ -5395,36 +5513,36 @@ class SqliteMigrations {
           UNIQUE(system_folder_name, emulator_slug)
         );
       ''');
-      _log.i('Migration v112 completed');
+      _log.i('Migration v116 completed');
     } catch (e, stackTrace) {
-      _log.e('Error in migration v112: $e');
+      _log.e('Error in migration v116: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }
   }
 
-  /// Migration v113: Adds the `emulator_slug` column to an existing
+  /// Migration v117: Adds the `emulator_slug` column to an existing
   /// [user_custom_save_folders] table.
   ///
   /// Devices that created the table via an earlier feature branch only have
   /// `system_folder_name` + `folder_path`, so `CREATE TABLE IF NOT EXISTS` in
-  /// v112 silently left it unchanged and later inserts failed with "no such
+  /// v116 silently left it unchanged and later inserts failed with "no such
   /// column: emulator_slug". This migrates the legacy rows to the default slug
   /// `unknown` and adds the column when missing.
-  static Future<void> _migrateToVersion113(Database db) async {
-    _log.i('Migration v113: Ensuring emulator_slug on user_custom_save_folders');
+  static Future<void> _migrateToVersion117(Database db) async {
+    _log.i('Migration v117: Ensuring emulator_slug on user_custom_save_folders');
     try {
       final tableInfo = db.select('PRAGMA table_info(user_custom_save_folders)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
       if (!columns.contains('emulator_slug')) {
-        _log.i('Migration v113: Adding emulator_slug column');
+        _log.i('Migration v117: Adding emulator_slug column');
         db.execute(
           'ALTER TABLE user_custom_save_folders ADD COLUMN emulator_slug TEXT NOT NULL DEFAULT \'unknown\'',
         );
       }
-      _log.i('Migration v113 completed');
+      _log.i('Migration v117 completed');
     } catch (e, stackTrace) {
-      _log.e('Error in migration v113: $e');
+      _log.e('Error in migration v117: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
     }

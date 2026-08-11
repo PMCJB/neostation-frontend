@@ -94,6 +94,11 @@ const Map<String, dynamic> appLocaleId = {
       'Pemindaian rekursif diaktifkan. Memindai {name}...',
   AppLocale.recursiveScanDisabled:
       'Pemindaian rekursif dinonaktifkan. Memindai {name}...',
+  AppLocale.subfolderView: 'Tampilkan Subfolder',
+  AppLocale.subfolderViewSubtitle:
+      'Kelompokkan ROM dalam subfolder menjadi folder yang dapat dijelajahi alih-alih mencampurnya dengan game',
+  AppLocale.subfolderViewEnabled: 'Subfolder ditampilkan sebagai folder',
+  AppLocale.subfolderViewDisabled: 'Subfolder dicampur dengan game',
   AppLocale.errorScanningSystem: 'Kesalahan saat memindai sistem: {error}',
   AppLocale.scrapedTitlesUsed:
       'Judul hasil scraping akan digunakan jika tersedia',
@@ -800,6 +805,10 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.pressToClose: 'Tekan [ESC], [ENTER], atau [SPASI] untuk menutup',
 
   AppLocale.selectStorage: 'Pilih Penyimpanan',
+
+  AppLocale.homeFolder: 'Beranda',
+
+  AppLocale.filesystemRoot: 'Sistem berkas',
   AppLocale.internalStorage: 'Penyimpanan Internal',
   AppLocale.externalStorage: 'Penyimpanan Eksternal ({name})',
   AppLocale.folderRestrictedAndroid: 'Folder dibatasi oleh Android',
@@ -829,6 +838,7 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.systemsUpdateCurrentVersion: 'Versi saat ini: {version}',
   AppLocale.systemsUpdateNewVersion: 'Versi baru: {version}',
   AppLocale.systemsUpdateDownloading: 'Mengunduh konfigurasi sistem...',
+  AppLocale.systemsUpdateCancelling: 'Membatalkan...',
   AppLocale.systemsUpdateSyncing: 'Menyinkronkan database sistem...',
   AppLocale.systemsUpdateComplete: 'Sistem berhasil diperbarui!',
   AppLocale.systemsUpdateError: 'Gagal memperbarui sistem. Coba lagi nanti.',

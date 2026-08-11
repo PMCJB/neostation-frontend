@@ -94,6 +94,11 @@ const Map<String, dynamic> appLocaleRu = {
       'Рекурсивное сканирование включено. Сканирование {name}...',
   AppLocale.recursiveScanDisabled:
       'Рекурсивное сканирование выключено. Сканирование {name}...',
+  AppLocale.subfolderView: 'Показывать подпапки',
+  AppLocale.subfolderViewSubtitle:
+      'Группировать ROM в подпапках в виде просматриваемых папок, а не смешивать их с играми',
+  AppLocale.subfolderViewEnabled: 'Подпапки показаны как папки',
+  AppLocale.subfolderViewDisabled: 'Подпапки смешаны с играми',
   AppLocale.errorScanningSystem: 'Ошибка при сканировании системы: {error}',
   AppLocale.scrapedTitlesUsed:
       'Будут использоваться полученные названия, если они доступны',
@@ -798,6 +803,10 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.pressToClose: 'Нажмите [ESC], [ENTER] или [ПРОБЕЛ], чтобы закрыть',
 
   AppLocale.selectStorage: 'Выбрать хранилище',
+
+  AppLocale.homeFolder: 'Домашняя папка',
+
+  AppLocale.filesystemRoot: 'Файловая система',
   AppLocale.internalStorage: 'Внутренняя память',
   AppLocale.externalStorage: 'Внешняя память ({name})',
   AppLocale.folderRestrictedAndroid: 'Папка ограничена Android',
@@ -827,6 +836,7 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.systemsUpdateCurrentVersion: 'Текущая версия: {version}',
   AppLocale.systemsUpdateNewVersion: 'Новая версия: {version}',
   AppLocale.systemsUpdateDownloading: 'Загрузка конфигураций систем...',
+  AppLocale.systemsUpdateCancelling: 'Отмена...',
   AppLocale.systemsUpdateSyncing: 'Синхронизация базы данных систем...',
   AppLocale.systemsUpdateComplete: 'Системы успешно обновлены!',
   AppLocale.systemsUpdateError: 'Ошибка обновления систем. Попробуйте позже.',

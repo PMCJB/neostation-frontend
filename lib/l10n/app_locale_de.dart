@@ -95,6 +95,11 @@ const Map<String, dynamic> appLocaleDe = {
       'Rekursive Suche aktiviert. Suche in {name}...',
   AppLocale.recursiveScanDisabled:
       'Rekursive Suche deaktiviert. Suche in {name}...',
+  AppLocale.subfolderView: 'Unterordner anzeigen',
+  AppLocale.subfolderViewSubtitle:
+      'ROMs in Unterordnern als durchsuchbare Ordner gruppieren, statt sie mit Spielen zu vermischen',
+  AppLocale.subfolderViewEnabled: 'Unterordner werden als Ordner angezeigt',
+  AppLocale.subfolderViewDisabled: 'Unterordner mit Spielen vermischt',
   AppLocale.errorScanningSystem: 'Fehler beim Scannen des Systems: {error}',
   AppLocale.scrapedTitlesUsed:
       'Scraper-Titel werden verwendet, falls verfügbar',
@@ -824,6 +829,10 @@ const Map<String, dynamic> appLocaleDe = {
       'Drücke [ESC], [ENTER] oder [LEERTASTE] zum Schließen',
 
   AppLocale.selectStorage: 'Speicher auswählen',
+
+  AppLocale.homeFolder: 'Persönlicher Ordner',
+
+  AppLocale.filesystemRoot: 'Dateisystem',
   AppLocale.internalStorage: 'Interner Speicher',
   AppLocale.externalStorage: 'Externer Speicher ({name})',
   AppLocale.folderRestrictedAndroid: 'Von Android eingeschränkter Ordner',
@@ -854,6 +863,7 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.systemsUpdateNewVersion: 'Neue Version: {version}',
   AppLocale.systemsUpdateDownloading:
       'System-Configs werden heruntergeladen...',
+  AppLocale.systemsUpdateCancelling: 'Abbrechen...',
   AppLocale.systemsUpdateSyncing: 'Systemdatenbank wird synchronisiert...',
   AppLocale.systemsUpdateComplete: 'Systeme erfolgreich aktualisiert!',
   AppLocale.systemsUpdateError:

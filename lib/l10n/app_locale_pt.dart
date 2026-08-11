@@ -96,6 +96,11 @@ const Map<String, dynamic> appLocalePt = {
       'Varredura recursiva ativada. Varrendo {name}...',
   AppLocale.recursiveScanDisabled:
       'Varredura recursiva desativada. Varrendo {name}...',
+  AppLocale.subfolderView: 'Mostrar subpastas',
+  AppLocale.subfolderViewSubtitle:
+      'Agrupar ROMs em subpastas em pastas navegáveis em vez de misturá-las com os jogos',
+  AppLocale.subfolderViewEnabled: 'Subpastas mostradas como pastas',
+  AppLocale.subfolderViewDisabled: 'Subpastas misturadas com os jogos',
   AppLocale.errorScanningSystem: 'Erro ao varrer o sistema: {error}',
   AppLocale.scrapedTitlesUsed: 'Títulos buscados serão usados se disponíveis',
   AppLocale.gameExtensionsHidden: 'Extensões de jogo serão ocultadas',
@@ -807,6 +812,10 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.pressToClose: 'Pressione [ESC], [ENTER] ou [ESPAÇO] para fechar',
 
   AppLocale.selectStorage: 'Selecionar Armazenamento',
+
+  AppLocale.homeFolder: 'Pasta pessoal',
+
+  AppLocale.filesystemRoot: 'Sistema de ficheiros',
   AppLocale.internalStorage: 'Armazenamento Interno',
   AppLocale.externalStorage: 'Armazenamento Externo ({name})',
   AppLocale.folderRestrictedAndroid: 'Pasta restrita pelo Android',
@@ -836,6 +845,7 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.systemsUpdateCurrentVersion: 'Versão atual: {version}',
   AppLocale.systemsUpdateNewVersion: 'Nova versão: {version}',
   AppLocale.systemsUpdateDownloading: 'Baixando configs de sistemas...',
+  AppLocale.systemsUpdateCancelling: 'Cancelando...',
   AppLocale.systemsUpdateSyncing: 'Sincronizando banco de dados de sistemas...',
   AppLocale.systemsUpdateComplete: 'Sistemas atualizados com sucesso!',
   AppLocale.systemsUpdateError:

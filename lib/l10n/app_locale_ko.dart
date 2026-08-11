@@ -83,6 +83,10 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.hideBracketsSubtitle: '파일명을 표시할 때 대괄호 안의 내용을 제거합니다',
   AppLocale.recursiveScanEnabled: '하위 폴더 검색이 활성화되었습니다. {name} 스캔 중...',
   AppLocale.recursiveScanDisabled: '하위 폴더 검색이 비활성화되었습니다. {name} 검색 중...',
+  AppLocale.subfolderView: '하위 폴더 표시',
+  AppLocale.subfolderViewSubtitle: '하위 폴더의 ROM을 게임 목록에 섞지 않고 탐색 가능한 폴더로 그룹화합니다',
+  AppLocale.subfolderViewEnabled: '하위 폴더를 폴더로 표시합니다',
+  AppLocale.subfolderViewDisabled: '하위 폴더를 게임 목록에 섞어서 표시합니다',
   AppLocale.errorScanningSystem: '시스템 검색 오류: {error}',
   AppLocale.scrapedTitlesUsed: '스크랩된 게임 제목이 있으면 우선 사용합니다',
   AppLocale.gameExtensionsHidden: '게임 파일 확장자를 숨깁니다',
@@ -732,6 +736,10 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.pressToClose: '닫으려면 [ESC], [ENTER] 또는 [SPACE]를 누르세요',
 
   AppLocale.selectStorage: '저장소 선택',
+
+  AppLocale.homeFolder: '홈',
+
+  AppLocale.filesystemRoot: '파일 시스템',
   AppLocale.internalStorage: '내부 저장소',
   AppLocale.externalStorage: '외부 저장소({name})',
   AppLocale.folderRestrictedAndroid: 'Android에서 제한된 폴더',
@@ -760,6 +768,7 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.systemsUpdateCurrentVersion: '현재 버전: {version}',
   AppLocale.systemsUpdateNewVersion: '새 버전: {version}',
   AppLocale.systemsUpdateDownloading: '시스템 구성 다운로드 중...',
+  AppLocale.systemsUpdateCancelling: '취소하는 중...',
   AppLocale.systemsUpdateSyncing: '시스템 데이터베이스 동기화 중...',
   AppLocale.systemsUpdateComplete: '시스템이 성공적으로 업데이트되었습니다!',
   AppLocale.systemsUpdateError: '시스템을 업데이트하지 못했습니다. 나중에 다시 시도해 주세요.',

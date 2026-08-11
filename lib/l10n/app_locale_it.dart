@@ -94,6 +94,11 @@ const Map<String, dynamic> appLocaleIt = {
       'Scansione ricorsiva abilitata. Scansione di {name}...',
   AppLocale.recursiveScanDisabled:
       'Scansione ricorsiva disabilitata. Scansione di {name}...',
+  AppLocale.subfolderView: 'Mostra sottocartelle',
+  AppLocale.subfolderViewSubtitle:
+      'Raggruppa le ROM nelle sottocartelle in cartelle navigabili invece di mescolarle con i giochi',
+  AppLocale.subfolderViewEnabled: 'Sottocartelle mostrate come cartelle',
+  AppLocale.subfolderViewDisabled: 'Sottocartelle mescolate ai giochi',
   AppLocale.errorScanningSystem:
       'Errore durante la scansione del sistema: {error}',
   AppLocale.scrapedTitlesUsed: 'I titoli cercati verranno usati se disponibili',
@@ -819,6 +824,10 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.pressToClose: 'Premi [ESC], [ENTER] o [SPAZIO] per chiudere',
 
   AppLocale.selectStorage: 'Seleziona Archiviazione',
+
+  AppLocale.homeFolder: 'Cartella home',
+
+  AppLocale.filesystemRoot: 'File system',
   AppLocale.internalStorage: 'Archiviazione Interna',
   AppLocale.externalStorage: 'Archiviazione Esterna ({name})',
   AppLocale.folderRestrictedAndroid: 'Cartella limitata da Android',
@@ -848,6 +857,7 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.systemsUpdateCurrentVersion: 'Versione attuale: {version}',
   AppLocale.systemsUpdateNewVersion: 'Nuova versione: {version}',
   AppLocale.systemsUpdateDownloading: 'Download configurazioni sistemi...',
+  AppLocale.systemsUpdateCancelling: 'Annullamento...',
   AppLocale.systemsUpdateSyncing: 'Sincronizzazione database sistemi...',
   AppLocale.systemsUpdateComplete: 'Sistemi aggiornati con successo!',
   AppLocale.systemsUpdateError:
