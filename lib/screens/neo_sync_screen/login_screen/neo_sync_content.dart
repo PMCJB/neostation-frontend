@@ -445,20 +445,36 @@ class NeoSyncContentState extends State<NeoSyncContent>
   Widget _buildDashboard() {
     return Padding(
       padding: EdgeInsets.only(top: 52.r, left: 8.r, right: 8.r, bottom: 8.r),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDashboardHeader(),
-          SizedBox(height: 12.r),
-          Expanded(
-            child: _buildMenuList(),
-          ),
-          SizedBox(height: 6.r),
-          Align(
-            alignment: Alignment.centerRight,
-            child: NeoSyncLogoutButton(onTap: _onLogout),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Main row: profile header (left) + menu options (right)
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 240.w,
+                      child: _buildDashboardHeader(),
+                    ),
+                    SizedBox(width: 12.r),
+                    Expanded(
+                      child: _buildMenuList(),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 8.r),
+              // Dedicated footer spanning the full dashboard width
+              Align(
+                alignment: Alignment.centerRight,
+                child: NeoSyncLogoutButton(onTap: _onLogout),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -505,149 +521,49 @@ class NeoSyncContentState extends State<NeoSyncContent>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Identity row: name + plan + online status ──
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppLocale.helloUser
-                              .getString(context)
-                              .replaceFirst('{name}', user?.username ?? ''),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.r,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: 3.r),
-                        // Plan badge
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 7.r,
-                            vertical: 2.r,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondary,
-                            borderRadius: BorderRadius.circular(6.r),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Symbols.storage_rounded,
-                                size: 9.r,
-                                color: theme.colorScheme.onSecondary,
-                              ),
-                              SizedBox(width: 3.r),
-                              Text(
-                                '${user?.plan.toUpperCase() ?? ''} ${AppLocale.quota.getString(context).toUpperCase()}',
-                                style: TextStyle(
-                                  color: theme.colorScheme.onSecondary,
-                                  fontSize: 7.r,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+              // ── Identity: name + plan ──
+              Text(
+                AppLocale.helloUser
+                    .getString(context)
+                    .replaceFirst('{name}', user?.username ?? ''),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.r,
+                  color: theme.colorScheme.onSurface,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 3.r),
+              // Plan badge
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 7.r, vertical: 2.r),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.secondary,
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Symbols.storage_rounded,
+                      size: 9.r,
+                      color: theme.colorScheme.onSecondary,
                     ),
-                  ),
-                  // Online status pill (replaces the cloud icon + "Cloud Save")
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.r,
-                      vertical: 4.r,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.secondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.25),
-                        width: 1.r,
+                    SizedBox(width: 3.r),
+                    Text(
+                      '${user?.plan.toUpperCase() ?? ''} ${AppLocale.quota.getString(context).toUpperCase()}',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSecondary,
+                        fontSize: 7.r,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Symbols.cloud_done_rounded,
-                          color: theme.colorScheme.primary,
-                          size: 12.r,
-                        ),
-                        SizedBox(width: 4.r),
-                        Text(
-                          'Online',
-                          style: TextStyle(
-                            fontSize: 8.r,
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        SizedBox(width: 4.r),
-                        Container(
-                          width: 6.r,
-                          height: 6.r,
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade400,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.green.shade400.withValues(
-                                  alpha: 0.5,
-                                ),
-                                blurRadius: 4.r,
-                                spreadRadius: 1.r,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              SizedBox(height: 8.r),
-              // ── Compact stats row ──
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildHeaderStat(
-                      context,
-                      icon: Symbols.cloud_rounded,
-                      label: AppLocale.onlineSaves.getString(context),
-                      value: '${neoSyncProvider.onlineFiles.length}',
-                    ),
-                  ),
-                  SizedBox(width: 6.r),
-                  Expanded(
-                    child: _buildHeaderStat(
-                      context,
-                      icon: Symbols.storage_rounded,
-                      label: 'Storage',
-                      value: neoSyncProvider.quota != null
-                          ? '${neoSyncProvider.quota!.usagePercentage.toStringAsFixed(0)}%'
-                          : '—',
-                    ),
-                  ),
-                  SizedBox(width: 6.r),
-                  Expanded(
-                    child: _buildHeaderGameStat(
-                      context,
-                      neoSyncProvider.onlineFiles.isEmpty
-                          ? null
-                          : neoSyncProvider.onlineFiles.first,
-                    ),
-                  ),
-                ],
-              ),
-              // Storage bar — bigger with its labels
+              // Storage bar — right under name + plan
               if (neoSyncProvider.quota != null) ...[
-                SizedBox(height: 8.r),
+                SizedBox(height: 10.r),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -655,7 +571,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
                       neoSyncProvider.quota!.usedQuotaFormatted,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                        fontSize: 9.r,
+                        fontSize: 8.r,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -663,7 +579,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
                       '${neoSyncProvider.quota!.usagePercentage.toStringAsFixed(1)}%',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 9.r,
+                        fontSize: 8.r,
                         color: neoSyncProvider.quota!.usagePercentage >= 90
                             ? Colors.red.shade400
                             : theme.colorScheme.primary,
@@ -673,7 +589,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
                       neoSyncProvider.quota!.totalQuotaFormatted,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                        fontSize: 9.r,
+                        fontSize: 8.r,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -681,15 +597,15 @@ class NeoSyncContentState extends State<NeoSyncContent>
                 ),
                 SizedBox(height: 4.r),
                 Container(
-                  height: 10.r,
+                  height: 8.r,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest.withValues(
                       alpha: 0.5,
                     ),
-                    borderRadius: BorderRadius.circular(5.r),
+                    borderRadius: BorderRadius.circular(4.r),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5.r),
+                    borderRadius: BorderRadius.circular(4.r),
                     child: LinearProgressIndicator(
                       value: neoSyncProvider.quota!.usagePercentage / 100,
                       backgroundColor: Colors.transparent,
@@ -704,6 +620,30 @@ class NeoSyncContentState extends State<NeoSyncContent>
                   ),
                 ),
               ],
+              // Mini stat cards — one per row
+              SizedBox(height: 10.r),
+              _buildHeaderStat(
+                context,
+                icon: Symbols.cloud_rounded,
+                label: AppLocale.onlineSaves.getString(context),
+                value: '${neoSyncProvider.onlineFiles.length}',
+              ),
+              SizedBox(height: 6.r),
+              _buildHeaderStat(
+                context,
+                icon: Symbols.storage_rounded,
+                label: 'Storage',
+                value: neoSyncProvider.quota != null
+                    ? '${neoSyncProvider.quota!.usagePercentage.toStringAsFixed(0)}%'
+                    : '—',
+              ),
+              SizedBox(height: 6.r),
+              _buildHeaderGameStat(
+                context,
+                neoSyncProvider.onlineFiles.isEmpty
+                    ? null
+                    : neoSyncProvider.onlineFiles.first,
+              ),
             ],
           ),
         ),
