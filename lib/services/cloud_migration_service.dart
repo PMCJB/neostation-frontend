@@ -73,7 +73,8 @@ class CloudMigrationService {
           : firstSegment.toLowerCase() == 'dc'
           ? 'unknown-dc'
           : 'nethersx2';
-      system = firstSegment.toLowerCase() == 'ps2' || firstSegment == 'NetherSX2'
+      system =
+          firstSegment.toLowerCase() == 'ps2' || firstSegment == 'NetherSX2'
           ? 'ps2'
           : 'dc';
     } else {
@@ -81,7 +82,8 @@ class CloudMigrationService {
       system = await _systemForCore(firstSegment) ?? 'unknown';
     }
 
-    final isSharedCard = parts.length < 2 ||
+    final isSharedCard =
+        parts.length < 2 ||
         fileName.toLowerCase().endsWith('.ps2') ||
         fileName.toLowerCase().contains('vmu_save');
 

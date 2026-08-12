@@ -402,7 +402,8 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.updateYourPlanMenu: 'Aggiorna il Tuo Piano',
   AppLocale.customFoldersSubtitle:
       'Aggiungi una cartella personalizzata da un emulatore standalone per sincronizzare anche i suoi salvataggi.',
-  AppLocale.noCustomFoldersConfigured: 'Nessuna cartella personalizzata configurata',
+  AppLocale.noCustomFoldersConfigured:
+      'Nessuna cartella personalizzata configurata',
   AppLocale.foldersConfigured: '{count} configurate',
   AppLocale.searchSavesHint: 'Cerca salvataggi...',
   AppLocale.filterAll: 'Tutti',
@@ -1015,7 +1016,8 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.uploadingCustomFolder: 'Caricamento dei salvataggi da {folder}...',
   AppLocale.customFolderUploadComplete:
       'Cartella personalizzata sincronizzata: {uploaded} caricati, {skipped} già aggiornati',
-  AppLocale.customFolderUploadFailed: 'Sincronizzazione della cartella personalizzata fallita',
+  AppLocale.customFolderUploadFailed:
+      'Sincronizzazione della cartella personalizzata fallita',
   AppLocale.customSaveFoldersMigrate: 'Migra i salvataggi cloud a NeoSync v2',
 
   // ES-DE import

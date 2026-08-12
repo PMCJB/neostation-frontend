@@ -400,7 +400,8 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.updateYourPlanMenu: 'Atualizar Seu Plano',
   AppLocale.customFoldersSubtitle:
       'Adicione uma pasta personalizada de um emulador standalone para que seus saves também sejam sincronizados.',
-  AppLocale.noCustomFoldersConfigured: 'Nenhuma pasta personalizada configurada',
+  AppLocale.noCustomFoldersConfigured:
+      'Nenhuma pasta personalizada configurada',
   AppLocale.foldersConfigured: '{count} configuradas',
   AppLocale.searchSavesHint: 'Pesquisar saves...',
   AppLocale.filterAll: 'Todos',
@@ -1004,7 +1005,8 @@ const Map<String, dynamic> appLocalePt = {
   AppLocale.uploadingCustomFolder: 'Enviando saves de {folder}...',
   AppLocale.customFolderUploadComplete:
       'Pasta personalizada sincronizada: {uploaded} enviados, {skipped} já atualizados',
-  AppLocale.customFolderUploadFailed: 'Falha ao sincronizar a pasta personalizada',
+  AppLocale.customFolderUploadFailed:
+      'Falha ao sincronizar a pasta personalizada',
   AppLocale.customSaveFoldersMigrate: 'Migrar saves da nuvem para o NeoSync v2',
 
   // ES-DE import

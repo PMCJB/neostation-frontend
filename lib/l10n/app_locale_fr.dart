@@ -1024,11 +1024,14 @@ const Map<String, dynamic> appLocaleFr = {
   AppLocale.removeCustomFolder: 'Supprimer le Dossier',
   AppLocale.removeCustomFolderConfirm:
       'Supprimer ce dossier de sauvegarde personnalisé ? Ses fichiers locaux ne seront pas supprimés, seulement déliés de la synchronisation.',
-  AppLocale.uploadingCustomFolder: 'Téléversement des sauvegardes de {folder}...',
+  AppLocale.uploadingCustomFolder:
+      'Téléversement des sauvegardes de {folder}...',
   AppLocale.customFolderUploadComplete:
       'Dossier personnalisé synchronisé : {uploaded} téléversés, {skipped} déjà à jour',
-  AppLocale.customFolderUploadFailed: 'Échec de la synchronisation du dossier personnalisé',
-  AppLocale.customSaveFoldersMigrate: 'Migrer les sauvegardes cloud vers NeoSync v2',
+  AppLocale.customFolderUploadFailed:
+      'Échec de la synchronisation du dossier personnalisé',
+  AppLocale.customSaveFoldersMigrate:
+      'Migrer les sauvegardes cloud vers NeoSync v2',
 
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',

@@ -353,10 +353,8 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     final lowerName = fileName.toLowerCase();
     final isSharedCard =
         (systemFolder == 'ps2' && lowerName.endsWith('.ps2')) ||
-        (systemFolder == 'dc' &&
-            lowerName.contains('vmu_save')) ||
-        systemFolder == 'dreamcast' &&
-            lowerName.contains('vmu_save');
+        (systemFolder == 'dc' && lowerName.contains('vmu_save')) ||
+        systemFolder == 'dreamcast' && lowerName.contains('vmu_save');
 
     final scope = isSharedCard ? 'shared' : 'game';
 
@@ -502,9 +500,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     // The save base name usually matches the ROM name, so find the game by
     // prefix and use its system.
     try {
-      final row = await GameRepository.findRomByFilenamePrefix(
-        '$fileName%',
-      );
+      final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
       if (row != null) {
         final folder = row['folder_name']?.toString();
         if (folder != null && folder.isNotEmpty) return folder;

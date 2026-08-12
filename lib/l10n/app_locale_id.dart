@@ -391,7 +391,8 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.updateYourPlanMenu: 'Perbarui Paket Anda',
   AppLocale.customFoldersSubtitle:
       'Tambahkan folder kustom dari emulator mandiri agar simpanannya juga disinkronkan.',
-  AppLocale.noCustomFoldersConfigured: 'Tidak ada folder kustom yang dikonfigurasi',
+  AppLocale.noCustomFoldersConfigured:
+      'Tidak ada folder kustom yang dikonfigurasi',
   AppLocale.foldersConfigured: '{count} dikonfigurasi',
   AppLocale.searchSavesHint: 'Cari simpanan...',
   AppLocale.filterAll: 'Semua',
@@ -996,7 +997,8 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.customFolderUploadComplete:
       'Folder kustom disinkronkan: {uploaded} diunggah, {skipped} sudah terbaru',
   AppLocale.customFolderUploadFailed: 'Gagal menyinkronkan folder kustom',
-  AppLocale.customSaveFoldersMigrate: 'Migrasikan penyimpanan cloud ke NeoSync v2',
+  AppLocale.customSaveFoldersMigrate:
+      'Migrasikan penyimpanan cloud ke NeoSync v2',
 
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',

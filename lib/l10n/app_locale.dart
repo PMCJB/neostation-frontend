@@ -416,7 +416,8 @@ mixin AppLocale {
   static const String customSaveFoldersMenu = 'custom_save_folders_menu';
   static const String updateYourPlanMenu = 'update_your_plan_menu';
   static const String customFoldersSubtitle = 'custom_folders_subtitle';
-  static const String noCustomFoldersConfigured = 'no_custom_folders_configured';
+  static const String noCustomFoldersConfigured =
+      'no_custom_folders_configured';
   static const String foldersConfigured = 'folders_configured';
   static const String searchSavesHint = 'search_saves_hint';
   static const String filterAll = 'filter_all';
@@ -1039,17 +1040,23 @@ mixin AppLocale {
 
   // Custom save folders (NeoSync v2)
   static const String customSaveFoldersTitle = 'custom_save_folders_title';
-  static const String customSaveFolderPickSystem = 'custom_save_folder_pick_system';
-  static const String customSaveFolderPickEmulator = 'custom_save_folder_pick_emulator';
+  static const String customSaveFolderPickSystem =
+      'custom_save_folder_pick_system';
+  static const String customSaveFolderPickEmulator =
+      'custom_save_folder_pick_emulator';
   static const String customSaveFolderSelect = 'custom_save_folder_select';
-  static const String customSaveFolderConfigure = 'custom_save_folder_configure';
-  static const String customSaveFolderConfiguredList = 'custom_save_folder_configured_list';
+  static const String customSaveFolderConfigure =
+      'custom_save_folder_configure';
+  static const String customSaveFolderConfiguredList =
+      'custom_save_folder_configured_list';
   static const String customSaveFolderSync = 'custom_save_folder_sync';
   static const String customSaveFolderInvalid = 'custom_save_folder_invalid';
   static const String removeCustomFolder = 'remove_custom_folder';
-  static const String removeCustomFolderConfirm = 'remove_custom_folder_confirm';
+  static const String removeCustomFolderConfirm =
+      'remove_custom_folder_confirm';
   static const String uploadingCustomFolder = 'uploading_custom_folder';
-  static const String customFolderUploadComplete = 'custom_folder_upload_complete';
+  static const String customFolderUploadComplete =
+      'custom_folder_upload_complete';
   static const String customFolderUploadFailed = 'custom_folder_upload_failed';
   static const String customSaveFoldersMigrate = 'custom_save_folders_migrate';
 

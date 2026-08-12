@@ -404,7 +404,8 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.updateYourPlanMenu: 'Actualizar Tu Plan',
   AppLocale.customFoldersSubtitle:
       'Añade una carpeta personalizada de un emulador independiente para que sus guardados también se sincronicen.',
-  AppLocale.noCustomFoldersConfigured: 'No hay carpetas personalizadas configuradas',
+  AppLocale.noCustomFoldersConfigured:
+      'No hay carpetas personalizadas configuradas',
   AppLocale.foldersConfigured: '{count} configuradas',
   AppLocale.searchSavesHint: 'Buscar guardados...',
   AppLocale.filterAll: 'Todos',
@@ -1019,8 +1020,10 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.uploadingCustomFolder: 'Subiendo guardados de {folder}...',
   AppLocale.customFolderUploadComplete:
       'Carpeta personalizada sincronizada: {uploaded} subidos, {skipped} ya actualizados',
-  AppLocale.customFolderUploadFailed: 'Error al sincronizar la carpeta personalizada',
-  AppLocale.customSaveFoldersMigrate: 'Migrar guardados de la nube a NeoSync v2',
+  AppLocale.customFolderUploadFailed:
+      'Error al sincronizar la carpeta personalizada',
+  AppLocale.customSaveFoldersMigrate:
+      'Migrar guardados de la nube a NeoSync v2',
 
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',

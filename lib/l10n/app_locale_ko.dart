@@ -345,8 +345,7 @@ const Map<String, dynamic> appLocaleKo = {
   AppLocale.saveListMenu: '세이브 목록',
   AppLocale.customSaveFoldersMenu: '사용자 지정 세이브 폴더',
   AppLocale.updateYourPlanMenu: '요금제 업데이트',
-  AppLocale.customFoldersSubtitle:
-      '독립형 에뮬레이터의 사용자 지정 폴더를 추가하면 해당 세이브도 동기화됩니다.',
+  AppLocale.customFoldersSubtitle: '독립형 에뮬레이터의 사용자 지정 폴더를 추가하면 해당 세이브도 동기화됩니다.',
   AppLocale.noCustomFoldersConfigured: '설정된 사용자 지정 폴더가 없습니다',
   AppLocale.foldersConfigured: '{count}개 설정됨',
   AppLocale.searchSavesHint: '세이브 검색...',

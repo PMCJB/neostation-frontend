@@ -78,18 +78,14 @@ class NeoSyncSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final radii =
-        theme.extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = theme.extension<CornerRadii>() ?? CornerRadii.m();
 
     return Container(
       padding: EdgeInsets.all(10.r),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: radii.radiusExternal,
-        border: Border.all(
-          color: theme.colorScheme.outline,
-          width: 1.r,
-        ),
+        border: Border.all(color: theme.colorScheme.outline, width: 1.r),
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.shadow.withValues(alpha: 0.1),

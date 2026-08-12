@@ -57,7 +57,9 @@ class CloudPathBuilder {
   /// Returns null when the path does not match the standard layout.
   static ParsedCloudPath? parse(String cloudPath) {
     final isState = cloudPath.startsWith('$namespaceV2/$rootState/');
-    if (!isState && !cloudPath.startsWith('$namespaceV2/$rootSave/')) return null;
+    if (!isState && !cloudPath.startsWith('$namespaceV2/$rootSave/')) {
+      return null;
+    }
 
     final segments = cloudPath.split('/');
     // v2/saves/<system>/<emulator>/<scope>/... is at least 6 segments.
@@ -116,10 +118,10 @@ class CloudPathBuilder {
   static String standaloneSlugFromUniqueId(String uniqueId) {
     final parts = uniqueId.split('.');
     if (parts.isEmpty) return 'standalone';
-    final last = parts.last
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9\-]'), '');
+    final last = parts.last.trim().toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9\-]'),
+      '',
+    );
     return last.isEmpty ? 'standalone' : last;
   }
 

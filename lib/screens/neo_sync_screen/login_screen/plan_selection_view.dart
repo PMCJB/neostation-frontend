@@ -50,7 +50,13 @@ class _PlanSelectionViewState extends State<PlanSelectionView> {
   String? _errorMessage;
   int _selectedPlanIndex = 0;
 
-  static const List<String> _planOrder = ['free', 'micro', 'mini', 'mega', 'ultra'];
+  static const List<String> _planOrder = [
+    'free',
+    'micro',
+    'mini',
+    'mega',
+    'ultra',
+  ];
 
   List<PlanInfo> get _availablePlans =>
       _plans.where((plan) => plan.name != 'free').toList();
@@ -659,11 +665,7 @@ class _PlanListViewState extends State<PlanListView>
           ),
           if (isCurrentPlan) ...[
             SizedBox(width: 8.r),
-            Icon(
-              Symbols.check_circle_rounded,
-              size: 18.r,
-              color: primaryColor,
-            ),
+            Icon(Symbols.check_circle_rounded, size: 18.r, color: primaryColor),
           ],
         ],
       ),

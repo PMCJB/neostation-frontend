@@ -85,15 +85,11 @@ class NeoSyncSaveFolderRepository {
     String folderPath,
   ) async {
     final db = await SqliteService.getDatabase();
-    await db.insert(
-      _table,
-      {
-        'system_folder_name': systemFolderName,
-        'emulator_slug': emulatorSlug,
-        'folder_path': folderPath,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(_table, {
+      'system_folder_name': systemFolderName,
+      'emulator_slug': emulatorSlug,
+      'folder_path': folderPath,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Removes the configured save folder for a system + emulator, if any.

@@ -1347,8 +1347,9 @@ class SqliteService {
       final csfInfo = await db.rawQuery(
         'PRAGMA table_info(user_custom_save_folders)',
       );
-      final hasEmulatorSlug =
-          csfInfo.any((c) => c['name'].toString() == 'emulator_slug');
+      final hasEmulatorSlug = csfInfo.any(
+        (c) => c['name'].toString() == 'emulator_slug',
+      );
       if (!hasEmulatorSlug) {
         await db.execute(
           'ALTER TABLE user_custom_save_folders ADD COLUMN emulator_slug TEXT NOT NULL DEFAULT \'unknown\'',

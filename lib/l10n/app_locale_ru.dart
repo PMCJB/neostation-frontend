@@ -992,8 +992,10 @@ const Map<String, dynamic> appLocaleRu = {
   AppLocale.uploadingCustomFolder: 'Загрузка сохранений из {folder}...',
   AppLocale.customFolderUploadComplete:
       'Пользовательская папка синхронизирована: {uploaded} загружено, {skipped} уже актуальны',
-  AppLocale.customFolderUploadFailed: 'Не удалось синхронизировать пользовательскую папку',
-  AppLocale.customSaveFoldersMigrate: 'Мигрировать облачные сохранения на NeoSync v2',
+  AppLocale.customFolderUploadFailed:
+      'Не удалось синхронизировать пользовательскую папку',
+  AppLocale.customSaveFoldersMigrate:
+      'Мигрировать облачные сохранения на NeoSync v2',
 
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',

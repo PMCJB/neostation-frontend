@@ -242,7 +242,9 @@ class NeoSyncFileFilter {
     if (offset != null) params['offset'] = '$offset';
     if (scope != null && scope!.isNotEmpty) params['scope'] = scope!;
     if (system != null && system!.isNotEmpty) params['system'] = system!;
-    if (emulator != null && emulator!.isNotEmpty) params['emulator'] = emulator!;
+    if (emulator != null && emulator!.isNotEmpty) {
+      params['emulator'] = emulator!;
+    }
     if (state != null) params['state'] = '$state';
     if (query != null && query!.trim().isNotEmpty) params['q'] = query!.trim();
     if (sort != null && sort!.isNotEmpty) params['sort'] = sort!;

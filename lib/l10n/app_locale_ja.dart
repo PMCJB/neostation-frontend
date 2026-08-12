@@ -339,8 +339,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.saveListMenu: 'セーブリスト',
   AppLocale.customSaveFoldersMenu: 'カスタムセーブフォルダ',
   AppLocale.updateYourPlanMenu: 'プランを更新',
-  AppLocale.customFoldersSubtitle:
-      'スタンドアロンエミュレータのカスタムフォルダを追加すると、そのセーブも同期されます。',
+  AppLocale.customFoldersSubtitle: 'スタンドアロンエミュレータのカスタムフォルダを追加すると、そのセーブも同期されます。',
   AppLocale.noCustomFoldersConfigured: 'カスタムフォルダが設定されていません',
   AppLocale.foldersConfigured: '{count}件設定済み',
   AppLocale.searchSavesHint: 'セーブを検索...',

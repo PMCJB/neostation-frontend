@@ -90,7 +90,8 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
 
   void _navigateFolders(int delta) {
     if (_configured.isEmpty) return;
-    final newIndex = (_selectedFolderIndex + delta + _configured.length) %
+    final newIndex =
+        (_selectedFolderIndex + delta + _configured.length) %
         _configured.length;
     if (mounted) setState(() => _selectedFolderIndex = newIndex);
   }
@@ -140,7 +141,9 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
         setState(() {
           _configured = configured;
           if (_selectedFolderIndex >= configured.length) {
-            _selectedFolderIndex = configured.isEmpty ? 0 : configured.length - 1;
+            _selectedFolderIndex = configured.isEmpty
+                ? 0
+                : configured.length - 1;
           }
         });
       }
@@ -328,7 +331,9 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                   children: [
                     SizedBox(height: 8.r),
                     Text(
-                      AppLocale.customSaveFolderConfiguredList.getString(context),
+                      AppLocale.customSaveFolderConfiguredList.getString(
+                        context,
+                      ),
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         fontSize: 11.r,
@@ -350,7 +355,9 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                               ),
                               SizedBox(height: 8.r),
                               Text(
-                                AppLocale.noCustomFoldersConfigured.getString(context),
+                                AppLocale.noCustomFoldersConfigured.getString(
+                                  context,
+                                ),
                                 style: TextStyle(
                                   fontSize: 12.r,
                                   color: theme.colorScheme.onSurface.withValues(
@@ -412,9 +419,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                                             ?.copyWith(
                                               fontSize: 9.r,
                                               fontFamily: 'monospace',
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSurface
+                                              color: theme.colorScheme.onSurface
                                                   .withValues(alpha: 0.7),
                                             ),
                                       ),

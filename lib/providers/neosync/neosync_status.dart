@@ -137,7 +137,9 @@ extension NeoSyncStatus on NeoSyncProvider {
 
   /// Navigates to [page] (clamped), keeping the current filter.
   Future<void> goOnlinePage(int page) async {
-    final target = page < 1 ? 1 : (page > onlineTotalPages ? onlineTotalPages : page);
+    final target = page < 1
+        ? 1
+        : (page > onlineTotalPages ? onlineTotalPages : page);
     if (target == _onlinePage) return;
     _onlinePage = target;
     await loadOnlineFiles();

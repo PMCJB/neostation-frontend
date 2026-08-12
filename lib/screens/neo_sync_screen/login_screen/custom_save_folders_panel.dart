@@ -19,7 +19,8 @@ import 'package:neostation/widgets/core_footer.dart';
 class CustomSaveFoldersDialog extends StatefulWidget {
   final List<SystemModel> systems;
   final bool isSyncing;
-  final Future<void> Function(String system, String emulatorSlug) onSelectFolder;
+  final Future<void> Function(String system, String emulatorSlug)
+  onSelectFolder;
 
   const CustomSaveFoldersDialog({
     super.key,
@@ -29,7 +30,8 @@ class CustomSaveFoldersDialog extends StatefulWidget {
   });
 
   @override
-  State<CustomSaveFoldersDialog> createState() => _CustomSaveFoldersDialogState();
+  State<CustomSaveFoldersDialog> createState() =>
+      _CustomSaveFoldersDialogState();
 }
 
 class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
@@ -85,7 +87,9 @@ class _CustomSaveFoldersDialogState extends State<CustomSaveFoldersDialog> {
 
   String? get _selectedEmulatorSlug {
     if (_selectedEmulatorUniqueId == null) return null;
-    return CloudPathBuilder.slugFromEmulatorUniqueId(_selectedEmulatorUniqueId!);
+    return CloudPathBuilder.slugFromEmulatorUniqueId(
+      _selectedEmulatorUniqueId!,
+    );
   }
 
   Future<void> _selectFolder() async {

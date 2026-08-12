@@ -91,30 +91,36 @@ void main() {
       expect(folder, 'snes9x');
     });
 
-    test('findCoreFolderByNeosyncSlug returns null when slug is unknown', () async {
-      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
-        'retroarch.unknown',
-      );
-      expect(folder, isNull);
-    });
+    test(
+      'findCoreFolderByNeosyncSlug returns null when slug is unknown',
+      () async {
+        final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+          'retroarch.unknown',
+        );
+        expect(folder, isNull);
+      },
+    );
 
-    test('findCoreFolderByNeosyncSlug ignores rows without core_filename', () async {
-      final db = await SqliteService.getDatabase();
-      await db.insert('app_emulators', {
-        'system_id': 'gba',
-        'os_id': 1,
-        'name': 'RetroArch64 mGBA',
-        'unique_identifier': 'gba.ra64.mgba',
-        'is_standalone': 0,
-        'core_filename': null,
-        'neosync_slug': 'retroarch.mgba',
-      });
+    test(
+      'findCoreFolderByNeosyncSlug ignores rows without core_filename',
+      () async {
+        final db = await SqliteService.getDatabase();
+        await db.insert('app_emulators', {
+          'system_id': 'gba',
+          'os_id': 1,
+          'name': 'RetroArch64 mGBA',
+          'unique_identifier': 'gba.ra64.mgba',
+          'is_standalone': 0,
+          'core_filename': null,
+          'neosync_slug': 'retroarch.mgba',
+        });
 
-      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
-        'retroarch.mgba',
-      );
-      expect(folder, isNull);
-    });
+        final folder = await SqliteService.findCoreFolderByNeosyncSlug(
+          'retroarch.mgba',
+        );
+        expect(folder, isNull);
+      },
+    );
   });
 
   group('CloudPathBuilder', () {
@@ -171,18 +177,15 @@ void main() {
 
     test('treats legacy paths as legacy', () {
       expect(CloudPathBuilder.isLegacy('saves/PS2/Mcd001.ps2'), isTrue);
+      expect(CloudPathBuilder.isLegacy('saves/Beetle PSX HW/Game.srm'), isTrue);
       expect(
-        CloudPathBuilder.isLegacy('saves/Beetle PSX HW/Game.srm'),
-        isTrue,
+        CloudPathBuilder.isLegacy('v2/saves/ps2/armsx2/shared/a.ps2'),
+        isFalse,
       );
-      expect(CloudPathBuilder.isLegacy('v2/saves/ps2/armsx2/shared/a.ps2'), isFalse);
     });
 
     test('does not parse legacy paths as v2', () {
-      expect(
-        CloudPathBuilder.parse('saves/PS2/Mcd001.ps2'),
-        isNull,
-      );
+      expect(CloudPathBuilder.parse('saves/PS2/Mcd001.ps2'), isNull);
     });
 
     test('derives RetroArch slug from unique id', () {

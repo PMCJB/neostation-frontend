@@ -206,7 +206,10 @@ class _SaveListViewState extends State<SaveListView> {
         );
         SfxService().playNavSound();
       case _SaveRegion.filters:
-        setState(() => _barIndex = (_barIndex - 1 + _barItems.length) % _barItems.length);
+        setState(
+          () =>
+              _barIndex = (_barIndex - 1 + _barItems.length) % _barItems.length,
+        );
         _scrollChipIntoView();
         SfxService().playNavSound();
       case _SaveRegion.results:
@@ -261,7 +264,9 @@ class _SaveListViewState extends State<SaveListView> {
       case _SaveRegion.search:
         _onlineSearchFocus.unfocus();
         setState(() {
-          _region = _filtersExpanded ? _SaveRegion.filters : _SaveRegion.results;
+          _region = _filtersExpanded
+              ? _SaveRegion.filters
+              : _SaveRegion.results;
           if (_filtersExpanded) _barIndex = 0;
         });
       case _SaveRegion.filters:
@@ -372,9 +377,15 @@ class _SaveListViewState extends State<SaveListView> {
     final filter = neoSyncProvider.onlineFilter;
     switch (key) {
       case 'scope':
-        _applyOnlineFilter(neoSyncProvider, filter.copyWith(scope: option.value));
+        _applyOnlineFilter(
+          neoSyncProvider,
+          filter.copyWith(scope: option.value),
+        );
       case 'system':
-        _applyOnlineFilter(neoSyncProvider, filter.copyWith(system: option.value));
+        _applyOnlineFilter(
+          neoSyncProvider,
+          filter.copyWith(system: option.value),
+        );
       case 'emulator':
         _applyOnlineFilter(
           neoSyncProvider,
@@ -439,8 +450,9 @@ class _SaveListViewState extends State<SaveListView> {
             label: AppLocale.filterAll.getString(context),
             value: null,
           ),
-          ...neoSyncProvider.onlineSystems
-              .map((s) => _FilterOption(label: s, value: s)),
+          ...neoSyncProvider.onlineSystems.map(
+            (s) => _FilterOption(label: s, value: s),
+          ),
         ];
       case 'emulator':
         return [
@@ -448,8 +460,9 @@ class _SaveListViewState extends State<SaveListView> {
             label: AppLocale.filterAll.getString(context),
             value: null,
           ),
-          ...neoSyncProvider.onlineEmulators
-              .map((e) => _FilterOption(label: e, value: e)),
+          ...neoSyncProvider.onlineEmulators.map(
+            (e) => _FilterOption(label: e, value: e),
+          ),
         ];
       case 'sort':
         return [
@@ -489,11 +502,12 @@ class _SaveListViewState extends State<SaveListView> {
       _ => '',
     };
     final String? value = switch (key) {
-      'scope' => filter.scope == 'game'
-          ? AppLocale.scopePerGame.getString(context)
-          : filter.scope == 'shared'
-          ? AppLocale.scopeMemCards.getString(context)
-          : null,
+      'scope' =>
+        filter.scope == 'game'
+            ? AppLocale.scopePerGame.getString(context)
+            : filter.scope == 'shared'
+            ? AppLocale.scopeMemCards.getString(context)
+            : null,
       'system' => filter.system,
       'emulator' => filter.emulator,
       'sort' => '${filter.sort ?? 'modified'} ${filter.dir ?? 'desc'}',
@@ -520,7 +534,8 @@ class _SaveListViewState extends State<SaveListView> {
       if (!_menuScroll.hasClients) return;
       final pos = _menuScroll.position;
       final target =
-          (_menuIndex * _menuExtent.r) - (pos.viewportDimension - _menuExtent.r) / 2;
+          (_menuIndex * _menuExtent.r) -
+          (pos.viewportDimension - _menuExtent.r) / 2;
       pos.animateTo(
         target.clamp(pos.minScrollExtent, pos.maxScrollExtent),
         duration: const Duration(milliseconds: 140),
@@ -739,7 +754,12 @@ class _SaveListViewState extends State<SaveListView> {
     return Stack(
       children: [
         Padding(
-          padding: EdgeInsets.only(top: 52.r, left: 8.r, right: 8.r, bottom: 8.r),
+          padding: EdgeInsets.only(
+            top: 52.r,
+            left: 8.r,
+            right: 8.r,
+            bottom: 8.r,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -758,7 +778,9 @@ class _SaveListViewState extends State<SaveListView> {
                         color: theme.cardColor.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.15,
+                          ),
                           width: 1.r,
                         ),
                       ),
@@ -767,7 +789,9 @@ class _SaveListViewState extends State<SaveListView> {
                         children: [
                           Expanded(
                             child: neoSyncProvider.isLoadingOnlineFiles
-                                ? const Center(child: CircularProgressIndicator())
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
                                 : neoSyncProvider.onlineFiles.isEmpty
                                 ? _buildEmptyState(context, neoSyncProvider)
                                 : OnlineSavesListView(
@@ -887,7 +911,10 @@ class _SaveListViewState extends State<SaveListView> {
               ? null
               : _buildClearQueryButton(theme, _searchFocused('clearQuery')),
           isDense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12.r, vertical: 10.r),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 12.r,
+            vertical: 10.r,
+          ),
           filled: true,
           fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
           border: OutlineInputBorder(
@@ -907,7 +934,9 @@ class _SaveListViewState extends State<SaveListView> {
         margin: EdgeInsets.symmetric(horizontal: 6.r, vertical: 4.r),
         padding: EdgeInsets.all(4.r),
         decoration: BoxDecoration(
-          color: focused ? scheme.primary.withValues(alpha: 0.18) : Colors.transparent,
+          color: focused
+              ? scheme.primary.withValues(alpha: 0.18)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(
             color: focused ? scheme.primary : Colors.transparent,
@@ -917,7 +946,9 @@ class _SaveListViewState extends State<SaveListView> {
         child: Icon(
           Symbols.close_rounded,
           size: 18.r,
-          color: focused ? scheme.primary : scheme.onSurface.withValues(alpha: 0.6),
+          color: focused
+              ? scheme.primary
+              : scheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -956,8 +987,9 @@ class _SaveListViewState extends State<SaveListView> {
       'scope' => filter.scope != null,
       'system' => filter.system != null,
       'emulator' => filter.emulator != null,
-      _ => (filter.sort ?? 'modified') != 'modified' ||
-          (filter.dir ?? 'desc') != 'desc',
+      _ =>
+        (filter.sort ?? 'modified') != 'modified' ||
+            (filter.dir ?? 'desc') != 'desc',
     };
 
     return GestureDetector(
@@ -982,7 +1014,9 @@ class _SaveListViewState extends State<SaveListView> {
           border: Border.all(
             color: isFocused
                 ? scheme.primary
-                : (active ? scheme.primary.withValues(alpha: 0.5) : Colors.transparent),
+                : (active
+                      ? scheme.primary.withValues(alpha: 0.5)
+                      : Colors.transparent),
             width: 2.r,
           ),
         ),
@@ -994,7 +1028,9 @@ class _SaveListViewState extends State<SaveListView> {
               style: TextStyle(
                 fontSize: 13.r,
                 fontWeight: FontWeight.w600,
-                color: (active || isFocused) ? scheme.primary : scheme.onSurface,
+                color: (active || isFocused)
+                    ? scheme.primary
+                    : scheme.onSurface,
               ),
             ),
             SizedBox(width: 4.r),
@@ -1071,7 +1107,9 @@ class _SaveListViewState extends State<SaveListView> {
                                     : Colors.transparent,
                                 border: Border(
                                   bottom: BorderSide(
-                                    color: scheme.outline.withValues(alpha: 0.1),
+                                    color: scheme.outline.withValues(
+                                      alpha: 0.1,
+                                    ),
                                     width: 0.5.r,
                                   ),
                                 ),
@@ -1209,7 +1247,9 @@ class _SaveListViewState extends State<SaveListView> {
             Icon(
               Symbols.cloud_off_rounded,
               size: 48.sp,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             SizedBox(height: 8.r),
             Text(
@@ -1218,7 +1258,9 @@ class _SaveListViewState extends State<SaveListView> {
                   : AppLocale.noOnlineSavesFound.getString(context),
               style: TextStyle(
                 fontSize: 16.r,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -1444,9 +1486,7 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
         loadingBuilder: (context, child, loadingProgress) {
           if (loadingProgress == null) return child;
           return Container(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             child: Center(
               child: SizedBox(
                 width: 14.r,
@@ -1469,12 +1509,8 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
       height: 44.r,
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(
-                context,
-              ).colorScheme.onSecondary.withValues(alpha: 0.2)
-            : Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.1),
+            ? Theme.of(context).colorScheme.onSecondary.withValues(alpha: 0.2)
+            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10.r),
       ),
       child: Icon(
@@ -1496,8 +1532,7 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
     final theme = Theme.of(context);
 
     // File name without the cloud path (v2/saves/system/emulator/.../game.ext).
-    final fileName = file.fileName.contains('/') ||
-            file.fileName.contains('\\')
+    final fileName = file.fileName.contains('/') || file.fileName.contains('\\')
         ? p.basename(file.fileName.replaceAll('\\', '/'))
         : file.fileName;
 
@@ -1557,8 +1592,7 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
                     fontFamily: theme.textTheme.bodySmall?.fontFamily,
                   ),
                 ),
-                if (file.systemName != null ||
-                    file.emulator != null) ...[
+                if (file.systemName != null || file.emulator != null) ...[
                   SizedBox(height: 3.r),
                   Row(
                     children: [
@@ -1572,7 +1606,8 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
                         ),
                         SizedBox(width: 4.r),
                       ],
-                      if (file.emulator != null && file.emulator!.isNotEmpty) ...[
+                      if (file.emulator != null &&
+                          file.emulator!.isNotEmpty) ...[
                         _buildMetaBadge(
                           theme,
                           file.emulator!,

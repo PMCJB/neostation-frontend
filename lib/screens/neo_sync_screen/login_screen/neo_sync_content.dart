@@ -258,8 +258,8 @@ class NeoSyncContentState extends State<NeoSyncContent>
       },
       onNavigateDown: (isRepeat) {
         setState(
-          () => _selectedMenuIndex = (_selectedMenuIndex + 1) %
-              _menuSections.length,
+          () => _selectedMenuIndex =
+              (_selectedMenuIndex + 1) % _menuSections.length,
         );
       },
       onSelectItem: () {
@@ -424,7 +424,9 @@ class NeoSyncContentState extends State<NeoSyncContent>
   Widget _buildActiveView() {
     switch (_section) {
       case NeoSyncSection.saveList:
-        return SaveListView(onBack: () => _goToSection(NeoSyncSection.dashboard));
+        return SaveListView(
+          onBack: () => _goToSection(NeoSyncSection.dashboard),
+        );
       case NeoSyncSection.customFolders:
         return CustomSaveFoldersView(
           onBack: () => _goToSection(NeoSyncSection.dashboard),
@@ -455,14 +457,9 @@ class NeoSyncContentState extends State<NeoSyncContent>
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      width: 240.w,
-                      child: _buildDashboardHeader(),
-                    ),
+                    SizedBox(width: 240.w, child: _buildDashboardHeader()),
                     SizedBox(width: 12.r),
-                    Expanded(
-                      child: _buildMenuList(),
-                    ),
+                    Expanded(child: _buildMenuList()),
                   ],
                 ),
               ),
@@ -484,18 +481,14 @@ class NeoSyncContentState extends State<NeoSyncContent>
     final neoSyncProvider = Provider.of<NeoSyncProvider>(context);
     final theme = Theme.of(context);
     final user = authService.currentUser;
-    final radii =
-        theme.extension<CornerRadii>() ?? CornerRadii.m();
+    final radii = theme.extension<CornerRadii>() ?? CornerRadii.m();
 
     return Container(
       padding: EdgeInsets.all(8.r),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: radii.radiusExternal,
-        border: Border.all(
-          color: theme.colorScheme.outline,
-          width: 1.r,
-        ),
+        border: Border.all(color: theme.colorScheme.outline, width: 1.r),
         boxShadow: [
           BoxShadow(
             color: theme.colorScheme.shadow.withValues(alpha: 0.1),
@@ -570,7 +563,9 @@ class NeoSyncContentState extends State<NeoSyncContent>
                     Text(
                       neoSyncProvider.quota!.usedQuotaFormatted,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.8,
+                        ),
                         fontSize: 8.r,
                         fontWeight: FontWeight.w600,
                       ),
@@ -588,7 +583,9 @@ class NeoSyncContentState extends State<NeoSyncContent>
                     Text(
                       neoSyncProvider.quota!.totalQuotaFormatted,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.8,
+                        ),
                         fontSize: 8.r,
                         fontWeight: FontWeight.w600,
                       ),

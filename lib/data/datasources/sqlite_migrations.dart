@@ -5433,9 +5433,7 @@ class SqliteMigrations {
       final tableInfo = db.select('PRAGMA table_info(app_emulators)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
       if (!columns.contains('neosync_slug')) {
-        db.execute(
-          'ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT',
-        );
+        db.execute('ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT');
         _log.i('Column neosync_slug added via v115');
       }
 
@@ -5482,14 +5480,14 @@ class SqliteMigrations {
   /// migration above is skipped, so this migration re-applies the missing bits
   /// idempotently.
   static Future<void> _migrateToVersion116(Database db) async {
-    _log.i('Migration v116: Ensuring neosync_slug and user_custom_save_folders');
+    _log.i(
+      'Migration v116: Ensuring neosync_slug and user_custom_save_folders',
+    );
     try {
       final tableInfo = db.select('PRAGMA table_info(app_emulators)');
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
       if (!columns.contains('neosync_slug')) {
-        db.execute(
-          'ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT',
-        );
+        db.execute('ALTER TABLE app_emulators ADD COLUMN neosync_slug TEXT');
         _log.i('Column neosync_slug added via v116');
       }
 
@@ -5533,9 +5531,13 @@ class SqliteMigrations {
   /// column: emulator_slug". This migrates the legacy rows to the default slug
   /// `unknown` and adds the column when missing.
   static Future<void> _migrateToVersion117(Database db) async {
-    _log.i('Migration v117: Ensuring emulator_slug on user_custom_save_folders');
+    _log.i(
+      'Migration v117: Ensuring emulator_slug on user_custom_save_folders',
+    );
     try {
-      final tableInfo = db.select('PRAGMA table_info(user_custom_save_folders)');
+      final tableInfo = db.select(
+        'PRAGMA table_info(user_custom_save_folders)',
+      );
       final columns = tableInfo.map((c) => c['name'].toString()).toList();
       if (!columns.contains('emulator_slug')) {
         _log.i('Migration v117: Adding emulator_slug column');

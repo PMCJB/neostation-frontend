@@ -442,7 +442,8 @@ class NeoSyncService extends ChangeNotifier {
 
   /// Fetches the user's current cloud storage quota and usage details.
   Future<Map<String, dynamic>> getQuota() async {
-    _isLoading = true;    _lastError = null;
+    _isLoading = true;
+    _lastError = null;
     _safeNotifyListeners();
 
     try {

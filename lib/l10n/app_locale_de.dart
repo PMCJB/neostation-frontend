@@ -409,7 +409,8 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.updateYourPlanMenu: 'Plan aktualisieren',
   AppLocale.customFoldersSubtitle:
       'Füge einen benutzerdefinierten Ordner von einem eigenständigen Emulator hinzu, damit auch seine Spielstände synchronisiert werden.',
-  AppLocale.noCustomFoldersConfigured: 'Keine benutzerdefinierten Ordner konfiguriert',
+  AppLocale.noCustomFoldersConfigured:
+      'Keine benutzerdefinierten Ordner konfiguriert',
   AppLocale.foldersConfigured: '{count} konfiguriert',
   AppLocale.searchSavesHint: 'Spielstände suchen...',
   AppLocale.filterAll: 'Alle',
@@ -1020,11 +1021,14 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.removeCustomFolder: 'Ordner Entfernen',
   AppLocale.removeCustomFolderConfirm:
       'Diesen benutzerdefinierten Speicherordner entfernen? Lokale Dateien werden nicht gelöscht, nur von der Synchronisierung entkoppelt.',
-  AppLocale.uploadingCustomFolder: 'Spielstände aus {folder} werden hochgeladen...',
+  AppLocale.uploadingCustomFolder:
+      'Spielstände aus {folder} werden hochgeladen...',
   AppLocale.customFolderUploadComplete:
       'Benutzerdefinierter Ordner synchronisiert: {uploaded} hochgeladen, {skipped} bereits aktuell',
-  AppLocale.customFolderUploadFailed: 'Synchronisierung des benutzerdefinierten Ordners fehlgeschlagen',
-  AppLocale.customSaveFoldersMigrate: 'Cloud-Spielstände zu NeoSync v2 migrieren',
+  AppLocale.customFolderUploadFailed:
+      'Synchronisierung des benutzerdefinierten Ordners fehlgeschlagen',
+  AppLocale.customSaveFoldersMigrate:
+      'Cloud-Spielstände zu NeoSync v2 migrieren',
 
   // ES-DE import
   AppLocale.esdeImport: 'ES-DE Import',

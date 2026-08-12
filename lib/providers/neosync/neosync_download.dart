@@ -107,9 +107,7 @@ extension NeoSyncDownload on NeoSyncProvider {
           v2Path.emulatorSlug,
         );
         if (customFolder != null && customFolder.isNotEmpty) {
-          final localFile = File(
-            path.join(customFolder, v2Path.filePath),
-          );
+          final localFile = File(path.join(customFolder, v2Path.filePath));
           await localFile.parent.create(recursive: true);
           if (!localFile.existsSync() ||
               cloudFile.uploadedAt.isAfter(await localFile.lastModified())) {

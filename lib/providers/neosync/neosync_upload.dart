@@ -151,13 +151,11 @@ extension NeoSyncUpload on NeoSyncProvider {
             if (!Directory(entry.value).existsSync()) continue;
             final files = await _getSaveFiles(entry.value);
             for (final file in files) {
-              customFiles.add(
-                (
-                  file: file,
-                  system: system.folderName,
-                  emulatorSlug: entry.key,
-                ),
-              );
+              customFiles.add((
+                file: file,
+                system: system.folderName,
+                emulatorSlug: entry.key,
+              ));
             }
           }
         }
@@ -297,8 +295,7 @@ extension NeoSyncUpload on NeoSyncProvider {
       final String relativePath;
       String? syncSystemId;
       String? syncEmulatorId;
-      if (customFolderSystem != null &&
-          customFolderEmulatorSlug != null) {
+      if (customFolderSystem != null && customFolderEmulatorSlug != null) {
         relativePath = CloudPathBuilder.build(
           system: customFolderSystem,
           emulatorSlug: customFolderEmulatorSlug,
@@ -316,7 +313,8 @@ extension NeoSyncUpload on NeoSyncProvider {
         // cards. Orphan saves left behind by removed games (e.g. a Naomi EEPROM
         // whose ROM is no longer on disk) must not be uploaded, otherwise the
         // auto-sync picks them up while scanning the whole saves folder.
-        final isSharedCard = lowerPath.endsWith('.ps2') ||
+        final isSharedCard =
+            lowerPath.endsWith('.ps2') ||
             lowerPath.endsWith('.mcr') ||
             lowerPath.endsWith('.mcd') ||
             lowerPath.endsWith('.vmu') ||
@@ -676,7 +674,8 @@ extension NeoSyncUpload on NeoSyncProvider {
           result.failed++;
           _processedItems.add(
             '❌ Failed to migrate $legacyPath: ${migrateResult['message']}',
-          );        }
+          );
+        }
         _processedFiles++;
         _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
         notify();

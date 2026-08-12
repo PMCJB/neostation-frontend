@@ -1206,32 +1206,32 @@ extension NeoSyncCore on NeoSyncProvider {
         final file = File(gameState.localSave!.filePath);
         if (file.existsSync()) {
           // Calcular la ruta relativa correcta
-      final savesPath = await _getRetroArchSavesPath();
-      if (savesPath != null) {
-        final relativePath = await _calculateSyncRelativePath(
-          game,
-          file,
-          savesPath,
-          explicitSystemFolder: game.systemFolderName,
-        );
+          final savesPath = await _getRetroArchSavesPath();
+          if (savesPath != null) {
+            final relativePath = await _calculateSyncRelativePath(
+              game,
+              file,
+              savesPath,
+              explicitSystemFolder: game.systemFolderName,
+            );
 
-        final parsed = CloudPathBuilder.parse(relativePath);
-        final result = await _neoSyncService.syncFile(
-          file,
-          game.name,
-          customFilename: relativePath,
-          systemId: parsed?.system ?? game.systemFolderName,
-          emulatorId: parsed?.emulatorSlug,
-          gameHash: await _resolveGameHashForUpload(game),
-          isState: false,
-          scope: parsed?.scope,
-        );
+            final parsed = CloudPathBuilder.parse(relativePath);
+            final result = await _neoSyncService.syncFile(
+              file,
+              game.name,
+              customFilename: relativePath,
+              systemId: parsed?.system ?? game.systemFolderName,
+              emulatorId: parsed?.emulatorSlug,
+              gameHash: await _resolveGameHashForUpload(game),
+              isState: false,
+              scope: parsed?.scope,
+            );
 
-        if (result['success']) {
-          // Actualizar estado después del sync
-          await detectGameSaveFiles(game);
-        }
-      }
+            if (result['success']) {
+              // Actualizar estado después del sync
+              await detectGameSaveFiles(game);
+            }
+          }
         }
       } else if (gameState.status == neo_sync.GameSyncStatus.cloudOnly &&
           gameState.cloudSave != null) {

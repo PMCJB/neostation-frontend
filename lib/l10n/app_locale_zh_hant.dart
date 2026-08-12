@@ -335,8 +335,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.saveListMenu: '存檔清單',
   AppLocale.customSaveFoldersMenu: '自訂存檔資料夾',
   AppLocale.updateYourPlanMenu: '更新您的方案',
-  AppLocale.customFoldersSubtitle:
-      '新增獨立模擬器的自訂資料夾，以便其存檔也能同步。',
+  AppLocale.customFoldersSubtitle: '新增獨立模擬器的自訂資料夾，以便其存檔也能同步。',
   AppLocale.noCustomFoldersConfigured: '未設定自訂資料夾',
   AppLocale.foldersConfigured: '已設定 {count} 個',
   AppLocale.searchSavesHint: '搜尋存檔...',
@@ -887,8 +886,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.customSaveFolderSync: '立即同步',
   AppLocale.customSaveFolderInvalid: '所選資料夾不存在',
   AppLocale.removeCustomFolder: '移除資料夾',
-  AppLocale.removeCustomFolderConfirm:
-      '移除這個自訂存檔資料夾？本機檔案不會被刪除，只會從同步中移除。',
+  AppLocale.removeCustomFolderConfirm: '移除這個自訂存檔資料夾？本機檔案不會被刪除，只會從同步中移除。',
   AppLocale.uploadingCustomFolder: '正在上傳 {folder} 中的存檔...',
   AppLocale.customFolderUploadComplete:
       '自訂資料夾已同步：已上傳 {uploaded} 個，{skipped} 個已是最新',
