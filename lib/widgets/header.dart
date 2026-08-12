@@ -19,8 +19,9 @@ import 'package:neostation/utils/nav_tabs.dart';
 import 'package:neostation/utils/time_format.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
-import 'package:neostation/themes/chrome_surface.dart';
 import '../themes/corner_radii.dart';
+import '../themes/liquid_chrome.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 
 class Header extends StatefulWidget {
   final int selectedTabIndex;
@@ -211,91 +212,82 @@ class HeaderState extends State<Header> {
                     // Bumper glyphs sit outside the pill so the pill reads as a
                     // single switch and the hardware hints stay distinct from it.
                     _buildShoulderButton('LB', true),
-                    Container(
-                      height: 32.r,
-                      padding: EdgeInsets.symmetric(horizontal: 4.r),
-                      decoration: BoxDecoration(
-                        color: ChromeSurface.fill(context),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outline,
-                          width: 1.r,
-                        ),
-                        borderRadius:
+                    // Liquid glass pill for the tab strip.
+                    LiquidGlassLens(
+                      style: LiquidChrome.style(
+                        context,
+                        cornerRadius:
                             Theme.of(
                               context,
-                            ).extension<CornerRadii>()?.radiusExternal ??
-                            BorderRadius.circular(8.r),
-                        // normal black shadow
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.shadow.withValues(alpha: 0.1),
-                            blurRadius: 4.r,
-                            offset: Offset(2.0.r, 2.0.r),
-                          ),
-                        ],
+                            ).extension<CornerRadii>()?.radiusExternalRadius ??
+                            8.r,
                       ),
-                      child: Builder(
-                        builder: (context) {
-                          final visibleTabs = visibleNavTabs(
-                            configProvider.config,
-                          );
-                          // The indicator tracks the tab's slot in the *rendered*
-                          // strip, not its canonical index — otherwise hiding a tab
-                          // parks it past the end of a shortened strip.
-                          final selectedSlot = visibleTabs.indexOf(
-                            NavTab.values[widget.selectedTabIndex],
-                          );
+                      child: SizedBox(
+                        height: 32.r,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4.r),
+                          child: Builder(
+                            builder: (context) {
+                              final visibleTabs = visibleNavTabs(
+                                configProvider.config,
+                              );
+                              // The indicator tracks the tab's slot in the *rendered*
+                              // strip, not its canonical index — otherwise hiding a tab
+                              // parks it past the end of a shortened strip.
+                              final selectedSlot = visibleTabs.indexOf(
+                                NavTab.values[widget.selectedTabIndex],
+                              );
 
-                          return Stack(
-                            children: [
-                              // Moving indicator
-                              AnimatedPositioned(
-                                left:
-                                    (selectedSlot < 0 ? 0 : selectedSlot) *
-                                    32.r,
-                                top: 4.r,
-                                bottom: 4.r,
-                                width: 32.r,
-                                duration: const Duration(milliseconds: 160),
-                                curve: Curves.easeInOut,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    borderRadius:
-                                        Theme.of(context)
-                                            .extension<CornerRadii>()
-                                            ?.radiusInternal ??
-                                        BorderRadius.circular(4.r),
-                                  ),
-                                ),
-                              ),
-                              // Tab buttons
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
+                              return Stack(
                                 children: [
-                                  for (final tab in visibleTabs)
-                                    SizedBox(
-                                      width: 32.r,
-                                      height: 32.r,
-                                      child: _buildTabButton(
-                                        context,
-                                        tab.index,
-                                        navTabSpec(tab).icon,
-                                        navTabSpec(
-                                          tab,
-                                        ).labelKey.getString(context),
-                                        iconData: navTabSpec(tab).iconData,
+                                  // Moving indicator
+                                  AnimatedPositioned(
+                                    left:
+                                        (selectedSlot < 0 ? 0 : selectedSlot) *
+                                        32.r,
+                                    top: 4.r,
+                                    bottom: 4.r,
+                                    width: 32.r,
+                                    duration: const Duration(milliseconds: 160),
+                                    curve: Curves.easeInOut,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        borderRadius:
+                                            Theme.of(context)
+                                                .extension<CornerRadii>()
+                                                ?.radiusInternal ??
+                                            BorderRadius.circular(4.r),
                                       ),
                                     ),
+                                  ),
+                                  // Tab buttons
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      for (final tab in visibleTabs)
+                                        SizedBox(
+                                          width: 32.r,
+                                          height: 32.r,
+                                          child: _buildTabButton(
+                                            context,
+                                            tab.index,
+                                            navTabSpec(tab).icon,
+                                            navTabSpec(
+                                              tab,
+                                            ).labelKey.getString(context),
+                                            iconData: navTabSpec(tab).iconData,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
                                 ],
-                              ),
-                            ],
-                          );
-                        },
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
                     _buildShoulderButton('RB', false),
@@ -303,80 +295,72 @@ class HeaderState extends State<Header> {
                 ),
               ),
 
-              // Steam-style system info
+              // Steam-style system info (liquid glass pill with clock,
+              // notifications and battery).
               Align(
                 alignment: Alignment.centerRight,
-                child: Container(
-                  margin: EdgeInsets.only(right: 8.r),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 10.r,
-                    vertical: 4.r,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ChromeSurface.fill(context),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.outline,
-                      width: 1.r,
+                child: Padding(
+                  padding: EdgeInsets.only(right: 8.r),
+                  child: LiquidGlassLens(
+                    style: LiquidChrome.style(
+                      context,
+                      cornerRadius:
+                          Theme.of(
+                            context,
+                          ).extension<CornerRadii>()?.radiusExternalRadius ??
+                          14.r,
                     ),
-                    borderRadius:
-                        Theme.of(
-                          context,
-                        ).extension<CornerRadii>()?.radiusExternal ??
-                        BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.shadow.withValues(alpha: 0.1),
-                        blurRadius: 4.r,
-                        offset: Offset(2.0.r, 2.0.r),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.r,
+                        vertical: 4.r,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const NotificationBell(),
-                      SizedBox(width: 10.r),
-                      Icon(
-                        Symbols.schedule,
-                        color: Theme.of(context).colorScheme.onSurface,
-                        size: 14.r,
-                      ),
-                      SizedBox(width: 4.r),
-                      Text(
-                        formatClockTime(
-                          _now,
-                          use12Hour: configProvider.config.use12HourClock,
-                        ),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 12.r,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 0.3.r,
-                        ),
-                      ),
-                      if (_batteryLevel != -1 &&
-                          !_isTelevision &&
-                          !Responsive.isHandheldXS(context)) ...[
-                        SizedBox(width: 12.r),
-                        Icon(
-                          _getBatteryIconData(),
-                          color: _getBatteryColor(customColors),
-                          size: 16.r,
-                        ),
-                        SizedBox(width: 4.r),
-                        Text(
-                          "$_batteryLevel%",
-                          style: TextStyle(
-                            color: _getBatteryColor(customColors),
-                            fontSize: 12.r,
-                            fontWeight: FontWeight.w500,
-                            letterSpacing: 0.3.r,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const NotificationBell(),
+                          SizedBox(width: 10.r),
+                          Icon(
+                            Symbols.schedule,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            size: 14.r,
                           ),
-                        ),
-                      ],
-                    ],
+                          SizedBox(width: 4.r),
+                          Text(
+                            formatClockTime(
+                              _now,
+                              use12Hour: configProvider.config.use12HourClock,
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 12.r,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3.r,
+                            ),
+                          ),
+                          if (_batteryLevel != -1 &&
+                              !_isTelevision &&
+                              !Responsive.isHandheldXS(context)) ...[
+                            SizedBox(width: 12.r),
+                            Icon(
+                              _getBatteryIconData(),
+                              color: _getBatteryColor(customColors),
+                              size: 16.r,
+                            ),
+                            SizedBox(width: 4.r),
+                            Text(
+                              "$_batteryLevel%",
+                              style: TextStyle(
+                                color: _getBatteryColor(customColors),
+                                fontSize: 12.r,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.3.r,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

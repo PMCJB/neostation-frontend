@@ -10,10 +10,11 @@ import '../../../../models/system_model.dart';
 import '../../../../models/game_model.dart';
 import '../../../../models/retro_achievements_game_info.dart';
 import '../../../../sync/i_sync_provider.dart';
-import 'package:neostation/themes/chrome_surface.dart';
 import '../../../../themes/corner_radii.dart';
+import '../../../../themes/liquid_chrome.dart';
 import '../../../../utils/game_utils.dart';
 import '../../../../widgets/marquee_text.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import '../../music/music_player.dart';
 
 /// A sticky footer component for the game details card that provides actionable controls and status summaries.
@@ -333,29 +334,20 @@ class GameDetailsFooter extends StatelessWidget {
           tween: Tween<double>(end: expand ? 1.0 : 0.0),
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          builder: (context, t, child) => Container(
-            width: 120.r + (availableWidth - 120.r) * t,
-            height: 45.r,
-            decoration: BoxDecoration(
-              color: ChromeSurface.fill(context),
-              borderRadius:
-                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                  BorderRadius.circular(14.r),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-                width: 1.r,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(
+          builder: (context, t, child) => LiquidGlassLens(
+            style: LiquidChrome.style(
+              context,
+              cornerRadius:
+                  Theme.of(
                     context,
-                  ).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 4.r,
-                  offset: Offset(2.0.r, 2.0.r),
-                ),
-              ],
+                  ).extension<CornerRadii>()?.radiusExternalRadius ??
+                  14.r,
             ),
-            child: child,
+            child: SizedBox(
+              width: 120.r + (availableWidth - 120.r) * t,
+              height: 45.r,
+              child: child,
+            ),
           ),
           child: Padding(
             // Symmetric 8.r horizontal inset so neither the trophy icon nor the
@@ -465,56 +457,52 @@ class _SteamStyleRating extends StatelessWidget {
       colorRatio,
     )!;
 
-    return Container(
-      height: 45.r,
-      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 6.r),
-      decoration: BoxDecoration(
-        color: ChromeSurface.fill(context),
-        borderRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-            BorderRadius.circular(14.r),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-          width: 1.r,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.5),
-            blurRadius: 3.r,
-            offset: Offset(2.0.r, 2.0.r),
-          ),
-        ],
+    return LiquidGlassLens(
+      style: LiquidChrome.style(
+        context,
+        cornerRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
+            14.r,
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(Symbols.star_rounded, color: ratingColor, size: 24.r),
-          SizedBox(width: 4.r),
-          // Reserve width for the widest possible value ("10") so the pill
-          // stays a static size regardless of the current score (e.g. "1"
-          // no longer renders narrower than "10"). Scale/font-independent.
-          Stack(
-            alignment: Alignment.centerLeft,
+      child: SizedBox(
+        height: 45.r,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 6.r),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Opacity(
-                opacity: 0,
-                child: Text(
-                  '10',
-                  style: TextStyle(fontSize: 22.r, fontWeight: FontWeight.w900),
-                ),
-              ),
-              Text(
-                ratingValue.toStringAsFixed(0),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 22.r,
-                  fontWeight: FontWeight.w900,
-                ),
+              Icon(Symbols.star_rounded, color: ratingColor, size: 24.r),
+              SizedBox(width: 4.r),
+              // Reserve width for the widest possible value ("10") so the pill
+              // stays a static size regardless of the current score (e.g. "1"
+              // no longer renders narrower than "10"). Scale/font-independent.
+              Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  Opacity(
+                    opacity: 0,
+                    child: Text(
+                      '10',
+                      style: TextStyle(
+                        fontSize: 22.r,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    ratingValue.toStringAsFixed(0),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 22.r,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -538,48 +526,41 @@ class _PlayTimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 45.r,
-      padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
-      decoration: BoxDecoration(
-        color: ChromeSurface.fill(context),
-        borderRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-            BorderRadius.circular(14.r),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-          width: 1.r,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.5),
-            blurRadius: 3.r,
-            offset: Offset(2.0.r, 2.0.r),
-          ),
-        ],
+    return LiquidGlassLens(
+      style: LiquidChrome.style(
+        context,
+        cornerRadius:
+            Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
+            14.r,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Icon(
-            Symbols.schedule_rounded,
-            color: Theme.of(context).colorScheme.onSurface,
-            size: 14.r,
+      child: SizedBox(
+        height: 45.r,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8.r, vertical: 4.r),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Symbols.schedule_rounded,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 14.r,
+              ),
+              SizedBox(height: 1.r),
+              Text(
+                _formatClock(game.playTime ?? 0),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 10.r,
+                  fontWeight: FontWeight.w800,
+                  height: 1.0,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 1.r),
-          Text(
-            _formatClock(game.playTime ?? 0),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 10.r,
-              fontWeight: FontWeight.w800,
-              height: 1.0,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

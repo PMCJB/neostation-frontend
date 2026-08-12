@@ -6,9 +6,10 @@ import '../models/game_model.dart';
 import '../models/system_model.dart';
 import '../services/game_legend_visibility.dart';
 import '../sync/i_sync_provider.dart';
-import 'package:neostation/themes/chrome_surface.dart';
 import '../themes/corner_radii.dart';
+import '../themes/liquid_chrome.dart';
 import '../utils/gamepad_nav.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'game_action_button.dart';
 import 'horizontal_swipe.dart';
 import 'neo_sync_status_icon.dart';
@@ -60,35 +61,35 @@ class GameActionButtons extends StatelessWidget {
           // handled by the host view. Hiding slides the column off-screen via
           // GameLegendVisibility.
           onSwipeLeft: GameLegendVisibility.hide,
-          child: Container(
-            padding: EdgeInsets.all(6.r),
-            decoration: BoxDecoration(
-              // Same left-to-right falloff as the game list panel beside it,
-              // so the rail and the list read as one lit surface rather than
-              // two separate cut-outs over the fanart.
-              gradient: ChromeSurface.fadeNarrow(context),
-              borderRadius:
-                  Theme.of(context).extension<CornerRadii>()?.radiusExternal ??
-                  BorderRadius.circular(14.r),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-                width: 1.r,
-              ),
+          child: LiquidGlassLens(
+            // Same glass recipe as the game list panel beside it, so the rail
+            // and the list read as one lit surface rather than two separate
+            // cut-outs over the fanart.
+            style: LiquidChrome.style(
+              context,
+              cornerRadius:
+                  Theme.of(
+                    context,
+                  ).extension<CornerRadii>()?.radiusExternalRadius ??
+                  14.r,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Touch affordance for the Select (View) modifier: tapping it
-                // latches the chord layer on/off, mirroring holding Select on a
-                // gamepad, so touchscreen users can reach the chord shortcuts.
-                if (_hasChordActions) ...[
-                  _buildViewToggle(context, active: selectHeld),
-                  SizedBox(height: 6.r),
+            child: Padding(
+              padding: EdgeInsets.all(6.r),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Touch affordance for the Select (View) modifier: tapping it
+                  // latches the chord layer on/off, mirroring holding Select on a
+                  // gamepad, so touchscreen users can reach the chord shortcuts.
+                  if (_hasChordActions) ...[
+                    _buildViewToggle(context, active: selectHeld),
+                    SizedBox(height: 6.r),
+                  ],
+                  ...(selectHeld
+                      ? _buildChordButtons(context)
+                      : _buildDefaultButtons(context)),
                 ],
-                ...(selectHeld
-                    ? _buildChordButtons(context)
-                    : _buildDefaultButtons(context)),
-              ],
+              ),
             ),
           ),
         );

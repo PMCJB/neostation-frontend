@@ -54,6 +54,8 @@ import '../../utils/artwork_cache.dart';
 import '../../utils/game_list_update.dart';
 import 'package:neostation/themes/chrome_surface.dart';
 import '../../themes/corner_radii.dart';
+import '../../themes/liquid_chrome.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 
 part 'my_games_list/gamepad_nav.dart';
 part 'my_games_list/favorites_reorder.dart';
@@ -1279,42 +1281,18 @@ class _SystemGamesListState extends State<SystemGamesList> {
                 top: 12.r,
                 bottom: 12.r,
               ),
-              decoration: BoxDecoration(
-                // A horizontal wash rather than a flat fill: the panel stays
-                // opaque where the row text sits and thins out towards its
-                // right edge, so the fanart bleeds through and it reads as a
-                // pane laid over the artwork instead of a cut-out block.
-                gradient: ChromeSurface.fade(context),
-                borderRadius:
-                    Theme.of(
-                      context,
-                    ).extension<CornerRadii>()?.radiusExternal ??
-                    BorderRadius.circular(14.r),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline,
-                  width: 1.r,
+              // Liquid glass pane over the fanart: the lens blurs and tints
+              // whatever sits behind it (the selected game's artwork).
+              child: LiquidGlassLens(
+                style: LiquidChrome.style(
+                  context,
+                  cornerRadius:
+                      Theme.of(
+                        context,
+                      ).extension<CornerRadii>()?.radiusExternalRadius ??
+                      14.r,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.shadow.withValues(alpha: 0.5),
-                    blurRadius: 3.r,
-                    offset: Offset(2.r, 2.r),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius:
-                    Theme.of(
-                      context,
-                    ).extension<CornerRadii>()?.radiusInternal ??
-                    BorderRadius.circular(9.r),
-                child: SizedBox(
-                  width: 200.r,
-                  height: availableHeight,
-                  child: _buildGamesListPanel(),
-                ),
+                child: _buildGamesListPanel(),
               ),
             ),
             // Main Viewport: Rich metadata, video previews, and launch controls.
