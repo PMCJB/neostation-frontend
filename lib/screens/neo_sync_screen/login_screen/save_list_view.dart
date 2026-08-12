@@ -115,6 +115,7 @@ class _SaveListViewState extends State<SaveListView> {
           _refreshOnlineFiles();
         }
       },
+      onSelectButton: _selectSaveItem,
       onSettings: () {},
     );
 
@@ -418,29 +419,56 @@ class _SaveListViewState extends State<SaveListView> {
     );
     switch (key) {
       case 'scope':
-        return const [
-          _FilterOption(label: 'All', value: null),
-          _FilterOption(label: 'Per-Game Saves', value: 'game'),
-          _FilterOption(label: 'Memory Cards', value: 'shared'),
+        return [
+          _FilterOption(
+            label: AppLocale.filterAll.getString(context),
+            value: null,
+          ),
+          _FilterOption(
+            label: AppLocale.filterPerGameSaves.getString(context),
+            value: 'game',
+          ),
+          _FilterOption(
+            label: AppLocale.filterMemoryCards.getString(context),
+            value: 'shared',
+          ),
         ];
       case 'system':
         return [
-          const _FilterOption(label: 'All', value: null),
+          _FilterOption(
+            label: AppLocale.filterAll.getString(context),
+            value: null,
+          ),
           ...neoSyncProvider.onlineSystems
               .map((s) => _FilterOption(label: s, value: s)),
         ];
       case 'emulator':
         return [
-          const _FilterOption(label: 'All', value: null),
+          _FilterOption(
+            label: AppLocale.filterAll.getString(context),
+            value: null,
+          ),
           ...neoSyncProvider.onlineEmulators
               .map((e) => _FilterOption(label: e, value: e)),
         ];
       case 'sort':
-        return const [
-          _FilterOption(label: 'Newest', value: 'modified_desc'),
-          _FilterOption(label: 'Oldest', value: 'modified_asc'),
-          _FilterOption(label: 'Name A–Z', value: 'name_asc'),
-          _FilterOption(label: 'Name Z–A', value: 'name_desc'),
+        return [
+          _FilterOption(
+            label: AppLocale.sortNewest.getString(context),
+            value: 'modified_desc',
+          ),
+          _FilterOption(
+            label: AppLocale.sortOldest.getString(context),
+            value: 'modified_asc',
+          ),
+          _FilterOption(
+            label: AppLocale.sortNameAsc.getString(context),
+            value: 'name_asc',
+          ),
+          _FilterOption(
+            label: AppLocale.sortNameDesc.getString(context),
+            value: 'name_desc',
+          ),
         ];
       default:
         return const [];
@@ -454,24 +482,24 @@ class _SaveListViewState extends State<SaveListView> {
     );
     final filter = neoSyncProvider.onlineFilter;
     final String label = switch (key) {
-      'scope' => 'Scope',
-      'system' => 'System',
-      'emulator' => 'Emulator',
-      'sort' => 'Sort',
+      'scope' => AppLocale.filterScope.getString(context),
+      'system' => AppLocale.filterSystem.getString(context),
+      'emulator' => AppLocale.filterEmulator.getString(context),
+      'sort' => AppLocale.filterSort.getString(context),
       _ => '',
     };
     final String? value = switch (key) {
       'scope' => filter.scope == 'game'
-          ? 'Per-Game'
+          ? AppLocale.scopePerGame.getString(context)
           : filter.scope == 'shared'
-          ? 'MemCards'
+          ? AppLocale.scopeMemCards.getString(context)
           : null,
       'system' => filter.system,
       'emulator' => filter.emulator,
       'sort' => '${filter.sort ?? 'modified'} ${filter.dir ?? 'desc'}',
       _ => null,
     };
-    return '$label: ${value ?? 'All'}';
+    return '$label: ${value ?? AppLocale.filterAll.getString(context)}';
   }
 
   void _scrollChipIntoView() {
@@ -747,10 +775,6 @@ class _SaveListViewState extends State<SaveListView> {
                                     files: neoSyncProvider.onlineFiles,
                                     selectedIndex: _selectedSaveIndex,
                                     isNavigatingFast: _isNavigatingFast,
-                                    onDeleteRequest: (file, index) async {
-                                      setState(() => _selectedSaveIndex = index);
-                                      _selectSaveItem();
-                                    },
                                     onSelectionChanged: (index) {
                                       _updateSelectionIndex(index);
                                     },
@@ -853,7 +877,7 @@ class _SaveListViewState extends State<SaveListView> {
         onSubmitted: (_) => _onlineSearchFocus.unfocus(),
         style: TextStyle(fontSize: 13.r, color: scheme.onSurface),
         decoration: InputDecoration(
-          hintText: 'Search saves...',
+          hintText: AppLocale.searchSavesHint.getString(context),
           hintStyle: TextStyle(
             fontSize: 13.r,
             color: scheme.onSurface.withValues(alpha: 0.5),
@@ -1113,6 +1137,14 @@ class _SaveListViewState extends State<SaveListView> {
         ),
         SizedBox(width: 8.r),
         GamepadControl(
+          label: AppLocale.delete.getString(context),
+          iconPath: 'assets/images/gamepad/Xbox_View_button.png',
+          onTap: _selectSaveItem,
+          textColor: theme.colorScheme.onError,
+          backgroundColor: theme.colorScheme.error,
+        ),
+        SizedBox(width: 8.r),
+        GamepadControl(
           label: AppLocale.back.getString(context),
           iconPath: 'assets/images/gamepad/Xbox_B_button.png',
           onTap: () => widget.onBack(),
@@ -1143,7 +1175,10 @@ class _SaveListViewState extends State<SaveListView> {
             color: theme.colorScheme.onSurface,
           ),
           Text(
-            'Page ${provider.onlinePage} of ${provider.onlineTotalPages}',
+            AppLocale.pageOf
+                .getString(context)
+                .replaceFirst('{current}', '${provider.onlinePage}')
+                .replaceFirst('{total}', '${provider.onlineTotalPages}'),
             style: TextStyle(
               fontSize: 10.r,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
@@ -1179,7 +1214,7 @@ class _SaveListViewState extends State<SaveListView> {
             SizedBox(height: 8.r),
             Text(
               provider.onlineTotal > 0
-                  ? 'No saves match the filters'
+                  ? AppLocale.noSavesMatchFilters.getString(context)
                   : AppLocale.noOnlineSavesFound.getString(context),
               style: TextStyle(
                 fontSize: 16.r,
@@ -1205,7 +1240,6 @@ class _FilterOption {
 class OnlineSavesListView extends StatefulWidget {
   final List<NeoSyncFile> files;
   final int selectedIndex;
-  final Function(NeoSyncFile, int) onDeleteRequest;
   final Function(int) onSelectionChanged;
   final bool isNavigatingFast;
 
@@ -1213,7 +1247,6 @@ class OnlineSavesListView extends StatefulWidget {
     super.key,
     required this.files,
     required this.selectedIndex,
-    required this.onDeleteRequest,
     required this.onSelectionChanged,
     this.isNavigatingFast = false,
   });
@@ -1552,16 +1585,6 @@ class OnlineSavesListViewState extends State<OnlineSavesListView>
                 ],
               ],
             ),
-          ),
-          IconButton(
-            onPressed: () => widget.onDeleteRequest(file, index),
-            icon: Icon(
-              Symbols.delete_rounded,
-              color: isSelected
-                  ? theme.colorScheme.onSecondary
-                  : theme.colorScheme.error,
-            ),
-            tooltip: AppLocale.delete.getString(context),
           ),
         ],
       ),

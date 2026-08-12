@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';
 import 'package:neostation/l10n/app_locale.dart';
 import 'package:neostation/providers/neo_sync_provider.dart';
@@ -14,6 +15,8 @@ import 'package:neostation/services/permission_service.dart';
 import 'package:neostation/services/user_data_location_service.dart';
 import 'package:neostation/widgets/custom_notification.dart' as custom;
 import 'package:neostation/widgets/tv_directory_picker.dart';
+import 'package:neostation/widgets/core_footer.dart';
+import 'package:neostation/widgets/confirm_action_dialog.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/gamepad/gamepad_navigation_manager.dart';
 import '../../app_screen.dart';
@@ -44,6 +47,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
   List<SystemModel> _systems = [];
   List<(String, String, String)> _configured = [];
   bool _syncing = false;
+  int _selectedFolderIndex = 0;
 
   @override
   void initState() {
@@ -61,12 +65,16 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
 
   void _initializeGamepad() {
     _gamepadNav = GamepadNavigation(
+      onNavigateUp: (isRepeat) => _navigateFolders(-1),
+      onNavigateDown: (isRepeat) => _navigateFolders(1),
       onPreviousTab: () => AppNavigation.previousTab(),
       onNextTab: () => AppNavigation.nextTab(),
       onBack: () {
         if (mounted) widget.onBack();
       },
       onSelectItem: _openConfigDialog,
+      onSelectButton: _handleSelectFolder,
+      onFavorite: _openConfigDialog,
       onSettings: () {},
     );
 
@@ -78,6 +86,38 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
         onDeactivate: () => _gamepadNav.deactivate(),
       );
     });
+  }
+
+  void _navigateFolders(int delta) {
+    if (_configured.isEmpty) return;
+    final newIndex = (_selectedFolderIndex + delta + _configured.length) %
+        _configured.length;
+    if (mounted) setState(() => _selectedFolderIndex = newIndex);
+  }
+
+  /// Select (View) asks for confirmation, then deletes the focused configured
+  /// folder; the list is empty-only so it becomes a no-op when there is nothing
+  /// configured.
+  Future<void> _handleSelectFolder() async {
+    if (_configured.isEmpty) {
+      _openConfigDialog();
+      return;
+    }
+    final (system, slug, _) = _configured[_selectedFolderIndex];
+
+    _gamepadNav.deactivate();
+    final confirmed = await ConfirmActionDialog.show(
+      context,
+      title: AppLocale.removeCustomFolder.getString(context),
+      body: AppLocale.removeCustomFolderConfirm.getString(context),
+      confirmLabel: AppLocale.removeCustomFolder.getString(context),
+      cancelLabel: AppLocale.cancel.getString(context),
+      icon: Symbols.delete_forever_rounded,
+    );
+    _gamepadNav.activate();
+
+    if (confirmed != true) return;
+    await _removeFolder(system, slug);
   }
 
   Future<void> _load() async {
@@ -96,7 +136,14 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
   Future<void> _loadConfigured() async {
     try {
       final configured = await NeoSyncSaveFolderRepository.getAllEntries();
-      if (mounted) setState(() => _configured = configured);
+      if (mounted) {
+        setState(() {
+          _configured = configured;
+          if (_selectedFolderIndex >= configured.length) {
+            _selectedFolderIndex = configured.isEmpty ? 0 : configured.length - 1;
+          }
+        });
+      }
     } catch (e) {
       // ignore
     }
@@ -126,7 +173,8 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
 
       if (selected == null || !mounted) return;
       selected = selected.replaceFirst(RegExp(r'[\\/]+$'), '');
-      if (!Directory(selected).existsSync()) {
+      final String folderPath = selected;
+      if (!Directory(folderPath).existsSync()) {
         if (mounted) {
           custom.AppNotification.showNotification(
             context,
@@ -140,15 +188,60 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
       await NeoSyncSaveFolderRepository.saveFolder(
         system,
         emulatorSlug,
-        selected,
+        folderPath,
       );
       await _loadConfigured();
 
       if (!mounted) return;
       final provider = context.read<NeoSyncProvider>();
       if (mounted) setState(() => _syncing = true);
+
+      // Surface the upload progress in the app's global notification center
+      // (header bell), updating the same notification in place as it runs.
+      const notificationId = 'custom_save_folder_upload';
+      final folderLabel = path.basename(folderPath);
+      custom.AppNotification.showNotification(
+        context,
+        AppLocale.uploadingCustomFolder
+            .getString(context)
+            .replaceFirst('{folder}', folderLabel),
+        type: custom.NotificationType.info,
+        notificationId: notificationId,
+        progress: 0,
+      );
+
       try {
-        await provider.syncCustomSaveFolder(system, emulatorSlug);
+        void listener() {
+          if (!mounted) return;
+          custom.AppNotification.showNotification(
+            context,
+            AppLocale.uploadingCustomFolder
+                .getString(context)
+                .replaceFirst('{folder}', folderLabel),
+            type: custom.NotificationType.info,
+            notificationId: notificationId,
+            progress: provider.syncProgress,
+          );
+        }
+
+        provider.addListener(listener);
+        try {
+          await provider.syncCustomSaveFolder(system, emulatorSlug);
+        } finally {
+          provider.removeListener(listener);
+        }
+
+        if (!mounted) return;
+        custom.AppNotification.showNotification(
+          context,
+          AppLocale.customFolderUploadComplete
+              .getString(context)
+              .replaceFirst('{uploaded}', '${provider.uploadedFiles}')
+              .replaceFirst('{skipped}', '${provider.skippedFiles}'),
+          type: custom.NotificationType.success,
+          notificationId: notificationId,
+          progress: 1,
+        );
       } finally {
         if (mounted) setState(() => _syncing = false);
       }
@@ -161,7 +254,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
       if (mounted) {
         custom.AppNotification.showNotification(
           context,
-          '$e',
+          AppLocale.customFolderUploadFailed.getString(context),
           type: custom.NotificationType.error,
         );
       }
@@ -173,19 +266,6 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
     await _loadConfigured();
   }
 
-  Future<void> _syncFolder(String system, String emulatorSlug) async {
-    if (_syncing) return;
-    if (mounted) setState(() => _syncing = true);
-    try {
-      await context.read<NeoSyncProvider>().syncCustomSaveFolder(
-        system,
-        emulatorSlug,
-      );
-    } finally {
-      if (mounted) setState(() => _syncing = false);
-    }
-  }
-
   Future<void> _openConfigDialog() async {
     _gamepadNav.deactivate();
     await showDialog<void>(
@@ -194,9 +274,6 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
         systems: _systems,
         isSyncing: _syncing,
         onSelectFolder: (system, slug) => _selectFolderFor(system, slug),
-        onSyncFolder: (system, slug) => _syncFolder(system, slug),
-        onRemoveFolder: (system, slug) => _removeFolder(system, slug),
-        onChanged: _loadConfigured,
       ),
     );
     _gamepadNav.activate();
@@ -214,6 +291,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
           NeoSyncSectionHeader(
             icon: Symbols.folder_special_rounded,
             title: AppLocale.customSaveFoldersTitle.getString(context),
+            subtitle: AppLocale.customFoldersSubtitle.getString(context),
             trailing: Container(
               padding: EdgeInsets.symmetric(horizontal: 6.r, vertical: 2.r),
               decoration: BoxDecoration(
@@ -221,7 +299,9 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Text(
-                '${_configured.length} configured',
+                AppLocale.foldersConfigured
+                    .getString(context)
+                    .replaceFirst('{count}', '${_configured.length}'),
                 style: TextStyle(
                   fontSize: 8.r,
                   fontWeight: FontWeight.bold,
@@ -246,34 +326,6 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Configure a new folder
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: busy ? null : _openConfigDialog,
-                        icon: busy
-                            ? SizedBox(
-                                width: 14.r,
-                                height: 14.r,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.r,
-                                  color: theme.colorScheme.onPrimary,
-                                ),
-                              )
-                            : Icon(Symbols.add_rounded, size: 18.r),
-                        label: Text(
-                          AppLocale.customSaveFolderConfigure.getString(context),
-                          style: TextStyle(fontSize: 11.r),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                          padding: EdgeInsets.symmetric(vertical: 10.r),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12.r),
-                    Divider(height: 1.r),
                     SizedBox(height: 8.r),
                     Text(
                       AppLocale.customSaveFolderConfiguredList.getString(context),
@@ -298,7 +350,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                               ),
                               SizedBox(height: 8.r),
                               Text(
-                                'No custom folders configured',
+                                AppLocale.noCustomFoldersConfigured.getString(context),
                                 style: TextStyle(
                                   fontSize: 12.r,
                                   color: theme.colorScheme.onSurface.withValues(
@@ -311,31 +363,40 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                         ),
                       )
                     else
-                      for (final (system, slug, path) in _configured)
+                      for (var i = 0; i < _configured.length; i++) ...[
                         Padding(
                           padding: EdgeInsets.only(bottom: 6.r),
                           child: Container(
                             padding: EdgeInsets.all(8.r),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(
-                                alpha: 0.05,
-                              ),
+                              color: i == _selectedFolderIndex
+                                  ? theme.colorScheme.secondary.withValues(
+                                      alpha: 0.12,
+                                    )
+                                  : theme.colorScheme.primary.withValues(
+                                      alpha: 0.05,
+                                    ),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                width: 1.r,
+                                color: i == _selectedFolderIndex
+                                    ? theme.colorScheme.secondary.withValues(
+                                        alpha: 0.6,
+                                      )
+                                    : theme.colorScheme.primary.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                width: i == _selectedFolderIndex ? 2.r : 1.r,
                               ),
                             ),
                             child: Row(
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '$system / $slug',
+                                        '${_configured[i].$1} / ${_configured[i].$2}',
                                         style: theme.textTheme.bodySmall
                                             ?.copyWith(
                                               fontWeight: FontWeight.bold,
@@ -344,7 +405,7 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                                       ),
                                       SizedBox(height: 2.r),
                                       Text(
-                                        path,
+                                        _configured[i].$3,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: theme.textTheme.bodySmall
@@ -360,34 +421,38 @@ class _CustomSaveFoldersViewState extends State<CustomSaveFoldersView> {
                                     ],
                                   ),
                                 ),
-                                IconButton(
-                                  icon: Icon(Symbols.sync_rounded, size: 16.r),
-                                  tooltip: AppLocale.customSaveFolderSync.getString(context),
-                                  onPressed: busy
-                                      ? null
-                                      : () => _syncFolder(system, slug),
-                                ),
-                                IconButton(
-                                  icon: Icon(Symbols.delete_rounded, size: 16.r),
-                                  onPressed: busy
-                                      ? null
-                                      : () async {
-                                          await _removeFolder(system, slug);
-                                        },
-                                ),
                               ],
                             ),
                           ),
                         ),
+                      ],
                   ],
                 ),
               ),
             ),
           ),
           SizedBox(height: 6.r),
-          Align(
-            alignment: Alignment.centerRight,
-            child: NeoSyncBackButton(onTap: () => widget.onBack()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GamepadControl(
+                label: AppLocale.customSaveFolderConfigure.getString(context),
+                iconPath: 'assets/images/gamepad/Xbox_Y_button.png',
+                onTap: busy ? null : _openConfigDialog,
+                textColor: theme.colorScheme.onTertiaryFixed,
+                backgroundColor: theme.colorScheme.tertiaryFixed,
+              ),
+              SizedBox(width: 8.r),
+              GamepadControl(
+                label: AppLocale.delete.getString(context),
+                iconPath: 'assets/images/gamepad/Xbox_View_button.png',
+                onTap: busy ? null : () => _handleSelectFolder(),
+                textColor: theme.colorScheme.onError,
+                backgroundColor: theme.colorScheme.error,
+              ),
+              SizedBox(width: 8.r),
+              NeoSyncBackButton(onTap: () => widget.onBack()),
+            ],
           ),
         ],
       ),

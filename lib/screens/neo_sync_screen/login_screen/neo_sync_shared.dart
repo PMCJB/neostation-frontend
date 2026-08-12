@@ -57,18 +57,21 @@ class NeoSyncLogoutButton extends StatelessWidget {
 
 /// Standard header used by every NeoSync sub-view.
 ///
-/// Carries a title (with an optional leading icon) and an optional trailing
-/// widget. There is intentionally no back arrow here — navigation back to the
-/// dashboard happens through [NeoSyncBackButton] at the bottom.
+/// Carries a title (with an optional leading icon), an optional smaller
+/// subtitle, and an optional trailing widget. There is intentionally no back
+/// arrow here — navigation back to the dashboard happens through
+/// [NeoSyncBackButton] at the bottom.
 class NeoSyncSectionHeader extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final Widget? trailing;
 
   const NeoSyncSectionHeader({
     super.key,
     required this.icon,
     required this.title,
+    this.subtitle,
     this.trailing,
   });
 
@@ -114,14 +117,31 @@ class NeoSyncSectionHeader extends StatelessWidget {
               Icon(icon, color: theme.colorScheme.primary, size: 18.r),
               SizedBox(width: 8.r),
               Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.r,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.r,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      SizedBox(height: 2.r),
+                      Text(
+                        subtitle!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 8.r,
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               ?trailing,

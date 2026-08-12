@@ -405,6 +405,34 @@ const Map<String, dynamic> appLocaleFr = {
   AppLocale.saveFileDeleted: 'Fichier de sauvegarde supprimé avec succès',
   AppLocale.failedToDeleteSave:
       'Échec de la suppression du fichier de sauvegarde',
+  AppLocale.storageLabel: 'Stockage',
+  AppLocale.lastSyncedSave: 'Dernière sauvegarde synchronisée',
+  AppLocale.saveListMenu: 'Liste des Sauvegardes',
+  AppLocale.customSaveFoldersMenu: 'Dossiers de Sauvegarde Personnalisés',
+  AppLocale.updateYourPlanMenu: 'Mettre à Jour Votre Plan',
+  AppLocale.customFoldersSubtitle:
+      'Ajoutez un dossier personnalisé depuis un émulateur autonome pour synchroniser aussi ses sauvegardes.',
+  AppLocale.noCustomFoldersConfigured: 'Aucun dossier personnalisé configuré',
+  AppLocale.foldersConfigured: '{count} configurés',
+  AppLocale.searchSavesHint: 'Rechercher des sauvegardes...',
+  AppLocale.filterAll: 'Tous',
+  AppLocale.filterPerGameSaves: 'Sauvegardes par Jeu',
+  AppLocale.filterMemoryCards: 'Cartes Mémoire',
+  AppLocale.filterScope: 'Portée',
+  AppLocale.filterSystem: 'Système',
+  AppLocale.filterEmulator: 'Émulateur',
+  AppLocale.filterSort: 'Trier',
+  AppLocale.sortNewest: 'Plus Récent',
+  AppLocale.sortOldest: 'Plus Ancien',
+  AppLocale.sortNameAsc: 'Nom A–Z',
+  AppLocale.sortNameDesc: 'Nom Z–A',
+  AppLocale.scopePerGame: 'Par Jeu',
+  AppLocale.scopeMemCards: 'Cartes Mém.',
+  AppLocale.pageOf: 'Page {current} sur {total}',
+  AppLocale.noSavesMatchFilters: 'Aucune sauvegarde ne correspond aux filtres',
+  AppLocale.statSaves: 'Sauvegardes',
+  AppLocale.statStates: 'États',
+  AppLocale.statShared: 'Partagés',
 
   AppLocale.syncConflictDetected: 'Conflit de Synchronisation Détecté',
   AppLocale.localVersion: 'Version Locale',
@@ -993,6 +1021,13 @@ const Map<String, dynamic> appLocaleFr = {
   AppLocale.customSaveFolderConfiguredList: 'Dossiers configurés',
   AppLocale.customSaveFolderSync: 'Synchroniser maintenant',
   AppLocale.customSaveFolderInvalid: 'Le dossier sélectionné n\'existe pas',
+  AppLocale.removeCustomFolder: 'Supprimer le Dossier',
+  AppLocale.removeCustomFolderConfirm:
+      'Supprimer ce dossier de sauvegarde personnalisé ? Ses fichiers locaux ne seront pas supprimés, seulement déliés de la synchronisation.',
+  AppLocale.uploadingCustomFolder: 'Téléversement des sauvegardes de {folder}...',
+  AppLocale.customFolderUploadComplete:
+      'Dossier personnalisé synchronisé : {uploaded} téléversés, {skipped} déjà à jour',
+  AppLocale.customFolderUploadFailed: 'Échec de la synchronisation du dossier personnalisé',
   AppLocale.customSaveFoldersMigrate: 'Migrer les sauvegardes cloud vers NeoSync v2',
 
   // ES-DE import

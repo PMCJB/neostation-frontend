@@ -626,13 +626,13 @@ class NeoSyncContentState extends State<NeoSyncContent>
                 context,
                 icon: Symbols.cloud_rounded,
                 label: AppLocale.onlineSaves.getString(context),
-                value: '${neoSyncProvider.onlineFiles.length}',
+                value: '${neoSyncProvider.onlineTotal}',
               ),
               SizedBox(height: 6.r),
               _buildHeaderStat(
                 context,
                 icon: Symbols.storage_rounded,
-                label: 'Storage',
+                label: AppLocale.storageLabel.getString(context),
                 value: neoSyncProvider.quota != null
                     ? '${neoSyncProvider.quota!.usagePercentage.toStringAsFixed(0)}%'
                     : '—',
@@ -768,7 +768,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
                   ),
                 ),
                 Text(
-                  'Last synced save',
+                  AppLocale.lastSyncedSave.getString(context),
                   style: TextStyle(
                     fontSize: 7.r,
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
@@ -797,17 +797,17 @@ class NeoSyncContentState extends State<NeoSyncContent>
     final entries = <_MenuEntry>[
       _MenuEntry(
         icon: Symbols.cloud_rounded,
-        title: 'Save List',
+        title: AppLocale.saveListMenu.getString(context),
         subtitle: AppLocale.onlineSaves.getString(context),
       ),
       _MenuEntry(
         icon: Symbols.folder_special_rounded,
-        title: 'Custom Save Folders',
+        title: AppLocale.customSaveFoldersMenu.getString(context),
         subtitle: AppLocale.customSaveFoldersTitle.getString(context),
       ),
       _MenuEntry(
         icon: Symbols.payment_rounded,
-        title: 'Update Your Plan',
+        title: AppLocale.updateYourPlanMenu.getString(context),
         subtitle: AppLocale.manageYourPlan
             .getString(context)
             .replaceFirst('{plan}', ''),
@@ -911,7 +911,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
     return Container(
       padding: EdgeInsets.all(16.r),
       decoration: BoxDecoration(
-        color: theme.cardColor.withValues(alpha: 0.25),
+        color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -984,7 +984,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
               children: [
                 TextSpan(text: AppLocale.learnMoreEcosystem.getString(context)),
                 TextSpan(
-                  text: 'neostation.com',
+                  text: 'neosync.cloud',
                   style: TextStyle(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
@@ -992,7 +992,7 @@ class NeoSyncContentState extends State<NeoSyncContent>
                   ),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () async {
-                      final url = Uri.parse('https://neogamelab.com');
+                      final url = Uri.parse('https://neosync.cloud');
                       if (await canLaunchUrl(url)) {
                         await launchUrl(url);
                       }
