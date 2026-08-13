@@ -56,9 +56,9 @@ class NeoGlass extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final glassTint =
-        tint ?? theme.scaffoldBackgroundColor.withValues(alpha: 0.60);
+        tint ?? theme.scaffoldBackgroundColor.withValues(alpha: 0.8);
     final border =
-        borderColor ?? theme.colorScheme.outline.withValues(alpha: 0.30);
+        borderColor ?? theme.colorScheme.outline.withValues(alpha: 0.2);
     final borderRadius = BorderRadius.circular(cornerRadius);
 
     Widget surface = DecoratedBox(
@@ -116,11 +116,23 @@ class _GlassRimPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (intensity <= 0) return;
 
+    // Rounded-rect outline inset by half the stroke width so the stroke sits
+    // fully inside the ClipRRect. A stroke centered on the outer outline gets
+    // its outer half clipped away at the corners, which reads as a jagged /
+    // aliased edge — the inset keeps the corner arc clean.
+    Path insetOutline(double strokeWidth) {
+      final inset = strokeWidth / 2;
+      final rect = (Offset.zero & size).deflate(inset);
+      return Path()
+        ..addRRect(
+          RRect.fromRectAndRadius(
+            rect,
+            Radius.circular((cornerRadius - inset).clamp(0.0, double.infinity)),
+          ),
+        );
+    }
+
     final bounds = Offset.zero & size;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(bounds, Radius.circular(cornerRadius)),
-      );
 
     // Light from the top-left. The rim stays light all around — it only fades
     // in strength towards the far edge, it never turns dark.
@@ -137,27 +149,31 @@ class _GlassRimPainter extends CustomPainter {
       stops: const [0.0, 0.3, 0.6, 0.9],
     ).createShader(bounds);
 
-    // Pass 1: soft outer glow — a uniform light sweep around the edge.
+    // Pass 1: soft outer glow — anti-aliased; the inset already keeps the
+    // corner arc clean, so no blur filter is needed (MaskFilter.blur would
+    // cost a Gaussian pass per surface on every repaint).
     canvas.drawPath(
-      path,
+      insetOutline(1.h),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.h
+        ..isAntiAlias = true
         ..shader = sweep,
     );
 
     // Pass 2: sharper inner rim, brightest near the light and fading to a
     // faint highlight on the far side — never dark.
     canvas.drawPath(
-      path,
+      insetOutline(0.7.h),
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.7.h
+        ..isAntiAlias = true
         ..shader = LinearGradient(
           begin: light,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.32 * intensity),
+            Colors.white.withValues(alpha: 0.64 * intensity),
             Colors.white.withValues(alpha: 0.16 * intensity),
             Colors.white.withValues(alpha: 0.08 * intensity),
           ],
