@@ -17,4 +17,4 @@ if (-not (Test-Path $EnvFile)) {
 # Step 3: Run with --no-pub so flutter run does NOT run pub get again
 # (which would recreate .plugin_symlinks as directories before the build)
 Write-Host "Loading environment from: $EnvFile" -ForegroundColor Cyan
-flutter run --release --no-pub --dart-define-from-file=$EnvFile @args
+flutter run --release --enable-impeller --no-pub --dart-define-from-file=$EnvFile @args

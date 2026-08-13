@@ -1242,105 +1242,112 @@ class _SystemGamesListState extends State<SystemGamesList> {
         MediaQuery.of(context).padding.bottom;
     final isMusic = widget.system.folderName == 'music';
 
-    return Stack(
-      children: [
-        // Full-screen ambient fanart + overlay combined in a single layer
-        // to avoid flickering caused by separate Positioned.fill compositing.
-        if (!isMusic && _selectedGame != null)
-          Positioned.fill(
-            child: RepaintBoundary(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _buildGameFanartBackground(
-                    _selectedGame!,
-                    artworkVersion: _artworkVersion,
-                  ),
-                  Container(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.shadow.withValues(alpha: 0.2),
-                  ),
-                ],
-              ),
+    // The backdrop the glass refracts: the full-screen fanart + dim layer.
+    // On Impeller the lens reads this live; on Skia this is what LiquidGlassView
+    // captures for the lens to refract, which is what gives the Windows build
+    // the same optical borders as Android.
+    final Widget backdrop = (!isMusic && _selectedGame != null)
+        ? RepaintBoundary(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _buildGameFanartBackground(
+                  _selectedGame!,
+                  artworkVersion: _artworkVersion,
+                ),
+                Container(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.2),
+                ),
+              ],
             ),
+          )
+        : const SizedBox.expand();
+
+    return LiquidGlassView(
+      backgroundWidget: backdrop,
+      // Skia capture pipeline: async capture at 0.6x keeps it light on desktop.
+      useSync: false,
+      pixelRatio: 0.6,
+      child: Stack(
+        children: [
+          // Main content row: list panel + details panel.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Sidebar: Interactive list of games or music tracks.
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                width: 200.r,
+                height: availableHeight,
+                margin: EdgeInsets.only(
+                  left: GameLegendVisibility.hidden.value ? 12.r : 60.r,
+                  top: 12.r,
+                  bottom: 12.r,
+                ),
+                // Liquid glass pane over the fanart: the lens blurs and tints
+                // whatever sits behind it (the selected game's artwork).
+                child: LiquidGlassLens(
+                  style: LiquidChrome.style(
+                    context,
+                    cornerRadius:
+                        Theme.of(
+                          context,
+                        ).extension<CornerRadii>()?.radiusExternalRadius ??
+                        14.r,
+                  ),
+                  child: _buildGamesListPanel(),
+                ),
+              ),
+              // Main Viewport: Rich metadata, video previews, and launch controls.
+              Expanded(
+                child: SizedBox(
+                  height: availableHeight,
+                  child: _buildGameDetailsPanel(),
+                ),
+              ),
+            ],
           ),
 
-        // Main content row: list panel + details panel.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Sidebar: Interactive list of games or music tracks.
-            AnimatedContainer(
+          // Floating action buttons on the left side of the game list. Select + B
+          // slides this legend off the left edge (in sync with the sidebar
+          // margin). The column is 40.r wide, so a 10.r inset centres it in the
+          // 60.r gutter — equal air either side of it.
+          if (!isMusic)
+            AnimatedPositioned(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              width: 200.r,
-              height: availableHeight,
-              margin: EdgeInsets.only(
-                left: GameLegendVisibility.hidden.value ? 12.r : 60.r,
-                top: 12.r,
-                bottom: 12.r,
-              ),
-              // Liquid glass pane over the fanart: the lens blurs and tints
-              // whatever sits behind it (the selected game's artwork).
-              child: LiquidGlassLens(
-                style: LiquidChrome.style(
-                  context,
-                  cornerRadius:
-                      Theme.of(
-                        context,
-                      ).extension<CornerRadii>()?.radiusExternalRadius ??
-                      14.r,
+              top: 12.r,
+              left: GameLegendVisibility.hidden.value ? -60.r : 10.r,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 250),
+                opacity: GameLegendVisibility.hidden.value ? 0.0 : 1.0,
+                child: Consumer<SyncManager>(
+                  builder: (context, syncManager, child) {
+                    return GameActionButtons(
+                      system: widget.system,
+                      selectedGame: _selectedGame,
+                      syncProvider: syncManager.active,
+                      onBack: _goBack,
+                      onFavorite: _toggleFavorite,
+                      onViewMode: () => GameViewModeDropdown
+                          .globalKey
+                          .currentState
+                          ?.showDropdown(),
+                      onSettings: _openGameSettingsDialog,
+                      onRandom: _showRandomGameDialog,
+                      onScrape: () => _scrapeAction?.call(),
+                    );
+                  },
                 ),
-                child: _buildGamesListPanel(),
               ),
             ),
-            // Main Viewport: Rich metadata, video previews, and launch controls.
-            Expanded(
-              child: SizedBox(
-                height: availableHeight,
-                child: _buildGameDetailsPanel(),
-              ),
-            ),
-          ],
-        ),
-
-        // Floating action buttons on the left side of the game list. Select + B
-        // slides this legend off the left edge (in sync with the sidebar
-        // margin). The column is 40.r wide, so a 10.r inset centres it in the
-        // 60.r gutter — equal air either side of it.
-        if (!isMusic)
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            top: 12.r,
-            left: GameLegendVisibility.hidden.value ? -60.r : 10.r,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 250),
-              opacity: GameLegendVisibility.hidden.value ? 0.0 : 1.0,
-              child: Consumer<SyncManager>(
-                builder: (context, syncManager, child) {
-                  return GameActionButtons(
-                    system: widget.system,
-                    selectedGame: _selectedGame,
-                    syncProvider: syncManager.active,
-                    onBack: _goBack,
-                    onFavorite: _toggleFavorite,
-                    onViewMode: () => GameViewModeDropdown
-                        .globalKey
-                        .currentState
-                        ?.showDropdown(),
-                    onSettings: _openGameSettingsDialog,
-                    onRandom: _showRandomGameDialog,
-                    onScrape: () => _scrapeAction?.call(),
-                  );
-                },
-              ),
-            ),
-          ),
-        // Touch: swipe-right from the left edge reveals a hidden legend.
-        const LegendEdgeReshowZone(),
-      ],
+          // Touch: swipe-right from the left edge reveals a hidden legend.
+          const LegendEdgeReshowZone(),
+        ],
+      ),
     );
   }
 

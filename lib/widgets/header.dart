@@ -240,7 +240,8 @@ class HeaderState extends State<Header> {
 
                               return Stack(
                                 children: [
-                                  // Moving indicator
+                                  // Moving indicator: liquid glass tinted with
+                                  // the primary color at partial transparency.
                                   AnimatedPositioned(
                                     left:
                                         (selectedSlot < 0 ? 0 : selectedSlot) *
@@ -250,17 +251,16 @@ class HeaderState extends State<Header> {
                                     width: 32.r,
                                     duration: const Duration(milliseconds: 160),
                                     curve: Curves.easeInOut,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        borderRadius:
+                                    child: LiquidGlassLens(
+                                      style: LiquidChrome.selector(
+                                        context,
+                                        cornerRadius:
                                             Theme.of(context)
                                                 .extension<CornerRadii>()
-                                                ?.radiusInternal ??
-                                            BorderRadius.circular(4.r),
+                                                ?.radiusInternalRadius ??
+                                            4.r,
                                       ),
+                                      child: const SizedBox.expand(),
                                     ),
                                   ),
                                   // Tab buttons

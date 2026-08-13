@@ -59,17 +59,46 @@ abstract final class LiquidChrome {
     return LiquidGlassStyle(
       shape: LiquidGlassShape.continuousRoundedRectangle(
         cornerRadius: cornerRadius,
-        borderWidth: 1,
-        lightIntensity: 0.6,
+        borderWidth: 1.0,
+        lightIntensity: 1.0,
+        lightDirection: 0,
       ),
       appearance: LiquidGlassAppearance(
         color: tint(context),
-        blur: const LiquidGlassBlur(sigmaX: 8, sigmaY: 8),
-        saturation: 1.5,
+        blur: const LiquidGlassBlur(sigmaX: 2, sigmaY: 2),
+        saturation: 1.2,
       ),
       refraction: LiquidGlassRefraction(
-        distortion: 0.75,
-        distortionWidth: 20,
+        distortion: 0.1,
+        distortionWidth: 15,
+        magnification: 0.99,
+        chromaticAberration: 0.003,
+        diagonalFlip: 0,
+        refractionMode: LiquidGlassRefractionMode.shapeRefraction,
+      ),
+    );
+  }
+
+  /// Style for the sliding tab selector: liquid glass tinted with the theme's
+  /// primary color at partial transparency, so it reads as frosted primary
+  /// glass rather than a solid block.
+  static LiquidGlassStyle selector(
+    BuildContext context, {
+    double cornerRadius = 6,
+  }) {
+    return LiquidGlassStyle(
+      shape: LiquidGlassShape.continuousRoundedRectangle(
+        cornerRadius: cornerRadius,
+        borderWidth: 0,
+      ),
+      appearance: LiquidGlassAppearance(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.65),
+        blur: const LiquidGlassBlur(sigmaX: 2, sigmaY: 2),
+        saturation: 1.0,
+      ),
+      refraction: const LiquidGlassRefraction(
+        distortion: 0.0,
+        distortionWidth: 0,
         magnification: 1.0,
       ),
     );

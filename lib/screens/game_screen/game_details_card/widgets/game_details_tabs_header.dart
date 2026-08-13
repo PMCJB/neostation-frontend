@@ -57,8 +57,6 @@ class GameDetailsTabsHeader extends StatelessWidget {
         .indexOf(currentTab)
         .clamp(0, numTabs - 1);
 
-    final theme = Theme.of(context);
-
     return ClipRRect(
       child: Container(
         height: 46.r,
@@ -91,7 +89,9 @@ class GameDetailsTabsHeader extends StatelessWidget {
                     height: 36.r,
                     child: Stack(
                       children: [
-                        // Transition Cursor: Fluidly follows the active selection.
+                        // Transition Cursor: Fluidly follows the active
+                        // selection. Liquid glass tinted with the primary color
+                        // at partial transparency.
                         AnimatedPositioned(
                           duration: const Duration(milliseconds: 160),
                           curve: Curves.easeInOut,
@@ -99,15 +99,16 @@ class GameDetailsTabsHeader extends StatelessWidget {
                           top: 4.r,
                           bottom: 4.r,
                           width: tabWidth,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              borderRadius:
-                                  Theme.of(
-                                    context,
-                                  ).extension<CornerRadii>()?.radiusInternal ??
-                                  BorderRadius.circular(14.r),
+                          child: LiquidGlassLens(
+                            style: LiquidChrome.selector(
+                              context,
+                              cornerRadius:
+                                  Theme.of(context)
+                                      .extension<CornerRadii>()
+                                      ?.radiusInternalRadius ??
+                                  14.r,
                             ),
+                            child: const SizedBox.expand(),
                           ),
                         ),
                         Row(

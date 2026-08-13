@@ -44,11 +44,28 @@ class _NotificationBellState extends State<NotificationBell>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 0.4).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    _pulseController.repeat(reverse: true);
+    // Pulse only while there are notifications. Without this the controller
+    // repeats forever, ticking (and repainting the header glass lens behind
+    // it) every frame even when the bell is idle.
+    GlobalNotificationService().notifier.addListener(_syncPulse);
+    _syncPulse();
+  }
+
+  /// Starts/stops the bell pulse to match whether any notifications exist.
+  void _syncPulse() {
+    final hasNotifications =
+        GlobalNotificationService().notifier.value.isNotEmpty;
+    if (hasNotifications && !_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    } else if (!hasNotifications && _pulseController.isAnimating) {
+      _pulseController.stop();
+      _pulseController.value = 0; // back to the resting (fully opaque) value.
+    }
   }
 
   @override
   void dispose() {
+    GlobalNotificationService().notifier.removeListener(_syncPulse);
     _closeDropdown();
     _pulseController.dispose();
     super.dispose();
