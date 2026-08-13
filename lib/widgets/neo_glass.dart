@@ -22,9 +22,8 @@ class NeoGlass extends StatelessWidget {
     this.cornerRadius = 14,
     this.blur = 3,
     this.tint,
-    this.borderColor,
     this.padding,
-    this.rimIntensity = 0.45,
+    this.rimIntensity = 0.5,
   });
 
   final Widget child;
@@ -43,30 +42,29 @@ class NeoGlass extends StatelessWidget {
   /// scaffold-background tint.
   final Color? tint;
 
-  /// Hairline border color. Defaults to a subtle outline.
-  final Color? borderColor;
-
   /// Inset applied inside the glass around [child].
   final EdgeInsetsGeometry? padding;
 
-  /// Strength of the specular rim highlight (0.0–1.0).
+  /// Strength of the specular rim highlight (0.0–1.0). The rim blends with the
+  /// image behind the glass, so it appears as the backdrop colour lifted
+  /// brighter.
   final double rimIntensity;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Semi-transparent so the image behind shows through and the rim (drawn
+    // beneath it) glows with the backdrop's colours.
     final glassTint =
         tint ?? theme.scaffoldBackgroundColor.withValues(alpha: 0.8);
-    final border =
-        borderColor ?? theme.colorScheme.outline.withValues(alpha: 0.2);
     final borderRadius = BorderRadius.circular(cornerRadius);
 
-    Widget surface = DecoratedBox(
-      decoration: BoxDecoration(
-        color: glassTint,
-        border: Border.all(color: border, width: 1.h),
-        borderRadius: borderRadius,
-      ),
+    // Layered so the rim can sit OUTSIDE the card:
+    //  1. the frosted surface is clipped to the rounded shape
+    //  2. the rim is painted over/around it (blend modes reach the backdrop
+    //     image behind the card), extending beyond the card's edge.
+    Widget surface = ColoredBox(
+      color: glassTint,
       child: padding != null ? Padding(padding: padding!, child: child) : child,
     );
 
@@ -79,26 +77,26 @@ class NeoGlass extends StatelessWidget {
       );
     }
 
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: Stack(
-        children: [
-          surface,
-          // Specular rim: a light-gradient stroke around the glass edge, drawn
-          // in pure Canvas (cheap, no shader). Mirrors the "optical border"
-          // look of the liquid-glass packages without the GPU cost.
-          Positioned.fill(
-            child: IgnorePointer(
-              child: CustomPaint(
-                painter: _GlassRimPainter(
-                  cornerRadius: cornerRadius,
-                  intensity: rimIntensity,
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: borderRadius,
+          child: surface,
+        ),
+        // External rim: drawn outside the clipped surface so the border sits
+        // around the card, blending with the backdrop image behind it.
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(
+              painter: _GlassRimPainter(
+                cornerRadius: cornerRadius,
+                intensity: rimIntensity,
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -116,18 +114,17 @@ class _GlassRimPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (intensity <= 0) return;
 
-    // Rounded-rect outline inset by half the stroke width so the stroke sits
-    // fully inside the ClipRRect. A stroke centered on the outer outline gets
-    // its outer half clipped away at the corners, which reads as a jagged /
-    // aliased edge — the inset keeps the corner arc clean.
-    Path insetOutline(double strokeWidth) {
-      final inset = strokeWidth / 2;
-      final rect = (Offset.zero & size).deflate(inset);
+    // Rounded-rect outline offset OUTWARD by half the stroke width, so the
+    // whole border sits outside the card's edge (external, not inset/middle).
+    // The rim is painted outside the ClipRRect, so nothing clips it.
+    Path outsetOutline(double strokeWidth) {
+      final extent = strokeWidth / 2;
+      final rect = (Offset.zero & size).inflate(extent);
       return Path()
         ..addRRect(
           RRect.fromRectAndRadius(
             rect,
-            Radius.circular((cornerRadius - inset).clamp(0.0, double.infinity)),
+            Radius.circular(cornerRadius + extent),
           ),
         );
     }
@@ -141,41 +138,43 @@ class _GlassRimPainter extends CustomPainter {
       begin: light,
       end: Alignment.bottomRight,
       colors: [
-        Colors.white.withValues(alpha: 0.48 * intensity),
-        Colors.white.withValues(alpha: 0.32 * intensity),
-        Colors.white.withValues(alpha: 0.16 * intensity),
-        Colors.white.withValues(alpha: 0.24 * intensity),
+        Colors.white.withValues(alpha: 0.60 * intensity),
+        Colors.white.withValues(alpha: 0.40 * intensity),
+        Colors.white.withValues(alpha: 0.20 * intensity),
+        Colors.white.withValues(alpha: 0.35 * intensity),
       ],
       stops: const [0.0, 0.3, 0.6, 0.9],
     ).createShader(bounds);
 
-    // Pass 1: soft outer glow — anti-aliased; the inset already keeps the
-    // corner arc clean, so no blur filter is needed (MaskFilter.blur would
-    // cost a Gaussian pass per surface on every repaint).
+    // Pass 1: soft outer glow — composited with BlendMode.overlay over the
+    // image behind the glass, so the edge reads as the backdrop colour lifted
+    // brighter (overlay preserves the hue instead of washing it to white).
     canvas.drawPath(
-      insetOutline(1.h),
+      outsetOutline(1.2.h),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.h
+        ..strokeWidth = 1.2.h
         ..isAntiAlias = true
+        ..blendMode = BlendMode.overlay
         ..shader = sweep,
     );
 
-    // Pass 2: sharper inner rim, brightest near the light and fading to a
-    // faint highlight on the far side — never dark.
+    // Pass 2: sharper inner border line — backdrop-tinted via overlay, brightest
+    // near the light and fading to a faint highlight on the far side.
     canvas.drawPath(
-      insetOutline(0.7.h),
+      outsetOutline(0.9.h),
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 0.7.h
+        ..strokeWidth = 0.9.h
         ..isAntiAlias = true
+        ..blendMode = BlendMode.overlay
         ..shader = LinearGradient(
           begin: light,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: 0.64 * intensity),
-            Colors.white.withValues(alpha: 0.16 * intensity),
-            Colors.white.withValues(alpha: 0.08 * intensity),
+            Colors.white.withValues(alpha: 0.70 * intensity),
+            Colors.white.withValues(alpha: 0.35 * intensity),
+            Colors.white.withValues(alpha: 0.20 * intensity),
           ],
           stops: const [0.0, 0.5, 1.0],
         ).createShader(bounds),
