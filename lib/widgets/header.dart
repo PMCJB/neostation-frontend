@@ -20,8 +20,7 @@ import 'package:neostation/utils/time_format.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
 import '../themes/corner_radii.dart';
-import '../themes/liquid_chrome.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+import 'neo_glass.dart';
 
 class Header extends StatefulWidget {
   final int selectedTabIndex;
@@ -212,16 +211,13 @@ class HeaderState extends State<Header> {
                     // Bumper glyphs sit outside the pill so the pill reads as a
                     // single switch and the hardware hints stay distinct from it.
                     _buildShoulderButton('LB', true),
-                    // Liquid glass pill for the tab strip.
-                    LiquidGlassLens(
-                      style: LiquidChrome.style(
-                        context,
-                        cornerRadius:
-                            Theme.of(
-                              context,
-                            ).extension<CornerRadii>()?.radiusExternalRadius ??
-                            8.r,
-                      ),
+                    // Frosted glass pill for the tab strip (native NeoGlass).
+                    NeoGlass(
+                      cornerRadius:
+                          Theme.of(
+                            context,
+                          ).extension<CornerRadii>()?.radiusExternalRadius ??
+                          8.r,
                       child: SizedBox(
                         height: 32.r,
                         child: Padding(
@@ -240,8 +236,8 @@ class HeaderState extends State<Header> {
 
                               return Stack(
                                 children: [
-                                  // Moving indicator: liquid glass tinted with
-                                  // the primary color at partial transparency.
+                                  // Moving indicator: translucent primary tint
+                                  // (native, cheap — no nested blur).
                                   AnimatedPositioned(
                                     left:
                                         (selectedSlot < 0 ? 0 : selectedSlot) *
@@ -251,16 +247,19 @@ class HeaderState extends State<Header> {
                                     width: 32.r,
                                     duration: const Duration(milliseconds: 160),
                                     curve: Curves.easeInOut,
-                                    child: LiquidGlassLens(
-                                      style: LiquidChrome.selector(
-                                        context,
-                                        cornerRadius:
-                                            Theme.of(context)
-                                                .extension<CornerRadii>()
-                                                ?.radiusInternalRadius ??
-                                            4.r,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withValues(alpha: 0.65),
+                                        borderRadius: BorderRadius.circular(
+                                          Theme.of(context)
+                                                  .extension<CornerRadii>()
+                                                  ?.radiusInternalRadius ??
+                                              4.r,
+                                        ),
                                       ),
-                                      child: const SizedBox.expand(),
                                     ),
                                   ),
                                   // Tab buttons
@@ -301,65 +300,60 @@ class HeaderState extends State<Header> {
                 alignment: Alignment.centerRight,
                 child: Padding(
                   padding: EdgeInsets.only(right: 8.r),
-                  child: LiquidGlassLens(
-                    style: LiquidChrome.style(
-                      context,
-                      cornerRadius:
-                          Theme.of(
-                            context,
-                          ).extension<CornerRadii>()?.radiusExternalRadius ??
-                          14.r,
+                  child: NeoGlass(
+                    cornerRadius:
+                        Theme.of(
+                          context,
+                        ).extension<CornerRadii>()?.radiusExternalRadius ??
+                        14.r,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.r,
-                        vertical: 4.r,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const NotificationBell(),
-                          SizedBox(width: 10.r),
-                          Icon(
-                            Symbols.schedule,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const NotificationBell(),
+                        SizedBox(width: 10.r),
+                        Icon(
+                          Symbols.schedule,
+                          color: Theme.of(context).colorScheme.onSurface,
+                          size: 14.r,
+                        ),
+                        SizedBox(width: 4.r),
+                        Text(
+                          formatClockTime(
+                            _now,
+                            use12Hour: configProvider.config.use12HourClock,
+                          ),
+                          style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            size: 14.r,
+                            fontSize: 12.r,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.3.r,
+                          ),
+                        ),
+                        if (_batteryLevel != -1 &&
+                            !_isTelevision &&
+                            !Responsive.isHandheldXS(context)) ...[
+                          SizedBox(width: 12.r),
+                          Icon(
+                            _getBatteryIconData(),
+                            color: _getBatteryColor(customColors),
+                            size: 16.r,
                           ),
                           SizedBox(width: 4.r),
                           Text(
-                            formatClockTime(
-                              _now,
-                              use12Hour: configProvider.config.use12HourClock,
-                            ),
+                            "$_batteryLevel%",
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: _getBatteryColor(customColors),
                               fontSize: 12.r,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.3.r,
                             ),
                           ),
-                          if (_batteryLevel != -1 &&
-                              !_isTelevision &&
-                              !Responsive.isHandheldXS(context)) ...[
-                            SizedBox(width: 12.r),
-                            Icon(
-                              _getBatteryIconData(),
-                              color: _getBatteryColor(customColors),
-                              size: 16.r,
-                            ),
-                            SizedBox(width: 4.r),
-                            Text(
-                              "$_batteryLevel%",
-                              style: TextStyle(
-                                color: _getBatteryColor(customColors),
-                                fontSize: 12.r,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.3.r,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),

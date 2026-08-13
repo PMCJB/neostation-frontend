@@ -11,10 +11,9 @@ import '../../../../models/game_model.dart';
 import '../../../../models/retro_achievements_game_info.dart';
 import '../../../../sync/i_sync_provider.dart';
 import '../../../../themes/corner_radii.dart';
-import '../../../../themes/liquid_chrome.dart';
 import '../../../../utils/game_utils.dart';
 import '../../../../widgets/marquee_text.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+import '../../../../widgets/neo_glass.dart';
 import '../../music/music_player.dart';
 
 /// A sticky footer component for the game details card that provides actionable controls and status summaries.
@@ -334,15 +333,12 @@ class GameDetailsFooter extends StatelessWidget {
           tween: Tween<double>(end: expand ? 1.0 : 0.0),
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          builder: (context, t, child) => LiquidGlassLens(
-            style: LiquidChrome.style(
-              context,
-              cornerRadius:
-                  Theme.of(
-                    context,
-                  ).extension<CornerRadii>()?.radiusExternalRadius ??
-                  14.r,
-            ),
+          builder: (context, t, child) => NeoGlass(
+            cornerRadius:
+                Theme.of(
+                  context,
+                ).extension<CornerRadii>()?.radiusExternalRadius ??
+                14.r,
             child: SizedBox(
               width: 120.r + (availableWidth - 120.r) * t,
               height: 45.r,
@@ -457,13 +453,10 @@ class _SteamStyleRating extends StatelessWidget {
       colorRatio,
     )!;
 
-    return LiquidGlassLens(
-      style: LiquidChrome.style(
-        context,
-        cornerRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
-            14.r,
-      ),
+    return NeoGlass(
+      cornerRadius:
+          Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
+          14.r,
       child: SizedBox(
         height: 45.r,
         child: Padding(
@@ -526,13 +519,10 @@ class _PlayTimePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LiquidGlassLens(
-      style: LiquidChrome.style(
-        context,
-        cornerRadius:
-            Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
-            14.r,
-      ),
+    return NeoGlass(
+      cornerRadius:
+          Theme.of(context).extension<CornerRadii>()?.radiusExternalRadius ??
+          14.r,
       child: SizedBox(
         height: 45.r,
         child: Padding(

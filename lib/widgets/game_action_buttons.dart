@@ -7,11 +7,10 @@ import '../models/system_model.dart';
 import '../services/game_legend_visibility.dart';
 import '../sync/i_sync_provider.dart';
 import '../themes/corner_radii.dart';
-import '../themes/liquid_chrome.dart';
 import '../utils/gamepad_nav.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'game_action_button.dart';
 import 'horizontal_swipe.dart';
+import 'neo_glass.dart';
 import 'neo_sync_status_icon.dart';
 
 /// Vertical action button column shared by the game list, grid, and carousel.
@@ -61,35 +60,30 @@ class GameActionButtons extends StatelessWidget {
           // handled by the host view. Hiding slides the column off-screen via
           // GameLegendVisibility.
           onSwipeLeft: GameLegendVisibility.hide,
-          child: LiquidGlassLens(
+          child: NeoGlass(
             // Same glass recipe as the game list panel beside it, so the rail
             // and the list read as one lit surface rather than two separate
             // cut-outs over the fanart.
-            style: LiquidChrome.style(
-              context,
-              cornerRadius:
-                  Theme.of(
-                    context,
-                  ).extension<CornerRadii>()?.radiusExternalRadius ??
-                  14.r,
-            ),
-            child: Padding(
-              padding: EdgeInsets.all(6.r),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Touch affordance for the Select (View) modifier: tapping it
-                  // latches the chord layer on/off, mirroring holding Select on a
-                  // gamepad, so touchscreen users can reach the chord shortcuts.
-                  if (_hasChordActions) ...[
-                    _buildViewToggle(context, active: selectHeld),
-                    SizedBox(height: 6.r),
-                  ],
-                  ...(selectHeld
-                      ? _buildChordButtons(context)
-                      : _buildDefaultButtons(context)),
+            cornerRadius:
+                Theme.of(
+                  context,
+                ).extension<CornerRadii>()?.radiusExternalRadius ??
+                14.r,
+            padding: const EdgeInsets.all(6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Touch affordance for the Select (View) modifier: tapping it
+                // latches the chord layer on/off, mirroring holding Select on a
+                // gamepad, so touchscreen users can reach the chord shortcuts.
+                if (_hasChordActions) ...[
+                  _buildViewToggle(context, active: selectHeld),
+                  SizedBox(height: 6.r),
                 ],
-              ),
+                ...(selectHeld
+                    ? _buildChordButtons(context)
+                    : _buildDefaultButtons(context)),
+              ],
             ),
           ),
         );

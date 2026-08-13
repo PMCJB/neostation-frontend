@@ -3,10 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:neostation/services/sfx_service.dart';
 import 'package:neostation/widgets/bumper_glyph.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 
 import '../../../../themes/corner_radii.dart';
-import '../../../../themes/liquid_chrome.dart';
+import '../../../../widgets/neo_glass.dart';
 
 /// Defines the navigable sections within the game details card.
 enum DetailTab { wheel, box2d, screenshotVideo, gameInfo, achievements }
@@ -71,15 +70,12 @@ class GameDetailsTabsHeader extends StatelessWidget {
             SizedBox(width: 6.r),
 
             // Tab Navigation Group: Hardware-mapped navigation controls.
-            LiquidGlassLens(
-              style: LiquidChrome.style(
-                context,
-                cornerRadius:
-                    Theme.of(
-                      context,
-                    ).extension<CornerRadii>()?.radiusExternalRadius ??
-                    12.r,
-              ),
+            NeoGlass(
+              cornerRadius:
+                  Theme.of(
+                    context,
+                  ).extension<CornerRadii>()?.radiusExternalRadius ??
+                  12.r,
               child: SizedBox(
                 height: 36.r,
                 child: Padding(
@@ -90,8 +86,8 @@ class GameDetailsTabsHeader extends StatelessWidget {
                     child: Stack(
                       children: [
                         // Transition Cursor: Fluidly follows the active
-                        // selection. Liquid glass tinted with the primary color
-                        // at partial transparency.
+                        // selection. Translucent primary tint (native, cheap —
+                        // a nested glass would double the blur).
                         AnimatedPositioned(
                           duration: const Duration(milliseconds: 160),
                           curve: Curves.easeInOut,
@@ -99,16 +95,18 @@ class GameDetailsTabsHeader extends StatelessWidget {
                           top: 4.r,
                           bottom: 4.r,
                           width: tabWidth,
-                          child: LiquidGlassLens(
-                            style: LiquidChrome.selector(
-                              context,
-                              cornerRadius:
-                                  Theme.of(context)
-                                      .extension<CornerRadii>()
-                                      ?.radiusInternalRadius ??
-                                  14.r,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.65),
+                              borderRadius: BorderRadius.circular(
+                                Theme.of(context)
+                                        .extension<CornerRadii>()
+                                        ?.radiusInternalRadius ??
+                                    14.r,
+                              ),
                             ),
-                            child: const SizedBox.expand(),
                           ),
                         ),
                         Row(

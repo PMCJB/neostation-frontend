@@ -54,8 +54,7 @@ import '../../utils/artwork_cache.dart';
 import '../../utils/game_list_update.dart';
 import 'package:neostation/themes/chrome_surface.dart';
 import '../../themes/corner_radii.dart';
-import '../../themes/liquid_chrome.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+import '../../widgets/neo_glass.dart';
 
 part 'my_games_list/gamepad_nav.dart';
 part 'my_games_list/favorites_reorder.dart';
@@ -1243,9 +1242,6 @@ class _SystemGamesListState extends State<SystemGamesList> {
     final isMusic = widget.system.folderName == 'music';
 
     // The backdrop the glass refracts: the full-screen fanart + dim layer.
-    // On Impeller the lens reads this live; on Skia this is what LiquidGlassView
-    // captures for the lens to refract, which is what gives the Windows build
-    // the same optical borders as Android.
     final Widget backdrop = (!isMusic && _selectedGame != null)
         ? RepaintBoundary(
             child: Stack(
@@ -1265,89 +1261,84 @@ class _SystemGamesListState extends State<SystemGamesList> {
           )
         : const SizedBox.expand();
 
-    return LiquidGlassView(
-      backgroundWidget: backdrop,
-      // Skia capture pipeline: async capture at 0.6x keeps it light on desktop.
-      useSync: false,
-      pixelRatio: 0.6,
-      child: Stack(
-        children: [
-          // Main content row: list panel + details panel.
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Sidebar: Interactive list of games or music tracks.
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                curve: Curves.easeOutCubic,
-                width: 200.r,
-                height: availableHeight,
-                margin: EdgeInsets.only(
-                  left: GameLegendVisibility.hidden.value ? 12.r : 60.r,
-                  top: 12.r,
-                  bottom: 12.r,
-                ),
-                // Liquid glass pane over the fanart: the lens blurs and tints
-                // whatever sits behind it (the selected game's artwork).
-                child: LiquidGlassLens(
-                  style: LiquidChrome.style(
-                    context,
-                    cornerRadius:
-                        Theme.of(
-                          context,
-                        ).extension<CornerRadii>()?.radiusExternalRadius ??
-                        14.r,
-                  ),
-                  child: _buildGamesListPanel(),
-                ),
-              ),
-              // Main Viewport: Rich metadata, video previews, and launch controls.
-              Expanded(
-                child: SizedBox(
-                  height: availableHeight,
-                  child: _buildGameDetailsPanel(),
-                ),
-              ),
-            ],
-          ),
+    return Stack(
+      children: [
+        // Full-screen ambient fanart + overlay combined in a single layer
+        // to avoid flickering caused by separate Positioned.fill compositing.
+        if (!isMusic && _selectedGame != null) Positioned.fill(child: backdrop),
 
-          // Floating action buttons on the left side of the game list. Select + B
-          // slides this legend off the left edge (in sync with the sidebar
-          // margin). The column is 40.r wide, so a 10.r inset centres it in the
-          // 60.r gutter — equal air either side of it.
-          if (!isMusic)
-            AnimatedPositioned(
+        // Main content row: list panel + details panel.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Sidebar: Interactive list of games or music tracks.
+            AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              top: 12.r,
-              left: GameLegendVisibility.hidden.value ? -60.r : 10.r,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 250),
-                opacity: GameLegendVisibility.hidden.value ? 0.0 : 1.0,
-                child: Consumer<SyncManager>(
-                  builder: (context, syncManager, child) {
-                    return GameActionButtons(
-                      system: widget.system,
-                      selectedGame: _selectedGame,
-                      syncProvider: syncManager.active,
-                      onBack: _goBack,
-                      onFavorite: _toggleFavorite,
-                      onViewMode: () => GameViewModeDropdown
-                          .globalKey
-                          .currentState
-                          ?.showDropdown(),
-                      onSettings: _openGameSettingsDialog,
-                      onRandom: _showRandomGameDialog,
-                      onScrape: () => _scrapeAction?.call(),
-                    );
-                  },
-                ),
+              width: 200.r,
+              height: availableHeight,
+              margin: EdgeInsets.only(
+                left: GameLegendVisibility.hidden.value ? 12.r : 60.r,
+                top: 12.r,
+                bottom: 12.r,
+              ),
+              // Frosted glass pane over the fanart: a single engine blur +
+              // tint + rim (native NeoGlass, no refraction shader).
+              child: NeoGlass(
+                cornerRadius:
+                    Theme.of(
+                      context,
+                    ).extension<CornerRadii>()?.radiusExternalRadius ??
+                    14.r,
+                child: _buildGamesListPanel(),
               ),
             ),
-          // Touch: swipe-right from the left edge reveals a hidden legend.
-          const LegendEdgeReshowZone(),
-        ],
-      ),
+            // Main Viewport: Rich metadata, video previews, and launch controls.
+            Expanded(
+              child: SizedBox(
+                height: availableHeight,
+                child: _buildGameDetailsPanel(),
+              ),
+            ),
+          ],
+        ),
+
+        // Floating action buttons on the left side of the game list. Select + B
+        // slides this legend off the left edge (in sync with the sidebar
+        // margin). The column is 40.r wide, so a 10.r inset centres it in the
+        // 60.r gutter — equal air either side of it.
+        if (!isMusic)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            top: 12.r,
+            left: GameLegendVisibility.hidden.value ? -60.r : 10.r,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: GameLegendVisibility.hidden.value ? 0.0 : 1.0,
+              child: Consumer<SyncManager>(
+                builder: (context, syncManager, child) {
+                  return GameActionButtons(
+                    system: widget.system,
+                    selectedGame: _selectedGame,
+                    syncProvider: syncManager.active,
+                    onBack: _goBack,
+                    onFavorite: _toggleFavorite,
+                    onViewMode: () => GameViewModeDropdown
+                        .globalKey
+                        .currentState
+                        ?.showDropdown(),
+                    onSettings: _openGameSettingsDialog,
+                    onRandom: _showRandomGameDialog,
+                    onScrape: () => _scrapeAction?.call(),
+                  );
+                },
+              ),
+            ),
+          ),
+        // Touch: swipe-right from the left edge reveals a hidden legend.
+        const LegendEdgeReshowZone(),
+      ],
     );
   }
 

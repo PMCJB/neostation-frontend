@@ -10,7 +10,6 @@ import 'package:neostation/widgets/update_dialog.dart';
 import 'package:neostation/widgets/systems_update_dialog.dart';
 import 'package:neostation/services/logger_service.dart';
 import '../widgets/fixed_header.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'systems_screen/system_content.dart';
 import 'systems_screen/my_systems_section/initial_setup_widget.dart';
 import 'search_screen/search_screen.dart';
@@ -90,11 +89,6 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
 
   /// Currently active top-level navigation tab index.
   int _selectedTabIndex = 0;
-
-  /// Controller for the header's liquid glass capture view (Skia only — a
-  /// no-op on Impeller, where lenses read the live backdrop directly).
-  final LiquidGlassViewController _glassController =
-      LiquidGlassViewController();
 
   /// Internal state tracker for system selection within the System tab.
   int _selectedSystemIndex = 0;
@@ -604,58 +598,45 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
         return PopScope(
           canPop: false, // Intercept hardware back button to maintain app flow.
           child: Scaffold(
-            // Liquid glass for the global header: the tab content + solid
-            // background are captured as the refraction source, and the header
-            // (with its LiquidGlassLens pills) refracts that snapshot.
-            body: LiquidGlassView(
-              controller: _glassController,
-              // Live capture on Skia (Windows) so the header refraction follows
-              // the scrolling grid; on Impeller (Android) this view is a no-op
-              // and the lenses read the live backdrop directly. Throttled to
-              // ~24 FPS so the desktop capture stays cheap.
-              realTimeCapture: true,
-              refreshRate: LiquidGlassRefreshRate.medium,
-              useSync: true,
-              pixelRatio: 0.6,
-              backgroundWidget: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
+            body: Stack(
+              children: [
+                // Background Layer.
+                Positioned.fill(
+                  child: Container(
                     color: Theme.of(context).scaffoldBackgroundColor,
                   ),
-                  _buildCurrentTabContent(),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Global Header: Managed based on app initialization state.
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child:
-                        (configProvider.initialized || !configProvider.isLoading)
-                        ? FixedHeader(
-                            selectedTabIndex: _selectedTabIndex,
-                            onTabSelected: _onTabSelected,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
+                ),
 
-                  // Global Footer Placeholder.
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child:
-                        configProvider.hasRomFolder &&
-                            !configProvider.isLoading &&
-                            !configProvider.isScanning
-                        ? _buildFooterForCurrentTab()
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
+                // Main Content Layer.
+                Positioned.fill(child: _buildCurrentTabContent()),
+
+                // Global Header: Managed based on app initialization state.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child:
+                      (configProvider.initialized || !configProvider.isLoading)
+                      ? FixedHeader(
+                          selectedTabIndex: _selectedTabIndex,
+                          onTabSelected: _onTabSelected,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+
+                // Global Footer Placeholder.
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child:
+                      configProvider.hasRomFolder &&
+                          !configProvider.isLoading &&
+                          !configProvider.isScanning
+                      ? _buildFooterForCurrentTab()
+                      : const SizedBox.shrink(),
+                ),
+              ],
             ),
           ),
         );
