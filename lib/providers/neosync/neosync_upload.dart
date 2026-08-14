@@ -140,7 +140,10 @@ extension NeoSyncUpload on NeoSyncProvider {
       // 3. Collect user-configured custom save folders (ARMSX2, ARMSX1, etc.)
       // from the NeoSync module. Each entry carries its system + emulator slug
       // so the cloud path identifies the emulator that produced the save.
-      final customFiles = <({File file, String system, String emulatorSlug})>[];
+      final customFiles =
+          <
+            ({File file, String system, String emulatorSlug, String folderRoot})
+          >[];
       try {
         final systems = await SystemRepository.getAllSystems();
         for (final system in systems) {
@@ -155,6 +158,7 @@ extension NeoSyncUpload on NeoSyncProvider {
                 file: file,
                 system: system.folderName,
                 emulatorSlug: entry.key,
+                folderRoot: entry.value,
               ));
             }
           }
@@ -203,7 +207,7 @@ extension NeoSyncUpload on NeoSyncProvider {
       for (final entry in customFiles) {
         await _processAutoUploadFile(
           entry.file,
-          entry.file.parent.path,
+          entry.folderRoot,
           isState: false,
           customFolderSystem: entry.system,
           customFolderEmulatorSlug: entry.emulatorSlug,
@@ -296,11 +300,17 @@ extension NeoSyncUpload on NeoSyncProvider {
       String? syncSystemId;
       String? syncEmulatorId;
       if (customFolderSystem != null && customFolderEmulatorSlug != null) {
+        // The configured folder root is the basePath for custom folders, so a
+        // nested layout (e.g. `memcards/slot1/Mcd001.ps2`) is preserved on the
+        // cloud path instead of collapsing every file to its basename.
+        final relativeToFolder = path
+            .relative(file.path, from: basePath)
+            .replaceAll('\\', '/');
         relativePath = CloudPathBuilder.build(
           system: customFolderSystem,
           emulatorSlug: customFolderEmulatorSlug,
           scope: 'shared',
-          filePath: path.basename(file.path),
+          filePath: relativeToFolder,
         );
         syncSystemId = customFolderSystem;
         syncEmulatorId = customFolderEmulatorSlug;
@@ -320,9 +330,7 @@ extension NeoSyncUpload on NeoSyncProvider {
             lowerPath.endsWith('.vmu') ||
             lowerPath.endsWith('.vmp') ||
             lowerPath.contains('vmu_save');
-        final gameRow = await GameRepository.findRomByFilenamePrefix(
-          '$fileName%',
-        );
+        final gameRow = await GameRepository.findRomForSaveName(fileName);
         if (gameRow == null && !isSharedCard) {
           _skippedFiles++;
           _processedItems.add(
@@ -351,12 +359,18 @@ extension NeoSyncUpload on NeoSyncProvider {
         // otherwise trust the emulator's own system (a save from a NES core can
         // never belong to cps1, no matter what the game metadata says).
         system = await _reconcileEmulatorSystem(system, emulatorSlug);
+        // Memory-card style files are shared between games, matching the
+        // `_buildV2CloudPath` behaviour: they go under the `shared` scope with
+        // no game segment so the download routes them to the configured custom
+        // folder.
         relativePath = CloudPathBuilder.build(
           system: system ?? 'unknown',
           emulatorSlug: emulatorSlug ?? 'unknown',
-          scope: 'game',
+          scope: isSharedCard ? 'shared' : 'game',
           filePath: path.basename(file.path),
-          gameName: path.basenameWithoutExtension(file.path),
+          gameName: isSharedCard
+              ? null
+              : path.basenameWithoutExtension(file.path),
           isState: isState,
         );
         syncSystemId = system;
@@ -372,7 +386,7 @@ extension NeoSyncUpload on NeoSyncProvider {
       String? gameHash;
       try {
         final fileName = path.basenameWithoutExtension(file.path);
-        final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
+        final row = await GameRepository.findRomForSaveName(fileName);
         if (row != null) {
           final game = _gameModelFromRomRow(row, fileName);
           gameHash = await _resolveGameHashForUpload(game);
@@ -510,7 +524,7 @@ extension NeoSyncUpload on NeoSyncProvider {
       String? gameHash;
       try {
         final fileName = path.basenameWithoutExtension(file.path);
-        final row = await GameRepository.findRomByFilenamePrefix('$fileName%');
+        final row = await GameRepository.findRomForSaveName(fileName);
         if (row != null) {
           final game = _gameModelFromRomRow(row, fileName);
           gameHash = await _resolveGameHashForUpload(game);
@@ -599,7 +613,7 @@ extension NeoSyncUpload on NeoSyncProvider {
       for (final file in files) {
         await _processAutoUploadFile(
           file,
-          file.parent.path,
+          folder,
           isState: false,
           customFolderSystem: systemFolderName,
           customFolderEmulatorSlug: emulatorSlug,
@@ -622,83 +636,4 @@ extension NeoSyncUpload on NeoSyncProvider {
       _setSyncing(false);
     }
   }
-
-  /// Migrates the user's legacy cloud files to the NeoSync v2 path standard.
-  ///
-  /// Lists every cloud file, maps legacy paths to their v2 equivalent using
-  /// [CloudMigrationService], and asks the backend to rename each one. Files
-  /// that already follow the v2 layout (or cannot be mapped) are skipped.
-  Future<MigrationResult> migrateCloudToV2() async {
-    final result = MigrationResult();
-    if (!isNeoSyncAuthenticated) return result;
-
-    _setSyncing(true);
-    _error = null;
-    _syncStatus = 'Migrating cloud files to NeoSync v2...';
-    _processedItems = [];
-    notify();
-
-    try {
-      final filesResult = await _neoSyncService.getFiles();
-      if (!filesResult['success']) {
-        _error = 'Failed to fetch cloud files: ${filesResult['message']}';
-        _syncStatus = 'Error: $_error';
-        _processedItems.add(_syncStatus);
-        return result;
-      }
-
-      final cloudFiles = (filesResult['files'] as List<NeoSyncFile>?) ?? [];
-      _totalFiles = cloudFiles.length;
-      _processedFiles = 0;
-      notify();
-
-      for (final cloudFile in cloudFiles) {
-        final legacyPath = cloudFile.fileName;
-        final v2Path = await CloudMigrationService.mapLegacyToV2(legacyPath);
-
-        if (v2Path == null || v2Path == legacyPath) {
-          result.skipped++;
-          _processedFiles++;
-          _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
-          continue;
-        }
-
-        final migrateResult = await _neoSyncService.migrateFile(
-          cloudFile.id,
-          v2Path,
-        );
-        if (migrateResult['success'] == true) {
-          result.migrated++;
-          _processedItems.add('🔄 $legacyPath -> $v2Path');
-        } else {
-          result.failed++;
-          _processedItems.add(
-            '❌ Failed to migrate $legacyPath: ${migrateResult['message']}',
-          );
-        }
-        _processedFiles++;
-        _syncProgress = _totalFiles > 0 ? _processedFiles / _totalFiles : 0.0;
-        notify();
-      }
-
-      _syncStatus =
-          'Migration complete: ${result.migrated} migrated, ${result.skipped} skipped, ${result.failed} failed';
-      _processedItems.add(_syncStatus);
-    } catch (e) {
-      _error = 'Error migrating cloud files: $e';
-      _syncStatus = 'Error: $_error';
-      _processedItems.add(_syncStatus);
-      NeoSyncProvider._log.e(_error!);
-    } finally {
-      _setSyncing(false);
-    }
-    return result;
-  }
-}
-
-/// Result of a NeoSync v2 cloud migration run.
-class MigrationResult {
-  int migrated = 0;
-  int skipped = 0;
-  int failed = 0;
 }

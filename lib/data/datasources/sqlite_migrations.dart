@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:neostation/services/logger_service.dart';
+import 'package:neostation/utils/cloud_path_builder.dart';
 
 /// Service responsible for managing SQLite database schema evolutions.
 ///
@@ -5437,19 +5438,7 @@ class SqliteMigrations {
         _log.i('Column neosync_slug added via v115');
       }
 
-      db.execute('''
-        UPDATE app_emulators
-        SET neosync_slug = CASE
-          WHEN unique_identifier LIKE '%.ra64.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra64.') + 6)), '_', '-')
-          WHEN unique_identifier LIKE '%.ra32.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra32.') + 6)), '_', '-')
-          WHEN unique_identifier LIKE '%.ra.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra.') + 4)), '_', '-')
-          ELSE lower(substr(unique_identifier, instr(unique_identifier, '.') + 1))
-        END
-        WHERE neosync_slug IS NULL OR neosync_slug = ''
-      ''');
+      await _backfillNeoSyncSlugs(db);
 
       _log.i('Migration v115: Creating user_custom_save_folders table');
       db.execute('''
@@ -5491,19 +5480,7 @@ class SqliteMigrations {
         _log.i('Column neosync_slug added via v116');
       }
 
-      db.execute('''
-        UPDATE app_emulators
-        SET neosync_slug = CASE
-          WHEN unique_identifier LIKE '%.ra64.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra64.') + 6)), '_', '-')
-          WHEN unique_identifier LIKE '%.ra32.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra32.') + 6)), '_', '-')
-          WHEN unique_identifier LIKE '%.ra.%.%' THEN
-            'retroarch.' || replace(lower(substr(unique_identifier, instr(unique_identifier, '.ra.') + 4)), '_', '-')
-          ELSE lower(substr(unique_identifier, instr(unique_identifier, '.') + 1))
-        END
-        WHERE neosync_slug IS NULL OR neosync_slug = ''
-      ''');
+      await _backfillNeoSyncSlugs(db);
 
       db.execute('''
         CREATE TABLE IF NOT EXISTS user_custom_save_folders (
@@ -5519,6 +5496,48 @@ class SqliteMigrations {
       _log.e('Error in migration v116: $e');
       _log.e('   StackTrace: $stackTrace');
       rethrow;
+    }
+  }
+
+  /// Backfills `neosync_slug` on [app_emulators] for rows that have none.
+  ///
+  /// Runs in Dart using [CloudPathBuilder.slugFromEmulatorUniqueId] — the exact
+  /// same derivation the runtime uses — instead of reimplementing it in SQL.
+  /// That guarantees the stored slug always matches the one `_resolveEmulatorSlugForGame`
+  /// computes, so `findSystemsByEmulatorSlug` finds the emulator's systems on
+  /// every upgraded install. Idempotent: only touches rows with an empty slug.
+  ///
+  /// Tolerant by design: `app_emulators` is keyed by the composite
+  /// `(os_id, unique_identifier)` (no `id` column), and any failure here must
+  /// not abort the whole migration and wedge the app in a lower DB version.
+  /// The slug is re-derivable at runtime, so a missed row only means one
+  /// emulator keeps its runtime-derived slug — the backfill is best-effort.
+  static Future<void> _backfillNeoSyncSlugs(Database db) async {
+    try {
+      final rows = db.select(
+        'SELECT os_id, unique_identifier FROM app_emulators '
+        "WHERE neosync_slug IS NULL OR neosync_slug = ''",
+      );
+      var updated = 0;
+      for (final row in rows) {
+        final osId = row['os_id'];
+        final uniqueId = row['unique_identifier']?.toString() ?? '';
+        if (uniqueId.isEmpty) continue;
+        final slug = CloudPathBuilder.slugFromEmulatorUniqueId(uniqueId);
+        if (slug.isEmpty) continue;
+        db.execute(
+          'UPDATE app_emulators SET neosync_slug = ? '
+          'WHERE os_id = ? AND unique_identifier = ?',
+          [slug, osId, uniqueId],
+        );
+        updated++;
+      }
+      if (updated > 0) {
+        _log.i('Backfilled neosync_slug for $updated emulators');
+      }
+    } catch (e, stackTrace) {
+      _log.e('Error backfilling neosync_slug: $e');
+      _log.e('   StackTrace: $stackTrace');
     }
   }
 

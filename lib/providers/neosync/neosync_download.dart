@@ -19,7 +19,7 @@ extension NeoSyncDownload on NeoSyncProvider {
     notify();
 
     try {
-      final result = await _neoSyncService.getFiles();
+      final result = await _neoSyncService.getAllFiles();
       if (!result['success']) {
         throw Exception('Failed to fetch cloud files: ${result['message']}');
       }
@@ -69,7 +69,7 @@ extension NeoSyncDownload on NeoSyncProvider {
     _processedItems.add('⬇️ Phase 2: Downloading files from cloud...');
     notify();
 
-    final result = await _neoSyncService.getFiles();
+    final result = await _neoSyncService.getAllFiles();
     if (!result['success']) {
       throw Exception('Failed to fetch cloud files: ${result['message']}');
     }

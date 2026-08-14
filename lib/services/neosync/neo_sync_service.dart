@@ -363,6 +363,53 @@ class NeoSyncService extends ChangeNotifier {
     }
   }
 
+  /// Fetches every cloud file by walking the `limit`/`offset` pages.
+  ///
+  /// Background flows (auto-sync, downloads, migration jobs) operate on the
+  /// full set, but `GET /api/v2/files` may paginate by default. This helper
+  /// pages through the whole filtered set using the server-reported [total], so
+  /// a user with more files than one page still gets every save processed.
+  Future<Map<String, dynamic>> getAllFiles({NeoSyncFileFilter? filter}) async {
+    const int pageSize = 200;
+    final allFiles = <NeoSyncFile>[];
+    Map<String, dynamic>? lastPage;
+
+    try {
+      var offset = 0;
+      while (true) {
+        final pageResult = await getFiles(
+          filter: (filter ?? const NeoSyncFileFilter()).copyWith(
+            limit: pageSize,
+            offset: offset,
+          ),
+        );
+        if (!pageResult['success']) return pageResult;
+
+        final page = (pageResult['files'] as List<NeoSyncFile>?) ?? [];
+        allFiles.addAll(page);
+        final total = (pageResult['total'] as num?)?.toInt() ?? page.length;
+        lastPage = pageResult;
+
+        if (page.isEmpty || allFiles.length >= total) break;
+        offset += page.length;
+      }
+
+      return {
+        'success': true,
+        'files': allFiles,
+        'total': (lastPage['total'] as num?)?.toInt() ?? allFiles.length,
+        'counts': lastPage['counts'],
+        'systems': lastPage['systems'] ?? const <String>[],
+        'emulators': lastPage['emulators'] ?? const <String>[],
+      };
+    } catch (e) {
+      final error = 'Network error: $e';
+      _log.e('Get all files error: $error');
+      _lastError = error;
+      return {'success': false, 'message': error};
+    }
+  }
+
   /// Deletes a specific file from the cloud storage by its unique identifier.
   Future<Map<String, dynamic>> deleteFile(String fileId) async {
     _isLoading = true;
@@ -387,51 +434,6 @@ class NeoSyncService extends ChangeNotifier {
     } catch (e) {
       final error = 'Network error: $e';
       _log.e('Delete error: $error');
-      _lastError = error;
-      return {'success': false, 'message': error};
-    } finally {
-      _isLoading = false;
-      _safeNotifyListeners();
-    }
-  }
-
-  /// Migrates a cloud file to a new path (NeoSync v2).
-  ///
-  /// The backend copies the object in GCS (without re-uploading bytes) and
-  /// updates the metadata path. Used by the legacy -> v2 migration job.
-  Future<Map<String, dynamic>> migrateFile(
-    String fileId,
-    String newPath,
-  ) async {
-    _isLoading = true;
-    _lastError = null;
-    _safeNotifyListeners();
-
-    try {
-      final headers = await _getHeaders();
-      final baseUrl = AppConfig.neoSyncBaseUrl;
-      final uri = Uri.parse('$baseUrl/api/v2/files/migrate');
-
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: jsonEncode({'file_id': fileId, 'new_path': newPath}),
-      );
-
-      if (response.statusCode == 200) {
-        return {'success': true};
-      } else {
-        String error = 'Migration failed';
-        try {
-          final data = jsonDecode(response.body);
-          error = data['error'] ?? error;
-        } catch (_) {}
-        _log.e('Migrate failed: $error');
-        return {'success': false, 'message': error};
-      }
-    } catch (e) {
-      final error = 'Network error: $e';
-      _log.e('Migrate error: $error');
       _lastError = error;
       return {'success': false, 'message': error};
     } finally {

@@ -960,7 +960,7 @@ extension NeoSyncCore on NeoSyncProvider {
 
       // 2. Cargar archivos de la nube si no están cargados
       if (_files.isEmpty) {
-        final result = await _neoSyncService.getFiles();
+        final result = await _neoSyncService.getAllFiles();
         if (result['success']) {
           _files = result['files'];
         } else {

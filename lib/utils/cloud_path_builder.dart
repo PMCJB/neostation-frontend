@@ -99,9 +99,22 @@ class CloudPathBuilder {
   /// Derives a RetroArch core slug from the core identifier or display name.
   ///
   /// Examples: `mednafen_psx_hw` -> `retroarch.mednafen-psx-hw`,
-  /// `pcsx2_libretro` -> `retroarch.pcsx2`.
+  /// `pcsx2_libretro` -> `retroarch.pcsx2`,
+  /// `pcsx2_libretro.dll` -> `retroarch.pcsx2` (the binary extension is
+  /// stripped so the seeded slug matches the runtime derivation from the
+  /// emulator's unique id, which never carries the extension).
   static String retroArchCoreSlug(String coreNameOrIdentifier) {
-    final core = coreNameOrIdentifier
+    var input = coreNameOrIdentifier.trim();
+    // Strip known binary/library extensions so desktop core filenames
+    // (`pcsx2_libretro.dll`, `mednafen_psx_hw_libretro.so`) collapse to the
+    // same slug the runtime derives from the unique id (`retroarch.pcsx2`).
+    final extMatch = RegExp(
+      r'\.(dll|so|dylib|appimage|exe|bin)$',
+    ).firstMatch(input.toLowerCase());
+    if (extMatch != null) {
+      input = input.substring(0, extMatch.start);
+    }
+    final core = input
         .replaceAll('_libretro', '')
         .trim()
         .toLowerCase()

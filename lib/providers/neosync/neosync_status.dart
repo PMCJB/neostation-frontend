@@ -10,7 +10,7 @@ extension NeoSyncStatus on NeoSyncProvider {
     notify();
 
     try {
-      final result = await _neoSyncService.getFiles();
+      final result = await _neoSyncService.getAllFiles();
 
       if (result['success']) {
         _files = result['files'];

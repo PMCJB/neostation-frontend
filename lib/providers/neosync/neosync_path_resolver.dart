@@ -199,6 +199,14 @@ extension NeoSyncPathResolver on NeoSyncProvider {
     bool isState = false,
     String? explicitSystemFolder,
   }) async {
+    // Switch saves are a tree under the Title ID (ExtraData1/data.bin, ...).
+    // They are NOT compatible with the v2 per-file layout: same-named files
+    // from different subtrees would overwrite each other in the cloud, so the
+    // emulator/Title-ID structure must be encoded first.
+    if (game.systemFolderName == 'switch') {
+      return await calculateSwitchRelativePath(file, game);
+    }
+
     // Try the NeoSync v2 standard path first. It carries system + emulator, so
     // the cloud always knows which emulator produced the save.
     final v2Path = await _buildV2CloudPath(
@@ -252,10 +260,6 @@ extension NeoSyncPathResolver on NeoSyncProvider {
 
     if (isPS2 && file.path.toLowerCase().endsWith('.ps2')) {
       return 'saves/PS2/${path.basename(file.path)}';
-    }
-
-    if (game.systemFolderName == 'switch') {
-      return await calculateSwitchRelativePath(file, game);
     }
 
     return _calculateRelativePath(file, basePath, isState: isState);
@@ -349,7 +353,10 @@ extension NeoSyncPathResolver on NeoSyncProvider {
 
     // Memory-card style files are shared between games (PS2 .ps2 memcards,
     // Dreamcast VMU, etc.), so they go under the `shared` scope without a game
-    // segment. Everything else is per-game.
+    // segment. Everything else is per-game. The game segment is the save base
+    // name (not the game title) so it stays consistent with the auto-upload
+    // flow, which only has the file path to derive it from; a save uploaded by
+    // either flow must resolve to the same cloud path.
     final lowerName = fileName.toLowerCase();
     final isSharedCard =
         (systemFolder == 'ps2' && lowerName.endsWith('.ps2')) ||
@@ -363,7 +370,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       emulatorSlug: emulatorSlug,
       scope: scope,
       filePath: fileName,
-      gameName: isSharedCard ? null : game.name,
+      gameName: isSharedCard ? null : path.basenameWithoutExtension(file.path),
       isState: isState,
     );
   }
@@ -372,9 +379,12 @@ extension NeoSyncPathResolver on NeoSyncProvider {
   ///
   /// The v2 cloud path carries the derived slug (`retroarch.mgba`), but the
   /// on-disk layout uses the core folder name (`mgba`, `mednafen_psx_hw`, ...).
-  /// Looks for an existing subfolder of [baseFolder] whose slug matches first,
-  /// then the emulator's stored `core_filename`, and finally falls back to
-  /// stripping the `retroarch.` prefix.
+  /// Only returns a folder that actually exists under [baseFolder], because the
+  /// per-core subfolder layout is what the upload encodes in the first place.
+  /// When no matching core folder exists on disk the save is a flat-layout
+  /// save (`<base>/<game>.srm`) and must be restored flat — returning null here
+  /// is what keeps the download from inventing a `<base>/<core>/` subfolder
+  /// that RetroArch would never read.
   Future<String?> _retroArchCoreFolderForSlug(
     String emulatorSlug,
     String baseFolder,
@@ -400,17 +410,7 @@ extension NeoSyncPathResolver on NeoSyncProvider {
       );
     }
 
-    try {
-      final folder = await SqliteService.findCoreFolderByNeosyncSlug(
-        emulatorSlug,
-      );
-      if (folder != null && folder.isNotEmpty) return folder;
-    } catch (e) {
-      NeoSyncProvider._log.w(
-        'Error resolving core folder for $emulatorSlug: $e',
-      );
-    }
-    return emulatorSlug.substring('retroarch.'.length);
+    return null;
   }
 
   /// Resolves the NeoSync v2 game hash (`ra_hash`) for an upload.

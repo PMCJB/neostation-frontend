@@ -260,6 +260,28 @@ class GameRepository {
     return result.isNotEmpty ? Map<String, dynamic>.from(result.first) : null;
   }
 
+  /// Finds the ROM a RetroArch save name belongs to, or null.
+  ///
+  /// RetroArch names saves after the *loaded content*, so a save like
+  /// `Game (USA).srm` can come from a ROM stored as `Game.zip` (the zip holds
+  /// `Game (USA).sfc`). A plain prefix match would miss it, so the save base
+  /// name is progressively shortened at region/edition markers (`(`, `[`)
+  /// until a ROM prefix matches (e.g. `Game (USA)` -> `Game` -> `Game.zip`).
+  static Future<Map<String, dynamic>?> findRomForSaveName(
+    String saveBaseName,
+  ) async {
+    var candidate = saveBaseName.trim();
+    while (candidate.isNotEmpty) {
+      final row = await findRomByFilenamePrefix(candidate);
+      if (row != null) return row;
+      final marker = RegExp(r'^(.*?)\s*[\(\[].*$').firstMatch(candidate);
+      final next = marker?.group(1)?.trim() ?? '';
+      if (next.isEmpty || next == candidate) break;
+      candidate = next;
+    }
+    return null;
+  }
+
   /// Finds a Switch ROM by [titleId]. Returns {filename, title_name} or null.
   static Future<Map<String, dynamic>?> findSwitchGameByTitleId(
     String titleId,

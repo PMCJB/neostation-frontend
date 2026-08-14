@@ -5020,30 +5020,4 @@ class SqliteService {
       return const [];
     }
   }
-
-  /// Returns the local core folder name for a RetroArch NeoSync emulator slug,
-  /// or null when no emulator row matches.
-  ///
-  /// RetroArch stores per-core saves as `<savesPath>/<core>/<game>.srm`, where
-  /// `<core>` is the core folder name (e.g. `mgba`, `snes9x`). The v2 cloud
-  /// path only carries the derived slug (`retroarch.mgba`), so this maps it
-  /// back to the on-disk folder via the emulator's `core_filename`.
-  static Future<String?> findCoreFolderByNeosyncSlug(String neosyncSlug) async {
-    try {
-      final db = await instance.database;
-      final results = await db.query(
-        'app_emulators',
-        columns: ['core_filename'],
-        where: 'neosync_slug = ? AND core_filename IS NOT NULL',
-        whereArgs: [neosyncSlug],
-        limit: 1,
-      );
-      if (results.isEmpty) return null;
-      final folder = results.first['core_filename']?.toString();
-      return (folder == null || folder.isEmpty) ? null : folder;
-    } catch (e) {
-      _log.e('Error finding core folder for slug $neosyncSlug: $e');
-      return null;
-    }
-  }
 }
