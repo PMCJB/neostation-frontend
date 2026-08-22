@@ -241,7 +241,10 @@ class RetroAchievementsHashService {
     // start to finish without a single frame: the UI froze on whatever it had
     // last painted, which on startup is the final system of the ROM scan. A
     // real yield every few candidates costs nothing and keeps frames coming.
-    const yieldEvery = 32;
+    // The lookup pass does nothing but hit the database, so its iterations are
+    // short and a coarse interval leaves the bar visibly stuttering; the hash
+    // pass does real file work per ROM and needs far fewer.
+    final yieldEvery = mode == RaRematchMode.lookupOnly ? 8 : 32;
 
     for (final candidate in candidates) {
       if (processed % yieldEvery == 0) {

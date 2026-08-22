@@ -5258,6 +5258,15 @@ class SqliteService {
   /// with the database on an NVMe, and it ran on every single launch. The stamp
   /// is only written after the seed succeeds, so a failed seed retries next
   /// launch rather than being cached as done.
+  /// Whether this launch actually rebuilt `app_ra_game_list`.
+  ///
+  /// The lookup-only match pass exists to recover matches after the bundled
+  /// RetroAchievements database changes. When it has not changed, walking every
+  /// hashed-but-unmatched ROM again cannot produce a different answer than it
+  /// did last launch — those ROMs are simply not in the list — so an unattended
+  /// pass has nothing to gain from it.
+  static bool raSeedChangedThisLaunch = false;
+
   Future<void> refreshRetroAchievementsData() async {
     try {
       final db = await database;
@@ -5287,7 +5296,7 @@ class SqliteService {
             'RetroAchievements seed unchanged ($assetStamp, $count rows) - '
             'skipping re-seed.',
           );
-          return;
+          return; // raSeedChangedThisLaunch stays false: nothing to re-look-up.
         }
         _log.w(
           'RetroAchievements seed stamp matched but table is empty - '
@@ -5315,6 +5324,7 @@ class SqliteService {
           _log.w('Could not record the RA seed stamp: $e');
         }
       }
+      raSeedChangedThisLaunch = true;
       _log.i('RetroAchievements database synchronized successfully.');
     } catch (e, stackTrace) {
       _log.e(

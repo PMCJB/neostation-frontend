@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:neostation/data/datasources/sqlite_service.dart';
 import 'package:neostation/services/global_notification_service.dart';
 import 'package:neostation/services/ra_library_match_runner.dart';
 
@@ -83,11 +84,102 @@ void main() {
     });
   });
 
+  group('the lookup pass is skipped when it cannot find anything new', () {
+    final dbHelper = DatabaseTestHelper();
+    late dynamic db;
+
+    setUp(() async {
+      db = await dbHelper.setUp();
+      GlobalNotificationService().dismiss(RaLibraryMatchRunner.notificationId);
+      await db.execute(
+        "INSERT INTO app_systems (id, real_name, folder_name, ra_id, multidisc)"
+        " VALUES ('nes', 'NES', 'nes', '7', 0)",
+      );
+      // A ROM the lookup pass *could* match, so anything skipping the pass is
+      // visible as the match not happening rather than as an empty library.
+      await db.execute(
+        "INSERT INTO app_ra_game_list (hash, game_id, title, console_id) "
+        "VALUES ('hash0', 42, 'Some Game', 7)",
+      );
+      await db.execute(
+        "INSERT INTO user_roms (filename, rom_path, app_system_id, ra_hash) "
+        "VALUES ('Game0.nes', '/roms/nes/Game0.nes', 'nes', 'hash0')",
+      );
+    });
+
+    tearDown(() async {
+      SqliteService.raSeedChangedThisLaunch = false;
+      GlobalNotificationService().dismiss(RaLibraryMatchRunner.notificationId);
+      await dbHelper.tearDown();
+    });
+
+    test('an unattended pass skips it when the RA list is unchanged', () async {
+      SqliteService.raSeedChangedThisLaunch = false;
+
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.automatic,
+      );
+
+      final rows = await db.rawQuery(
+        "SELECT id_ra FROM user_roms WHERE filename = 'Game0.nes'",
+      );
+      expect(
+        rows.first['id_ra'],
+        isNull,
+        reason:
+            'walking every hashed-but-unmatched ROM cannot answer differently '
+            'than last launch when the bundled list has not changed, and it '
+            'costs seconds of startup every time',
+      );
+    });
+
+    test('an unattended pass runs it when the RA list changed', () async {
+      SqliteService.raSeedChangedThisLaunch = true;
+
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.automatic,
+      );
+
+      final rows = await db.rawQuery(
+        "SELECT id_ra FROM user_roms WHERE filename = 'Game0.nes'",
+      );
+      expect(
+        rows.first['id_ra'],
+        42,
+        reason: 'a new list is exactly what the lookup pass exists to pick up',
+      );
+    });
+
+    test('the pass the user asked for always runs it', () async {
+      SqliteService.raSeedChangedThisLaunch = false;
+
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.manual,
+      );
+
+      final rows = await db.rawQuery(
+        "SELECT id_ra FROM user_roms WHERE filename = 'Game0.nes'",
+      );
+      expect(
+        rows.first['id_ra'],
+        42,
+        reason: 'they may be pressing the button to repair exactly this',
+      );
+    });
+  });
+
   group('an automatic pass that finds something reports it', () {
     final dbHelper = DatabaseTestHelper();
     late dynamic db;
 
     setUp(() async {
+      // These cover what the pass *says*, and the thing it has to say something
+      // about here is a lookup hit. An unattended pass only runs the lookup
+      // when the bundled RA list changed, which is the launch being modelled.
+      SqliteService.raSeedChangedThisLaunch = true;
       db = await dbHelper.setUp();
       GlobalNotificationService().dismiss(RaLibraryMatchRunner.notificationId);
       await db.execute(
@@ -105,6 +197,7 @@ void main() {
     });
 
     tearDown(() async {
+      SqliteService.raSeedChangedThisLaunch = false;
       GlobalNotificationService().dismiss(RaLibraryMatchRunner.notificationId);
       await dbHelper.tearDown();
     });

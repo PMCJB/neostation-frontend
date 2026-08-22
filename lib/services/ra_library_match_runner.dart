@@ -186,20 +186,39 @@ class RaLibraryMatchRunner {
 
       // Cheap pass: no file I/O, just retry the local lookup for ROMs that
       // already carry a hash.
-      final lookup = await RetroAchievementsHashService.rematchLibrary(
-        mode: RaRematchMode.lookupOnly,
-        reopenSkipped: manual,
-        onProgress: (processed, total, _) {
-          if (total == 0) return;
-          publish();
-          if (!manual) return;
-          showOrUpdate(
-            message: strings.lookingUp,
-            type: GlobalNotificationType.info,
-            progress: eligible > 0 ? alreadyHashed / eligible : null,
-          );
-        },
-      );
+      //
+      // "Cheap" is relative: it walks every hashed-but-unmatched ROM, which on
+      // a real library is thousands of rows and a couple of seconds, and it
+      // finds nothing every time by construction — those ROMs are not in the
+      // bundled RA database. It is worth doing after that database changes and
+      // pointless otherwise, so an unattended pass runs it only then. The user
+      // pressing the Tools button always gets it: they may be trying to repair
+      // exactly this.
+      final runLookup =
+          manual || RetroAchievementsRepository.raSeedChangedThisLaunch;
+      final lookup = !runLookup
+          ? const RaRematchResult(
+              total: 0,
+              processed: 0,
+              hashed: 0,
+              matched: 0,
+              skipped: 0,
+              cancelled: false,
+            )
+          : await RetroAchievementsHashService.rematchLibrary(
+              mode: RaRematchMode.lookupOnly,
+              reopenSkipped: manual,
+              onProgress: (processed, total, _) {
+                if (total == 0) return;
+                publish();
+                if (!manual) return;
+                showOrUpdate(
+                  message: strings.lookingUp,
+                  type: GlobalNotificationType.info,
+                  progress: eligible > 0 ? alreadyHashed / eligible : null,
+                );
+              },
+            );
 
       // Expensive pass: hash the ROMs that have never been hashed.
       final hashPass = lookup.cancelled
