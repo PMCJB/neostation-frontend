@@ -458,7 +458,7 @@ class SqliteService {
   SqliteService._internal();
 
   // Database configuration
-  static const int _databaseVersion = 138;
+  static const int _databaseVersion = 141;
   static const String _databaseName = 'data.sqlite';
 
   DatabaseAdapter? _database;
@@ -1894,7 +1894,8 @@ class SqliteService {
         now_playing_dim_level INTEGER DEFAULT 100,
         fanart_dim_level INTEGER DEFAULT 25,
         esde_folder_path TEXT DEFAULT '',
-        show_achievements_badge INTEGER DEFAULT 0
+        show_achievements_badge INTEGER DEFAULT 0,
+        ra_match_on_startup INTEGER DEFAULT 0
       );
       ''',
       '''
@@ -2710,6 +2711,7 @@ class SqliteService {
     int? fanartDimLevel,
     String? esdeFolderPath,
     int? showAchievementsBadge,
+    int? raMatchOnStartup,
   }) async {
     final db = await instance.database;
 
@@ -2841,6 +2843,10 @@ class SqliteService {
     if (esdeFolderPath != null) {
       updates['esde_folder_path'] = esdeFolderPath;
     }
+    if (raMatchOnStartup != null) {
+      updates['ra_match_on_startup'] = raMatchOnStartup;
+    }
+
     if (showAchievementsBadge != null) {
       updates['show_achievements_badge'] = showAchievementsBadge;
     }
@@ -3124,6 +3130,12 @@ class SqliteService {
   /// Configures whether the application should automatically scan for games on startup.
   static Future<void> updateScanOnStartup(int value) async {
     await saveUserConfig(scanOnStartup: value);
+  }
+
+  /// Configures whether the startup scan is followed by a RetroAchievements
+  /// match pass over the ROMs it added.
+  static Future<void> updateRaMatchOnStartup(int value) async {
+    await saveUserConfig(raMatchOnStartup: value);
   }
 
   // ==========================================

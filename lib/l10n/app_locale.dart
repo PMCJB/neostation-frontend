@@ -178,6 +178,10 @@ mixin AppLocale {
   static const String showAchievementsBadge = 'show_achievements_badge';
   static const String showAchievementsBadgeSubtitle =
       'show_achievements_badge_subtitle';
+  static const String raMatchOnStartup = 'ra_match_on_startup';
+  static const String raMatchOnStartupSubtitle = 'ra_match_on_startup_subtitle';
+  static const String raMatchOnStartupBacklogWarning =
+      'ra_match_on_startup_backlog_warning';
   static const String fullscreenMode = 'fullscreen_mode';
   static const String fullscreenModeSubtitle = 'fullscreen_mode_subtitle';
   static const String allFilesAccess = 'all_files_access';

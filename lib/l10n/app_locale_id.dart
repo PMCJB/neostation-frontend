@@ -167,6 +167,11 @@ const Map<String, dynamic> appLocaleId = {
   AppLocale.showAchievementsBadge: 'Lencana Prestasi',
   AppLocale.showAchievementsBadgeSubtitle:
       'Tampilkan jumlah prestasi pada gim yang cocok dengan RetroAchievements',
+  AppLocale.raMatchOnStartup: 'Cocokkan prestasi saat mulai',
+  AppLocale.raMatchOnStartupSubtitle:
+      'Mencocokkan ROM baru setelah pemindaian awal. Untuk seluruh pustaka, jalankan Cocokkan Game RetroAchievements di Alat terlebih dahulu.',
+  AppLocale.raMatchOnStartupBacklogWarning:
+      '{count} gim belum pernah diperiksa. Mencocokkan semuanya saat mulai berikutnya bisa memakan waktu beberapa menit. Jalankan Cocokkan Game RetroAchievements di Alat untuk melakukannya sekarang, dengan kemajuan yang terlihat.',
   AppLocale.fullscreenMode: 'Mode Layar Penuh',
   AppLocale.fullscreenModeSubtitle: 'Tampilkan aplikasi dalam mode layar penuh',
   AppLocale.allFilesAccess: 'Akses Semua File',

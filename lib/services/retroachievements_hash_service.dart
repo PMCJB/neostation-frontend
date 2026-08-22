@@ -155,8 +155,14 @@ class RetroAchievementsHashService {
   ///
   /// Rows the user matched by hand are never overwritten — the write guard
   /// lives in [RetroAchievementsRepository].
+  ///
+  /// [reopenSkipped] controls what happens once nothing hashable is left: a
+  /// pass the user asked for reopens the ROMs parked as unhashable and tries
+  /// them again, because they may have replaced a bad dump since. An
+  /// unattended pass must not — see [_runRematch].
   static Future<RaRematchResult> rematchLibrary({
     RaRematchMode mode = RaRematchMode.hashMissing,
+    bool reopenSkipped = true,
     void Function(int processed, int total, String label)? onProgress,
     bool Function()? isCancelled,
   }) async {
@@ -178,6 +184,7 @@ class RetroAchievementsHashService {
     try {
       return await _runRematch(
         mode: mode,
+        reopenSkipped: reopenSkipped,
         onProgress: onProgress,
         isCancelled: isCancelled,
       );
@@ -189,6 +196,7 @@ class RetroAchievementsHashService {
 
   static Future<RaRematchResult> _runRematch({
     required RaRematchMode mode,
+    required bool reopenSkipped,
     void Function(int processed, int total, String label)? onProgress,
     bool Function()? isCancelled,
   }) async {
@@ -203,7 +211,14 @@ class RetroAchievementsHashService {
     // an earlier run. Give those one more go — the user may have restored a
     // missing file or replaced a bad dump since — rather than leaving them
     // permanently invisible.
-    if (mode == RaRematchMode.hashMissing && candidates.isEmpty) {
+    //
+    // Only when a human asked for this pass. Unattended, it is the opposite of
+    // what the caller wants: on a fully matched library every parked ROM is
+    // reopened and re-read on *every* run, always failing again. A shelf of
+    // .gdi and .rvz discs is hundreds of pointless file reads per launch.
+    if (reopenSkipped &&
+        mode == RaRematchMode.hashMissing &&
+        candidates.isEmpty) {
       final reopened = await RetroAchievementsRepository.clearRaHashSkips();
       if (reopened > 0) {
         _log.i('RA re-match: retrying $reopened previously skipped ROMs');

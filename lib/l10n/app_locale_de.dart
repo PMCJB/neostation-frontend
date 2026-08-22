@@ -169,6 +169,11 @@ const Map<String, dynamic> appLocaleDe = {
   AppLocale.showAchievementsBadge: 'Erfolgs-Abzeichen',
   AppLocale.showAchievementsBadgeSubtitle:
       'Die Anzahl der Erfolge auf Spielen anzeigen, die RetroAchievements zugeordnet sind',
+  AppLocale.raMatchOnStartup: 'Erfolge beim Start zuordnen',
+  AppLocale.raMatchOnStartupSubtitle:
+      'Ordnet neue ROMs nach dem Start-Scan zu. Für eine ganze Bibliothek zuerst RetroAchievements-Spiele zuordnen unter Werkzeuge ausführen.',
+  AppLocale.raMatchOnStartupBacklogWarning:
+      '{count} Spiele wurden noch nie geprüft. Sie alle beim nächsten Start zuzuordnen, kann mehrere Minuten dauern. Führen Sie stattdessen RetroAchievements-Spiele zuordnen unter Werkzeuge aus, mit sichtbarem Fortschritt.',
   AppLocale.fullscreenMode: 'Vollbildmodus',
   AppLocale.fullscreenModeSubtitle: 'Zeigt die App im Vollbildmodus an',
   AppLocale.allFilesAccess: 'Zugriff auf alle Dateien',

@@ -170,6 +170,11 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.showAchievementsBadge: 'Insignias de logros',
   AppLocale.showAchievementsBadgeSubtitle:
       'Mostrar el número de logros en los juegos asociados con RetroAchievements',
+  AppLocale.raMatchOnStartup: 'Asociar logros al iniciar',
+  AppLocale.raMatchOnStartupSubtitle:
+      'Empareja ROMs nuevas tras el escaneo inicial. Para toda una biblioteca, ejecuta antes Emparejar juegos de RetroAchievements en Herramientas.',
+  AppLocale.raMatchOnStartupBacklogWarning:
+      '{count} juegos nunca se han comprobado. Emparejarlos todos en el próximo inicio puede tardar varios minutos. Ejecuta Emparejar juegos de RetroAchievements en Herramientas para hacerlo ahora, con progreso visible.',
   AppLocale.fullscreenMode: 'Modo Pantalla Completa',
   AppLocale.fullscreenModeSubtitle:
       'Mostrar la aplicación en pantalla completa',
