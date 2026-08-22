@@ -234,7 +234,20 @@ class RetroAchievementsHashService {
 
     _log.i('RA re-match (${mode.name}): $total candidate ROMs');
 
+    // Every `await` below can complete synchronously — sqlite goes through
+    // FFI, and a lookup that hits nothing touches no file at all. Awaiting a
+    // future that is already done only drains the microtask queue, and Flutter
+    // renders from the event loop, so a pass over thousands of rows would run
+    // start to finish without a single frame: the UI froze on whatever it had
+    // last painted, which on startup is the final system of the ROM scan. A
+    // real yield every few candidates costs nothing and keeps frames coming.
+    const yieldEvery = 32;
+
     for (final candidate in candidates) {
+      if (processed % yieldEvery == 0) {
+        await Future<void>.delayed(Duration.zero);
+      }
+
       if (cancelled()) {
         _log.i('RA re-match cancelled after $processed of $total');
         return RaRematchResult(
