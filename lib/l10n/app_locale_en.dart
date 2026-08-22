@@ -169,6 +169,7 @@ const Map<String, dynamic> appLocaleEn = {
       'Matches new ROMs after the startup scan. To match a whole library, run Match RetroAchievements Games in Tools first.',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} games have never been checked. Matching them all on the next start can take several minutes. Run Match RetroAchievements Games in Tools to do it now instead, with progress you can watch.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Fullscreen Mode',
   AppLocale.fullscreenModeSubtitle: 'Display the app in fullscreen mode',
   AppLocale.allFilesAccess: 'All Files Access',

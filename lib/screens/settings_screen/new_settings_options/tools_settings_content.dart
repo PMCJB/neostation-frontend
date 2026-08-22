@@ -430,6 +430,7 @@ class ToolsSettingsContentState extends State<ToolsSettingsContent> {
           '${AppLocale.rematchAchievementsSignedOut.getString(context)}';
     }
     final strings = RaMatchStrings(
+      title: AppLocale.raMatchNotificationTitle.getString(context),
       lookingUp: AppLocale.rematchAchievementsLookingUp.getString(context),
       hashing: AppLocale.rematchAchievementsHashing.getString(context),
       done: AppLocale.rematchAchievementsDone.getString(context),

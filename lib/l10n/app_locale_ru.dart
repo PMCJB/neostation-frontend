@@ -173,6 +173,7 @@ const Map<String, dynamic> appLocaleRu = {
       'Сопоставляет новые ROM после стартового сканирования. Для всей библиотеки сначала запустите «Сопоставить игры RetroAchievements» в разделе «Инструменты».',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} игр ещё ни разу не проверялись. Сопоставление их всех при следующем запуске может занять несколько минут. Вместо этого запустите «Сопоставить игры RetroAchievements» в разделе «Инструменты» — с видимым прогрессом.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Полноэкранный режим',
   AppLocale.fullscreenModeSubtitle:
       'Отображать приложение в полноэкранном режиме',

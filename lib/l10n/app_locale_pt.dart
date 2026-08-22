@@ -176,6 +176,7 @@ const Map<String, dynamic> appLocalePt = {
       'Associa novas ROMs após a análise inicial. Para uma biblioteca inteira, execute primeiro Associar jogos do RetroAchievements em Ferramentas.',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} jogos nunca foram verificados. Associá-los todos no próximo arranque pode demorar vários minutos. Execute Associar jogos do RetroAchievements em Ferramentas para o fazer agora, com progresso visível.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Modo Tela Cheia',
   AppLocale.fullscreenModeSubtitle: 'Exibe o aplicativo em tela cheia',
   AppLocale.allFilesAccess: 'Acesso a Todos os Arquivos',

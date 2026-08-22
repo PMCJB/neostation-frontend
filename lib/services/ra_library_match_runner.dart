@@ -26,6 +26,12 @@ enum RaMatchTrigger {
 /// come in already translated instead of the service reaching for a
 /// [BuildContext] it has no business holding.
 class RaMatchStrings {
+  /// Names the job in the notification bell. The pass can run unattended, so
+  /// the per-ROM message alone ("Identifying Game.zip") never says what the
+  /// identifying is *for*; the title is what makes an unprompted notification
+  /// legible.
+  final String title;
+
   /// Shown during the cheap lookup-only pass.
   final String lookingUp;
 
@@ -45,6 +51,7 @@ class RaMatchStrings {
   final String failed;
 
   const RaMatchStrings({
+    required this.title,
     required this.lookingUp,
     required this.hashing,
     required this.done,
@@ -103,6 +110,7 @@ class RaLibraryMatchRunner {
         notificationShown = true;
         GlobalNotificationService().show(
           id: notificationId,
+          title: strings.title,
           message: message,
           type: type,
           progress: progress,
@@ -169,6 +177,7 @@ class RaLibraryMatchRunner {
 
       if (cancelled) {
         _finish(
+          title: strings.title,
           message: strings.paused.replaceFirst('{matched}', matched.toString()),
           type: GlobalNotificationType.info,
           notificationShown: notificationShown,
@@ -188,12 +197,14 @@ class RaLibraryMatchRunner {
         // The user pressed a button and deserves an answer, even when the
         // answer is that there was nothing left to check.
         _finish(
+          title: strings.title,
           message: strings.nothingToDo,
           type: GlobalNotificationType.info,
           notificationShown: notificationShown,
         );
       } else {
         _finish(
+          title: strings.title,
           message: strings.done
               .replaceFirst('{matched}', matched.toString())
               .replaceFirst('{hashed}', hashed.toString()),
@@ -211,6 +222,7 @@ class RaLibraryMatchRunner {
         stackTrace: stackTrace,
       );
       _finish(
+        title: strings.title,
         message: strings.failed.replaceFirst('{error}', e.toString()),
         type: GlobalNotificationType.error,
         notificationShown: notificationShown,
@@ -224,6 +236,7 @@ class RaLibraryMatchRunner {
   /// Writes the completion message, showing the notification first if the run
   /// never got far enough to raise one.
   static void _finish({
+    required String title,
     required String message,
     required GlobalNotificationType type,
     required bool notificationShown,
@@ -238,6 +251,7 @@ class RaLibraryMatchRunner {
     } else {
       GlobalNotificationService().show(
         id: notificationId,
+        title: title,
         message: message,
         type: type,
       );

@@ -294,6 +294,7 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   RaMatchStrings? _raMatchStrings() {
     if (!mounted) return null;
     return RaMatchStrings(
+      title: AppLocale.raMatchNotificationTitle.getString(context),
       lookingUp: AppLocale.rematchAchievementsLookingUp.getString(context),
       hashing: AppLocale.rematchAchievementsHashing.getString(context),
       done: AppLocale.rematchAchievementsDone.getString(context),

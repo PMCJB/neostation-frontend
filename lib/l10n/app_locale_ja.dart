@@ -149,6 +149,7 @@ const Map<String, dynamic> appLocaleJa = {
       '起動時スキャンの後、新しい ROM を照合します。ライブラリ全体を照合するには、先にツールの「RetroAchievements のゲームを照合」を実行してください。',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} 本のゲームがまだ確認されていません。次回の起動ですべてを照合すると数分かかることがあります。代わりにツールの「RetroAchievements のゲームを照合」を実行すると、進捗を見ながら行えます。',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'フルスクリーンモード',
   AppLocale.fullscreenModeSubtitle: 'アプリをフルスクリーンで表示',
   AppLocale.allFilesAccess: 'すべてのファイルへのアクセス',

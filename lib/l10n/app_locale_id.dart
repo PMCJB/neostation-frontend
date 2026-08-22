@@ -172,6 +172,7 @@ const Map<String, dynamic> appLocaleId = {
       'Mencocokkan ROM baru setelah pemindaian awal. Untuk seluruh pustaka, jalankan Cocokkan Game RetroAchievements di Alat terlebih dahulu.',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} gim belum pernah diperiksa. Mencocokkan semuanya saat mulai berikutnya bisa memakan waktu beberapa menit. Jalankan Cocokkan Game RetroAchievements di Alat untuk melakukannya sekarang, dengan kemajuan yang terlihat.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Mode Layar Penuh',
   AppLocale.fullscreenModeSubtitle: 'Tampilkan aplikasi dalam mode layar penuh',
   AppLocale.allFilesAccess: 'Akses Semua File',

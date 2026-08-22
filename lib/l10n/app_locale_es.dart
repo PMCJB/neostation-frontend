@@ -175,6 +175,7 @@ const Map<String, dynamic> appLocaleEs = {
       'Empareja ROMs nuevas tras el escaneo inicial. Para toda una biblioteca, ejecuta antes Emparejar juegos de RetroAchievements en Herramientas.',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} juegos nunca se han comprobado. Emparejarlos todos en el próximo inicio puede tardar varios minutos. Ejecuta Emparejar juegos de RetroAchievements en Herramientas para hacerlo ahora, con progreso visible.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Modo Pantalla Completa',
   AppLocale.fullscreenModeSubtitle:
       'Mostrar la aplicación en pantalla completa',

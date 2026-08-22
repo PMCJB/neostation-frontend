@@ -146,6 +146,7 @@ const Map<String, dynamic> appLocaleZh = {
       '在启动扫描后匹配新的 ROM。若要匹配整个游戏库，请先在工具中运行“匹配 RetroAchievements 游戏”。',
   AppLocale.raMatchOnStartupBacklogWarning:
       '有 {count} 个游戏从未检查过。在下次启动时全部匹配可能需要几分钟。建议改为在工具中运行“匹配 RetroAchievements 游戏”，可以看到进度。',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: '全屏模式',
   AppLocale.fullscreenModeSubtitle: '以全屏模式显示应用',
   AppLocale.allFilesAccess: '所有文件访问权限',

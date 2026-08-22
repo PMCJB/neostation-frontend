@@ -146,6 +146,7 @@ const Map<String, dynamic> appLocaleZhHant = {
       '在啟動掃描後比對新的 ROM。若要比對整個遊戲庫，請先在工具中執行「比對 RetroAchievements 遊戲」。',
   AppLocale.raMatchOnStartupBacklogWarning:
       '有 {count} 個遊戲從未檢查過。在下次啟動時全部比對可能需要幾分鐘。建議改為在工具中執行「比對 RetroAchievements 遊戲」，可以看到進度。',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: '全螢幕模式',
   AppLocale.fullscreenModeSubtitle: '以全螢幕模式顯示應用程式',
   AppLocale.allFilesAccess: '所有檔案存取權限',

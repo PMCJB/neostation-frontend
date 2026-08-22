@@ -182,6 +182,7 @@ mixin AppLocale {
   static const String raMatchOnStartupSubtitle = 'ra_match_on_startup_subtitle';
   static const String raMatchOnStartupBacklogWarning =
       'ra_match_on_startup_backlog_warning';
+  static const String raMatchNotificationTitle = 'ra_match_notification_title';
   static const String fullscreenMode = 'fullscreen_mode';
   static const String fullscreenModeSubtitle = 'fullscreen_mode_subtitle';
   static const String allFilesAccess = 'all_files_access';

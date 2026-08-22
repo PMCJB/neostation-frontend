@@ -7,6 +7,7 @@ import 'database_test_helper.dart';
 /// Placeholder copy: these tests care about *whether* the runner speaks, not
 /// what it says, so the strings only have to be distinguishable.
 const _strings = RaMatchStrings(
+  title: 'ra-title',
   lookingUp: 'looking-up',
   hashing: 'hashing {filename}',
   done: 'done {matched}/{hashed}',
@@ -117,6 +118,21 @@ void main() {
       final note = _raNotification();
       expect(note, isNotNull);
       expect(note!.message, contains('done'));
+    });
+
+    test('the notification names the job it is doing', () async {
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.automatic,
+      );
+
+      expect(
+        _raNotification()?.title,
+        'ra-title',
+        reason:
+            'the startup pass runs unprompted, so a bare "Identifying '
+            'Game.nes" never says what the identifying is for',
+      );
     });
   });
 }

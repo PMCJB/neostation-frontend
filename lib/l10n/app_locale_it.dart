@@ -177,6 +177,7 @@ const Map<String, dynamic> appLocaleIt = {
       'Abbina le nuove ROM dopo la scansione iniziale. Per un’intera libreria, esegui prima Abbina i giochi RetroAchievements in Strumenti.',
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} giochi non sono mai stati controllati. Abbinarli tutti al prossimo avvio può richiedere diversi minuti. Esegui invece Abbina i giochi RetroAchievements in Strumenti, con un avanzamento visibile.',
+  AppLocale.raMatchNotificationTitle: 'RetroAchievements',
   AppLocale.fullscreenMode: 'Modalità Schermo Intero',
   AppLocale.fullscreenModeSubtitle: 'Visualizza l’app a schermo intero',
   AppLocale.allFilesAccess: 'Accesso a Tutti i File',
