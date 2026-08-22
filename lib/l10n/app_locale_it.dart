@@ -178,6 +178,9 @@ const Map<String, dynamic> appLocaleIt = {
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} giochi non sono mai stati controllati. Abbinarli tutti al prossimo avvio può richiedere diversi minuti. Esegui invece Abbina i giochi RetroAchievements in Strumenti, con un avanzamento visibile.',
   AppLocale.raMatchNotificationTitle: 'RetroAchievements',
+  AppLocale.raMatchProgressBusy: 'Abbinamento RetroAchievements...',
+  AppLocale.raMatchProgressCounted:
+      'Abbinamento RetroAchievements... {done}/{total}',
   AppLocale.fullscreenMode: 'Modalità Schermo Intero',
   AppLocale.fullscreenModeSubtitle: 'Visualizza l’app a schermo intero',
   AppLocale.allFilesAccess: 'Accesso a Tutti i File',
@@ -267,7 +270,7 @@ const Map<String, dynamic> appLocaleIt = {
       'L\'abbinamento funziona anche senza aver effettuato l\'accesso, ma devi accedere a RetroAchievements per vedere i risultati.',
   AppLocale.rematchAchievementsLookingUp:
       'Controllo dei giochi già sottoposti ad hash...',
-  AppLocale.rematchAchievementsHashing: 'Identificazione di {filename}',
+  AppLocale.rematchAchievementsHashing: 'Abbinamento {done} di {total}',
   AppLocale.rematchAchievementsDone:
       'Fatto: {matched} gioco/giochi abbinati, {hashed} identificati per la prima volta.',
   AppLocale.rematchAchievementsNothingToDo:

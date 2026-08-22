@@ -176,6 +176,9 @@ const Map<String, dynamic> appLocaleEs = {
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} juegos nunca se han comprobado. Emparejarlos todos en el próximo inicio puede tardar varios minutos. Ejecuta Emparejar juegos de RetroAchievements en Herramientas para hacerlo ahora, con progreso visible.',
   AppLocale.raMatchNotificationTitle: 'RetroAchievements',
+  AppLocale.raMatchProgressBusy: 'Emparejando RetroAchievements...',
+  AppLocale.raMatchProgressCounted:
+      'Emparejando RetroAchievements... {done}/{total}',
   AppLocale.fullscreenMode: 'Modo Pantalla Completa',
   AppLocale.fullscreenModeSubtitle:
       'Mostrar la aplicación en pantalla completa',
@@ -269,7 +272,7 @@ const Map<String, dynamic> appLocaleEs = {
       'La coincidencia funciona sin haber iniciado sesión, pero necesitas iniciar sesión en RetroAchievements para ver los resultados.',
   AppLocale.rematchAchievementsLookingUp:
       'Comprobando los juegos que ya tienen hash...',
-  AppLocale.rematchAchievementsHashing: 'Identificando {filename}',
+  AppLocale.rematchAchievementsHashing: 'Emparejando {done} de {total}',
   AppLocale.rematchAchievementsDone:
       'Listo: {matched} juego(s) emparejado(s), {hashed} identificado(s) por primera vez.',
   AppLocale.rematchAchievementsNothingToDo:

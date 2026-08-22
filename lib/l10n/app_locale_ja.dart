@@ -150,6 +150,8 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} 本のゲームがまだ確認されていません。次回の起動ですべてを照合すると数分かかることがあります。代わりにツールの「RetroAchievements のゲームを照合」を実行すると、進捗を見ながら行えます。',
   AppLocale.raMatchNotificationTitle: 'RetroAchievements',
+  AppLocale.raMatchProgressBusy: 'RetroAchievements を照合中...',
+  AppLocale.raMatchProgressCounted: 'RetroAchievements を照合中... {done}/{total}',
   AppLocale.fullscreenMode: 'フルスクリーンモード',
   AppLocale.fullscreenModeSubtitle: 'アプリをフルスクリーンで表示',
   AppLocale.allFilesAccess: 'すべてのファイルへのアクセス',
@@ -221,7 +223,7 @@ const Map<String, dynamic> appLocaleJa = {
   AppLocale.rematchAchievementsSignedOut:
       'ログアウトしていても照合は実行されますが、結果を見るには RetroAchievements にログインする必要があります。',
   AppLocale.rematchAchievementsLookingUp: 'ハッシュ済みのゲームを確認中...',
-  AppLocale.rematchAchievementsHashing: '{filename} を識別中',
+  AppLocale.rematchAchievementsHashing: '{total} 件中 {done} 件を照合中',
   AppLocale.rematchAchievementsDone:
       '完了: {matched} 本を照合し、{hashed} 本を新たに識別しました。',
   AppLocale.rematchAchievementsNothingToDo: '対応するゲームはすべて確認済みです。',

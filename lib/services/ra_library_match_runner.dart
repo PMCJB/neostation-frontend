@@ -35,7 +35,10 @@ class RaMatchStrings {
   /// Shown during the cheap lookup-only pass.
   final String lookingUp;
 
-  /// Shown per ROM during the hashing pass. Contains `{filename}`.
+  /// Shown during the hashing pass. Contains `{done}` and `{total}`.
+  ///
+  /// Counted rather than per-ROM: the filename changed tens of times a second
+  /// and told the user nothing they could act on.
   final String hashing;
 
   /// Completion message. Contains `{matched}` and `{hashed}`.
@@ -68,10 +71,39 @@ class RaMatchStrings {
 /// ordering of the two passes, the progress denominator and the completion
 /// wording are policy, not widget code, and duplicating them would let the two
 /// entry points drift apart.
+/// Live progress of a running pass, for UI that wants to show it in place
+/// rather than in the notification bell.
+///
+/// [done] and [total] are null during the cheap lookup pass: it walks every
+/// hashed-but-unmatched ROM on every launch and finding nothing is its normal
+/// outcome, so counting it out loud would be a large number that means nothing
+/// to the user.
+class RaMatchProgress {
+  final int? done;
+  final int? total;
+
+  /// True only for the pass that runs as part of the startup sequence, which
+  /// the startup screen waits for.
+  ///
+  /// The pass that resumes after a game session must NOT set this: it runs
+  /// against a library the user is already looking at, and throwing them back
+  /// to a splash screen on returning from a game would be a bug, not progress.
+  final bool holdsSplash;
+
+  const RaMatchProgress({this.done, this.total, this.holdsSplash = false});
+}
+
 class RaLibraryMatchRunner {
   RaLibraryMatchRunner._();
 
   static final _log = LoggerService.instance;
+
+  /// Non-null exactly while a pass is running. The systems grid shows this as
+  /// a row above the (still usable) library, the same way it shows the ROM
+  /// scan — which is where someone actually looks when the app has just
+  /// started, unlike a bell that has to be clicked.
+  static final ValueNotifier<RaMatchProgress?> progress =
+      ValueNotifier<RaMatchProgress?>(null);
 
   /// Notification id, shared by both triggers on purpose: only one pass can be
   /// in flight at a time (the service is single-flight), so they can never
@@ -89,10 +121,24 @@ class RaLibraryMatchRunner {
   static Future<bool> run({
     required RaMatchStrings strings,
     RaMatchTrigger trigger = RaMatchTrigger.manual,
+    bool holdsSplash = false,
     VoidCallback? onProgressStateChanged,
   }) async {
     final manual = trigger == RaMatchTrigger.manual;
     var notificationShown = false;
+
+    // The automatic pass reports through `progress` and the systems grid row.
+    // It deliberately does NOT post a running notification: it starts on its
+    // own, so a bell pulsing for minutes with a filename churning behind it is
+    // noise nobody asked for. Its completion message still goes to the bell.
+    // The manual pass keeps its notification — Tools' own inline bar reads the
+    // notification's progress, so removing it would blank that row.
+    void publish({int? done, int? total}) => progress.value = RaMatchProgress(
+      done: done,
+      total: total,
+      holdsSplash: holdsSplash,
+    );
+    publish();
 
     void showOrUpdate({
       required String message,
@@ -145,6 +191,8 @@ class RaLibraryMatchRunner {
         reopenSkipped: manual,
         onProgress: (processed, total, _) {
           if (total == 0) return;
+          publish();
+          if (!manual) return;
           showOrUpdate(
             message: strings.lookingUp,
             type: GlobalNotificationType.info,
@@ -158,10 +206,14 @@ class RaLibraryMatchRunner {
           ? null
           : await RetroAchievementsHashService.rematchLibrary(
               reopenSkipped: manual,
-              onProgress: (processed, total, label) {
+              onProgress: (processed, total, _) {
                 if (total == 0) return;
+                publish(done: processed, total: total);
+                if (!manual) return;
                 showOrUpdate(
-                  message: strings.hashing.replaceFirst('{filename}', label),
+                  message: strings.hashing
+                      .replaceFirst('{done}', processed.toString())
+                      .replaceFirst('{total}', total.toString()),
                   type: GlobalNotificationType.info,
                   progress: eligible > 0
                       ? ((alreadyHashed + processed) / eligible).clamp(0.0, 1.0)
@@ -229,6 +281,7 @@ class RaLibraryMatchRunner {
       );
       return false;
     } finally {
+      progress.value = null;
       onProgressStateChanged?.call();
     }
   }

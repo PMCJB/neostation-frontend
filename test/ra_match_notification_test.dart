@@ -120,6 +120,43 @@ void main() {
       expect(note!.message, contains('done'));
     });
 
+    test('live progress is published, then cleared', () async {
+      expect(RaLibraryMatchRunner.progress.value, isNull);
+
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.automatic,
+      );
+
+      expect(
+        RaLibraryMatchRunner.progress.value,
+        isNull,
+        reason:
+            'the systems grid shows a row for as long as this is non-null, so '
+            'a run that forgets to clear it leaves that row up forever',
+      );
+    });
+
+    test('only the startup pass holds the startup screen', () async {
+      RaMatchProgress? seen;
+      void capture() => seen ??= RaLibraryMatchRunner.progress.value;
+      RaLibraryMatchRunner.progress.addListener(capture);
+      addTearDown(() => RaLibraryMatchRunner.progress.removeListener(capture));
+
+      await RaLibraryMatchRunner.run(
+        strings: _strings,
+        trigger: RaMatchTrigger.automatic,
+      );
+
+      expect(
+        seen?.holdsSplash,
+        isFalse,
+        reason:
+            'the default is the resume-after-a-game pass, and pulling the '
+            'splash back over a library the user is looking at is a bug',
+      );
+    });
+
     test('the notification names the job it is doing', () async {
       await RaLibraryMatchRunner.run(
         strings: _strings,

@@ -170,6 +170,9 @@ const Map<String, dynamic> appLocaleEn = {
   AppLocale.raMatchOnStartupBacklogWarning:
       '{count} games have never been checked. Matching them all on the next start can take several minutes. Run Match RetroAchievements Games in Tools to do it now instead, with progress you can watch.',
   AppLocale.raMatchNotificationTitle: 'RetroAchievements',
+  AppLocale.raMatchProgressBusy: 'Matching RetroAchievements...',
+  AppLocale.raMatchProgressCounted:
+      'Matching RetroAchievements... {done}/{total}',
   AppLocale.fullscreenMode: 'Fullscreen Mode',
   AppLocale.fullscreenModeSubtitle: 'Display the app in fullscreen mode',
   AppLocale.allFilesAccess: 'All Files Access',
@@ -257,7 +260,7 @@ const Map<String, dynamic> appLocaleEn = {
       'Matching runs while you are signed out, but you need to sign in to RetroAchievements to see the results.',
   AppLocale.rematchAchievementsLookingUp:
       'Looking up games that are already hashed...',
-  AppLocale.rematchAchievementsHashing: 'Identifying {filename}',
+  AppLocale.rematchAchievementsHashing: 'Matching {done} of {total}',
   AppLocale.rematchAchievementsDone:
       'Done: {matched} game(s) matched, {hashed} newly identified.',
   AppLocale.rematchAchievementsNothingToDo:

@@ -147,6 +147,8 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.raMatchOnStartupBacklogWarning:
       '有 {count} 個遊戲從未檢查過。在下次啟動時全部比對可能需要幾分鐘。建議改為在工具中執行「比對 RetroAchievements 遊戲」，可以看到進度。',
   AppLocale.raMatchNotificationTitle: 'RetroAchievements',
+  AppLocale.raMatchProgressBusy: '正在比對 RetroAchievements...',
+  AppLocale.raMatchProgressCounted: '正在比對 RetroAchievements... {done}/{total}',
   AppLocale.fullscreenMode: '全螢幕模式',
   AppLocale.fullscreenModeSubtitle: '以全螢幕模式顯示應用程式',
   AppLocale.allFilesAccess: '所有檔案存取權限',
@@ -216,7 +218,7 @@ const Map<String, dynamic> appLocaleZhHant = {
   AppLocale.rematchAchievementsSignedOut:
       '未登入時仍會進行比對，但需要登入 RetroAchievements 才能查看結果。',
   AppLocale.rematchAchievementsLookingUp: '正在檢查已有雜湊值的遊戲…',
-  AppLocale.rematchAchievementsHashing: '正在辨識 {filename}',
+  AppLocale.rematchAchievementsHashing: '正在比對 {done}/{total}',
   AppLocale.rematchAchievementsDone: '完成：比對 {matched} 個遊戲，新辨識 {hashed} 個。',
   AppLocale.rematchAchievementsNothingToDo: '所有支援的遊戲都已檢查過。',
   AppLocale.rematchAchievementsPaused: '已暫停：目前已比對 {matched} 個遊戲。再次執行即可繼續。',

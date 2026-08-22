@@ -240,7 +240,7 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     // can bring a system into RA range for the first time.
     await initialScan;
     await systemsRescan;
-    await _runStartupRaMatch(configProvider);
+    await _runStartupRaMatch(configProvider, holdsSplash: true);
   }
 
   /// Runs the RetroAchievements match pass over ROMs the startup scan added.
@@ -249,7 +249,15 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
   /// ever triggered by the user opening a game or walking to Tools, so a ROM
   /// added last week carries no match and no badge until somebody remembers to
   /// press a button.
-  Future<void> _runStartupRaMatch(SqliteConfigProvider configProvider) async {
+  ///
+  /// [holdsSplash] is set only by the startup sequence, which keeps the startup
+  /// screen up until the pass finishes so the user is told what is happening
+  /// rather than watching a library appear mid-work. The resume-after-a-game
+  /// path leaves it false: that library is already on screen.
+  Future<void> _runStartupRaMatch(
+    SqliteConfigProvider configProvider, {
+    bool holdsSplash = false,
+  }) async {
     if (!mounted) return;
     if (!configProvider.config.raMatchOnStartup) return;
 
@@ -273,6 +281,7 @@ class AppScreenState extends State<AppScreen> with WidgetsBindingObserver {
     _raMatchInterrupted = await RaLibraryMatchRunner.run(
       strings: strings,
       trigger: RaMatchTrigger.automatic,
+      holdsSplash: holdsSplash,
     );
   }
 
