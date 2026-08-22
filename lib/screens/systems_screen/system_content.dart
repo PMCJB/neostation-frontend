@@ -1,4 +1,3 @@
-import 'dart:async';
 import '../../services/ra_library_match_runner.dart';
 
 import 'package:flutter/material.dart';
@@ -29,45 +28,6 @@ class SystemContent extends StatefulWidget {
 }
 
 class _SystemContentState extends State<SystemContent> {
-  /// Minimum time the splash stays visible once shown. A fast scan (sub-second
-  /// on a warm library) would otherwise blink the logo away before the shine
-  /// animation is even perceptible.
-  static const _minSplashDuration = Duration(milliseconds: 2500);
-
-  /// When the splash first appeared; null once it has been released.
-  DateTime? _splashShownAt;
-
-  Timer? _releaseTimer;
-
-  @override
-  void dispose() {
-    _releaseTimer?.cancel();
-    super.dispose();
-  }
-
-  /// Returns whether the splash must stay up even though loading has finished,
-  /// arming a one-shot timer that rebuilds when the minimum time is served.
-  bool _holdSplash(bool isLoading) {
-    if (isLoading) {
-      _splashShownAt ??= DateTime.now();
-      _releaseTimer?.cancel();
-      _releaseTimer = null;
-      return false;
-    }
-    final shownAt = _splashShownAt;
-    if (shownAt == null) return false;
-
-    final remaining = _minSplashDuration - DateTime.now().difference(shownAt);
-    if (remaining <= Duration.zero) {
-      _splashShownAt = null;
-      return false;
-    }
-    _releaseTimer ??= Timer(remaining, () {
-      if (mounted) setState(() => _splashShownAt = null);
-    });
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Consumer2<SqliteConfigProvider, ThemeProvider>(
@@ -96,7 +56,11 @@ class _SystemContentState extends State<SystemContent> {
     // Determine the current operational state of the library.
     final isLoading =
         configProvider.isLoading || configProvider.isScanning || raHoldsSplash;
-    final showSplash = isLoading || _holdSplash(isLoading);
+    // No minimum display time: a fast scan is a fast start, and holding the
+    // logo up after the library is ready only makes the app feel slower than
+    // it is. The 400 ms cross-fade below is what keeps a quick one from
+    // reading as a flicker.
+    final showSplash = isLoading;
 
     // Show setup wizard if scan is finished but no systems were resolved.
     final showInitialSetup =
