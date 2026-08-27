@@ -31,6 +31,7 @@ Open the **NeoSync** tab and choose to create an account or sign in. You can als
 
 NeoStation syncs automatically, the same way a storefront syncs your library before and after a session:
 
+- **Whenever NeoStation walks through your games**, each one is checked and synchronised with the cloud as it is browsed.
 - **When NeoStation starts**, it checks the cloud and downloads any newer saves.
 - **Before a game launches**, it pulls down the latest saves, states and memory cards for that game.
 - **After you finish a game**, it pushes your local changes up to the cloud.
@@ -82,9 +83,17 @@ Some standalone emulators store their saves in a folder that NeoStation cannot f
 
 Removing a custom save folder only disconnects it from syncing; it does not delete the local files.
 
-## Downloading a Save Manually
+## Deleting a Cloud Save
 
-Cloud downloads on the device are automatic. If you want to copy a save or memory card down by hand, use the [official site](https://neosync.cloud/) to browse, download and delete your cloud files.
+You can delete a cloud save from **NeoStation** (in the **Save List**) or from the [official site](https://neosync.cloud/). NeoStation asks for confirmation before deleting a cloud save.
+
+> **Warning:** Deleting a cloud save is permanent. If you might need a local copy, download it from the [official site](https://neosync.cloud/) first.
+
+## Downloading a Save
+
+Downloads in NeoStation are **automatic**, triggered by synchronisation: they happen while NeoStation walks through your games and before and after each game session.
+
+There is **no manual download button** in NeoStation. If you want to download a save or memory card by hand, use the [official site](https://neosync.cloud/).
 
 ## Legacy (v1) Saves
 
@@ -95,10 +104,6 @@ From now on, NeoStation only uses the new **NeoSync v2** cloud storage for norma
 ## Storage and Plans
 
 Your NeoSync account has a storage limit. When you are close to the limit, NeoStation shows how much space you are using and how much remains. If you run out of space, syncing pauses so you can free up room or upgrade your plan.
-
-When you delete a cloud save, NeoStation asks for confirmation.
-
-> **Warning:** Deleting a cloud save is permanent. If you might need a local copy, download it from the [official site](https://neosync.cloud/) first.
 
 ## Related Pages
 
