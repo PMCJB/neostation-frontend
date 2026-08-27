@@ -29,12 +29,14 @@ Open the **NeoSync** tab and choose to create an account or sign in. You can als
 
 ## How Automatic Syncing Works
 
-NeoStation syncs automatically, the same way a storefront syncs your library before and after a session:
+NeoStation syncs automatically, but it does **not** sync all of your saves at once — syncing everything in a single pass would saturate NeoSync's servers. Instead, each game is synchronised as you reach it:
 
-- **Whenever NeoStation walks through your games**, each one is checked and synchronised with the cloud as it is browsed.
+- **Whenever NeoStation walks through your games**, the game you land on is checked and synchronised with the cloud as you browse.
 - **When NeoStation starts**, it checks the cloud and downloads any newer saves.
 - **Before a game launches**, it pulls down the latest saves, states and memory cards for that game.
 - **After you finish a game**, it pushes your local changes up to the cloud.
+
+Because each game is synced one at a time, give it a moment: look for the **sync/checkmark** indicator on the left side of the screen and wait until the synchronisation finishes before moving on or launching the game.
 
 Because of this, you only need to play and let NeoStation handle the rest. You can turn this automatic behaviour **on or off** in the NeoSync settings, but leaving it on is the recommended way to keep everything current.
 
