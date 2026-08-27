@@ -83,6 +83,8 @@ Some standalone emulators store their saves in a folder that NeoStation cannot f
 3. Select the save folder on your device.
 4. Choose **Configure**, then **Sync now** when you want to back up or pull down that folder.
 
+> **Important:** For a custom folder to sync, it must be configured on **every device** you want to synchronise with. NeoStation cannot place a save into a custom folder that the target device has not been pointed at, so configure the same system + emulator + folder on each device.
+
 Removing a custom save folder only disconnects it from syncing; it does not delete the local files.
 
 ## Deleting a Cloud Save
