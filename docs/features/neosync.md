@@ -7,37 +7,92 @@ nav_order: 3
 
 # NeoSync
 
-NeoSync synchronises game saves and states through your NeoSync account. It includes account registration, email verification, password recovery, cloud-save browsing, quota information, and custom save folders for standalone emulators.
+NeoSync is your cloud companion for NeoStation. It keeps your game saves, save states and memory cards in sync across all of your devices, so your progress is safe even if a device is lost or replaced.
+
+## Before You Start
+
+The NeoSync tab is hidden by default. To show it:
+
+1. Open **Settings → General**.
+2. Turn on **Show NeoSync tab**.
 
 ## Sign In or Create an Account
 
-Open the **NeoSync** tab. You can register a new account or sign in with an existing account. New registrations require email verification; NeoStation can also resend the verification email and start password recovery.
+Open the **NeoSync** tab and choose to create an account or sign in.
 
-If the NeoSync tab is not visible, enable **Show NeoSync tab** in the General settings.
+- New accounts need email verification. NeoStation can resend the verification email.
+- If you forget your password, use the password recovery option.
 
-## Save Synchronisation
+## How Automatic Syncing Works
 
-Once signed in, NeoSync tracks local and cloud save files and can show synchronisation progress and errors. The **Save List** lets you browse and refresh your online saves.
+NeoStation syncs automatically, the same way a storefront syncs your library before and after a session:
 
-> **Note:** Only one save-sync provider is active at a time. If another connected provider owns save synchronisation, NeoSync remains available for its account and cloud-save views but does not run active save sync.
+- **When NeoStation starts**, it checks the cloud and downloads any newer saves.
+- **Before a game launches**, it pulls down the latest saves, states and memory cards for that game.
+- **After you finish a game**, it pushes your local changes up to the cloud.
+
+Because of this, you only need to play and let NeoStation handle the rest. You can turn this automatic behaviour **on or off** in the NeoSync settings, but leaving it on is the recommended way to keep everything current.
+
+### What Is Synced
+
+NeoStation saves each file with the system and the emulator (or RetroArch core) that created it. This means:
+
+- Game saves and save states are linked to the game they belong to.
+- Memory cards and other shared files are shared across the whole system.
+- RetroArch saves are tracked per core, so switching between devices keeps using the right emulator.
+
+## Per-Game Status
+
+Each game in your library shows a small cloud status so you know where its save stands:
+
+| Status | Meaning |
+|---|---|
+| **No save found** | There is no save for this game yet, on this device or in the cloud. |
+| **Local only** | The save exists on this device but has not been uploaded yet. |
+| **Cloud only** | The save is in the cloud but not on this device yet. |
+| **Up to date** | The local and cloud saves match. |
+| **Disabled** | Cloud sync is turned off for this game. |
+| **Quota exceeded** | Your storage plan is full. Free up space or upgrade. |
+
+You can turn cloud sync on or off for an individual game.
+
+## Save List
+
+The **Save List** shows every file you have in the cloud. You can:
+
+- Browse your online saves, states and memory cards.
+- **Search** by name to find a specific save.
+- **Filter** by scope (per-game saves or memory cards), system, or emulator.
+- **Sort** by newest/oldest or by name.
+- **Refresh** the list to show the latest files.
+- **Delete** a cloud save.
 
 ## Custom Save Folders
 
-Use **Custom Save Folders** when a standalone emulator stores saves in a location NeoStation cannot discover automatically.
+Some standalone emulators store their saves in a folder that NeoStation cannot find automatically. You can point NeoStation at it:
 
 1. Open **Custom Save Folders** in the NeoSync area.
-2. Choose a system and emulator.
-3. Select the save folder.
-4. Select **Configure**, then use **Sync now** when needed.
+2. Choose the system and emulator.
+3. Select the save folder on your device.
+4. Choose **Configure**, then **Sync now** when you want to back up or pull down that folder.
 
-Removing a custom save folder unlinks it from synchronisation; it does not delete the local files.
+Removing a custom save folder only disconnects it from syncing; it does not delete the local files.
 
-## Delete a Cloud Save
+## Downloading a Save Manually
 
-NeoSync asks for confirmation before deleting a cloud save.
+Cloud downloads on the device are automatic. If you want to copy a save or memory card down by hand, NeoStation also provides a web view where you can browse, download and delete your cloud files:
 
-> **Warning:** Deleting a cloud save is permanent. If you need a local copy first, use the available download option before deleting it.
+[https://neosync.cloud/](https://neosync.cloud/)
+
+## Storage and Plans
+
+Your NeoSync account has a storage limit. When you are close to the limit, NeoStation shows how much space you are using and how much remains. If you run out of space, syncing pauses so you can free up room or upgrade your plan.
+
+When you delete a cloud save, NeoStation asks for confirmation.
+
+> **Warning:** Deleting a cloud save is permanent. If you might need a local copy, download it from the web view first.
 
 ## Related Pages
 
 - [Troubleshooting](/troubleshooting/)
+- [Configuring Emulators](/configuration/configuring-emulators/)
