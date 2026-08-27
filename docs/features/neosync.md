@@ -16,9 +16,13 @@ The NeoSync tab is hidden by default. To show it:
 1. Open **Settings → General**.
 2. Turn on **Show NeoSync tab**.
 
+## The Official Site
+
+The official NeoSync website is [https://neosync.cloud/](https://neosync.cloud/). You can sign in or create an account there exactly as you can in the NeoStation app.
+
 ## Sign In or Create an Account
 
-Open the **NeoSync** tab and choose to create an account or sign in.
+Open the **NeoSync** tab and choose to create an account or sign in. You can also do this on the [official site](https://neosync.cloud/).
 
 - New accounts need email verification. NeoStation can resend the verification email.
 - If you forget your password, use the password recovery option.
@@ -80,9 +84,13 @@ Removing a custom save folder only disconnects it from syncing; it does not dele
 
 ## Downloading a Save Manually
 
-Cloud downloads on the device are automatic. If you want to copy a save or memory card down by hand, NeoStation also provides a web view where you can browse, download and delete your cloud files:
+Cloud downloads on the device are automatic. If you want to copy a save or memory card down by hand, use the [official site](https://neosync.cloud/) to browse, download and delete your cloud files.
 
-[https://neosync.cloud/](https://neosync.cloud/)
+## Legacy (v1) Saves
+
+Saves from the previous NeoSync version are kept as **backup only**. Legacy saves are not synced by NeoStation and can only be downloaded as a backup from the [official site](https://neosync.cloud/).
+
+From now on, NeoStation only uses the new **NeoSync v2** cloud storage for normal synchronisation.
 
 ## Storage and Plans
 
@@ -90,7 +98,7 @@ Your NeoSync account has a storage limit. When you are close to the limit, NeoSt
 
 When you delete a cloud save, NeoStation asks for confirmation.
 
-> **Warning:** Deleting a cloud save is permanent. If you might need a local copy, download it from the web view first.
+> **Warning:** Deleting a cloud save is permanent. If you might need a local copy, download it from the [official site](https://neosync.cloud/) first.
 
 ## Related Pages
 
