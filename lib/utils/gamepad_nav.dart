@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gamepads/gamepads.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:neostation/services/game_service.dart';
 import 'package:neostation/services/logger_service.dart';
 import 'package:neostation/services/sfx_service.dart';
 import '../responsive.dart';
@@ -109,6 +110,9 @@ class GamepadNavigation {
   final bool Function()? isTextFieldFocused;
 
   static final _log = LoggerService.instance;
+
+  /// Listener for device screen state changes.
+  VoidCallback? _screenOnListener;
 
   /// When true, all raw input events are logged for diagnostic purposes.
   static bool _debugLogging = false;
@@ -352,6 +356,15 @@ class GamepadNavigation {
   void initialize() async {
     _subscription?.cancel();
 
+    // Cancel all active repeat timers whenever the device screen turns off
+    _screenOnListener ??= () {
+      if (!GameService.deviceScreenOn.value) {
+        cancelAllRepeatTimers();
+        _stopShoulderHold();
+      }
+    };
+    GameService.deviceScreenOn.addListener(_screenOnListener!);
+
     await _initializeGamepadInfo();
 
     _subscription = Gamepads.events.listen(
@@ -523,8 +536,8 @@ class GamepadNavigation {
 
   /// Cancels all active auto-repeat timers.
   ///
-  /// Called when navigation lands on a text field so held directional inputs
-  /// do not loop indefinitely.
+  /// Called when navigation lands on a text field or screen turns off so held
+  /// directional inputs do not loop indefinitely.
   void cancelAllRepeatTimers() {
     for (final timer in _repeatTimers.values) {
       timer?.cancel();
@@ -602,6 +615,10 @@ class GamepadNavigation {
   void dispose() {
     _subscription?.cancel();
     _subscription = null;
+    if (_screenOnListener != null) {
+      GameService.deviceScreenOn.removeListener(_screenOnListener!);
+      _screenOnListener = null;
+    }
     _resetSelectModifier();
     cancelAllRepeatTimers();
     if (identical(_activeNavigator, this)) {
@@ -632,6 +649,12 @@ class GamepadNavigation {
 
   /// Orchestrates the processing of a raw [GamepadEvent].
   void _handleGamepadEvent(GamepadEvent event) async {
+    // Drop all events and clear repeat state if the screen is off (suspend mode).
+    if (!GameService.deviceScreenOn.value) {
+      cancelAllRepeatTimers();
+      return;
+    }
+
     // Ends a synthetic shoulder repeat. Deliberately ahead of the active check:
     // every navigator subscribes to the raw stream, and the release that ends a
     // hold can land while this layer is the deactivated one (mid tab switch, or
@@ -1273,8 +1296,11 @@ class GamepadNavigation {
 
     void schedule(Duration delay) {
       _repeatTimers[key] = Timer(delay, () {
-        // Guard: if the key was removed (by _stopRepeatTimer or
-        // cancelAllRepeatTimers) before this callback ran, stop here.
+        // Guard: if screen is off or key was removed before callback ran, stop.
+        if (!GameService.deviceScreenOn.value) {
+          cancelAllRepeatTimers();
+          return;
+        }
         if (!_repeatTimers.containsKey(key)) return;
         if (!_isActive) {
           _repeatTimers.remove(key);
