@@ -81,6 +81,7 @@ class GameService {
         // reliable signal to release background resources while locked.
         deviceScreenOn.value = false;
         MusicPlayerService().appPaused();
+        GameSessionManager.handleScreenPowerChanged(false);
 
         // Suspend notification service WebSocket and timers on screen off
         try {
@@ -96,6 +97,8 @@ class GameService {
         // running game (the preview video) check that themselves, and leaving
         // the notifier stuck on false would strand them after the game exits.
         deviceScreenOn.value = true;
+        GameSessionManager.handleScreenPowerChanged(true);
+
         // Skip restore while a game owns the foreground — the game-return
         // (lifecycle resumed) path re-opens everything. Restoring here would
         // reopen the audio engine (and restart music/websocket) behind the

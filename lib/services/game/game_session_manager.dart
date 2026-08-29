@@ -215,6 +215,16 @@ class GameSessionManager {
     _startPlaytimeTimer();
   }
 
+  /// Handles screen power state changes to pause or resume playtime persistence.
+  static void handleScreenPowerChanged(bool isScreenOn) {
+    if (!isScreenOn) {
+      _stopPlaytimeTimer();
+    } else if (_isGameLaunched) {
+      _lastPlaytimeSave = DateTime.now();
+      _startPlaytimeTimer();
+    }
+  }
+
   /// Starts the periodic timer for incremental playtime persistence.
   static void _startPlaytimeTimer() {
     _playtimeTimer?.cancel();
