@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 import 'package:neostation/services/logger_service.dart';
+import 'package:neostation/services/sfx_service.dart';
 
 /// Talks to the secondary-display Flutter engine's own native channel
 /// (`com.neogamelab.neostation/secondary_apps`, registered by
@@ -90,27 +92,31 @@ class SecondaryAppsService {
 
   /// Whether the device screen is on, as pushed by the native presentation on
   /// every ACTION_SCREEN_ON/OFF edge.
-  ///
-  /// The secondary engine also receives this fact through the shared display
-  /// state, but that transport ships full snapshots between engines with no
-  /// ordering guarantee: a snapshot built just before the screen went off can
-  /// land after the screen-off write and flip the flag back to `true` while the
-  /// device sleeps. This notifier is fed by a direct, ordered channel call, so
-  /// it cannot be clobbered — media on the bottom screen gates on both.
-  ///
-  /// Defaults to true so the preview plays normally until the first edge or the
-  /// [refreshScreenState] seed arrives.
   static final ValueNotifier<bool> deviceScreenOn = ValueNotifier<bool>(true);
 
   static bool _screenStateWired = false;
 
   /// Subscribes to native screen on/off edges and seeds [deviceScreenOn] from
   /// the display's live state. Idempotent — safe to call from every widget that
-  /// needs it. Only the secondary engine talks on this channel, so registering
-  /// the handler here cannot steal calls from the main engine.
+  /// needs it.
   static void listenForScreenState() {
     if (_screenStateWired) return;
     _screenStateWired = true;
+
+    // Release/reinitialize SoLoud audio engine on the secondary screen when power state toggles
+    deviceScreenOn.addListener(() {
+      if (!deviceScreenOn.value) {
+        if (SoLoud.instance.isInitialized) {
+          try {
+            SoLoud.instance.deinit();
+            SfxService().handleEngineTornDown();
+          } catch (_) {}
+        }
+      } else {
+        SfxService().reinitializeAfterEngineRestart();
+      }
+    });
+
     _channel.setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onDeviceScreenOn':
@@ -122,6 +128,7 @@ class SecondaryAppsService {
       }
       return null;
     });
+
     // Edges alone would leave an engine that started while the device was
     // already asleep stuck on the `true` default, so read the display up front.
     unawaited(refreshScreenState());
@@ -133,11 +140,6 @@ class SecondaryAppsService {
   }
 
   /// Asks the native presentation whether the display it renders on is lit.
-  ///
-  /// Ground truth, unlike any pushed flag: used to double-check right before
-  /// starting the preview video, so a stale "screen is on" can never start
-  /// audio playing under a closed lid. Fails open (true) so a channel error
-  /// can't kill the preview on a healthy, awake device.
   static Future<bool> isDisplayOn() async {
     try {
       final bool? on = await _channel.invokeMethod<bool>('isDisplayOn');
