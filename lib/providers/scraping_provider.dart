@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import '../services/game_service.dart';
 
 /// Defines the operational status of an individual scraping thread.
 enum ThreadStatus {
@@ -89,6 +90,10 @@ class ThreadProgress {
 /// Implements estimated time remaining (ETA) calculation based on batch processing
 /// performance and prevents the device from sleeping during long operations.
 class ScrapingProvider extends ChangeNotifier {
+  ScrapingProvider() {
+    GameService.deviceScreenOn.addListener(_handleScreenStateChanged);
+  }
+
   /// Whether a scraping session is currently active.
   bool _isScraping = false;
 
@@ -146,6 +151,18 @@ class ScrapingProvider extends ChangeNotifier {
   Duration? get estimatedTimeRemaining => _estimatedTimeRemaining;
   int get artworkRevision => _artworkRevision;
 
+  /// Temporarily releases WakelockPlus when screen turns off during a scrape,
+  /// and restores it when the screen turns back on.
+  void _handleScreenStateChanged() {
+    if (!_isScraping) return;
+
+    if (GameService.deviceScreenOn.value) {
+      WakelockPlus.enable();
+    } else {
+      WakelockPlus.disable();
+    }
+  }
+
   void markArtworkUpdated() {
     _artworkRevision++;
     notifyListeners();
@@ -179,7 +196,9 @@ class ScrapingProvider extends ChangeNotifier {
       ),
     );
 
-    WakelockPlus.enable();
+    if (GameService.deviceScreenOn.value) {
+      WakelockPlus.enable();
+    }
     notifyListeners();
   }
 
@@ -313,5 +332,11 @@ class ScrapingProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    GameService.deviceScreenOn.removeListener(_handleScreenStateChanged);
+    super.dispose();
   }
 }
