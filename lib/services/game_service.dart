@@ -3,14 +3,19 @@ import 'dart:async';
 import 'package:path/path.dart' as path;
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../main.dart';
 import '../models/game_model.dart';
 import '../models/system_model.dart';
 import '../providers/file_provider.dart';
 import 'music_player_service.dart';
+import 'notification_service.dart';
 import 'game/game_list_service.dart';
 import 'game/favorites_service.dart';
 import 'game/game_session_manager.dart';
 import 'game/game_launch_service.dart';
+
 export 'gamepad/gamepad_navigation_manager.dart'
     show GamepadNavigationManager, NavLayer;
 export 'game/game_launch_service.dart' show GameLaunchResult;
@@ -76,6 +81,15 @@ class GameService {
         // reliable signal to release background resources while locked.
         deviceScreenOn.value = false;
         MusicPlayerService().appPaused();
+
+        // Suspend notification service WebSocket and timers on screen off
+        try {
+          final context = rootNavigatorKey.currentContext;
+          if (context != null) {
+            Provider.of<NotificationService>(context, listen: false).suspend();
+          }
+        } catch (_) {}
+
         onScreenStateChanged?.call(false);
       } else if (call.method == 'onDeviceScreenOn') {
         // Published unconditionally: listeners that must not act behind a
@@ -88,6 +102,18 @@ class GameService {
         // running emulator.
         if (!GameSessionManager.isGameLaunched) {
           MusicPlayerService().appResumed();
+
+          // Reconnect notification service WebSocket and timers on screen on
+          try {
+            final context = rootNavigatorKey.currentContext;
+            if (context != null) {
+              Provider.of<NotificationService>(
+                context,
+                listen: false,
+              ).connect();
+            }
+          } catch (_) {}
+
           onScreenStateChanged?.call(true);
         }
       }
